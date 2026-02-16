@@ -19,6 +19,11 @@ class HabitCoach implements Agent, HasTools
 
     public function __construct(private User $user) {}
 
+    public function model(): string
+    {
+        return config('ai.openai_model', env('CHATGPT_MODEL', 'gpt-4o-mini'));
+    }
+
     public function instructions(): Stringable|string
     {
         return <<<PROMPT

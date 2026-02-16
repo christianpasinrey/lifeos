@@ -1,7 +1,7 @@
 <template>
     <div class="flex flex-col h-full">
         <!-- Header -->
-        <div class="flex items-center justify-between px-4 py-3 border-b border-surface-800">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
             <div class="flex items-center gap-2">
                 <div class="w-8 h-8 rounded-lg bg-primary-500/10 flex items-center justify-center">
                     <SparklesIcon class="w-4 h-4 text-primary-400" />
@@ -11,13 +11,13 @@
                     <p class="text-xs text-surface-400">Tu asistente personal</p>
                 </div>
             </div>
-            <button @click="$emit('close')" class="p-1.5 text-surface-400 hover:text-surface-200 rounded-lg hover:bg-surface-800 transition-colors">
+            <button @click="$emit('close')" class="p-1.5 text-surface-400 hover:text-surface-200 rounded-lg hover:bg-white/[0.06] transition-colors">
                 <XMarkIcon class="w-5 h-5" />
             </button>
         </div>
 
         <!-- Messages -->
-        <div ref="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-4">
+        <div ref="messagesContainer" class="flex-1 overflow-y-auto glass-scroll p-4 space-y-4">
             <div v-if="messages.length === 0" class="text-center py-8">
                 <SparklesIcon class="w-10 h-10 text-surface-600 mx-auto mb-3" />
                 <p class="text-surface-400 text-sm">Pregúntame sobre tus hábitos, pídeme crear uno nuevo, o dime qué quieres mejorar.</p>
@@ -32,15 +32,15 @@
                 <div
                     class="max-w-[85%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed"
                     :class="msg.role === 'user'
-                        ? 'bg-primary-600 text-white rounded-br-md'
-                        : 'bg-surface-800 text-surface-200 rounded-bl-md'"
+                        ? 'bg-primary-600/80 text-white rounded-br-md backdrop-blur-sm'
+                        : 'bg-white/[0.06] text-surface-200 rounded-bl-md backdrop-blur-sm'"
                 >
                     <div v-html="formatMessage(msg.content)" />
                 </div>
             </div>
 
             <div v-if="loading" class="flex justify-start">
-                <div class="bg-surface-800 text-surface-400 px-3.5 py-2.5 rounded-2xl rounded-bl-md text-sm">
+                <div class="bg-white/[0.06] text-surface-400 px-3.5 py-2.5 rounded-2xl rounded-bl-md text-sm">
                     <span class="inline-flex gap-1">
                         <span class="w-1.5 h-1.5 bg-surface-400 rounded-full animate-bounce" style="animation-delay: 0ms" />
                         <span class="w-1.5 h-1.5 bg-surface-400 rounded-full animate-bounce" style="animation-delay: 150ms" />
@@ -51,20 +51,20 @@
         </div>
 
         <!-- Input -->
-        <form @submit.prevent="sendMessage" class="p-3 border-t border-surface-800">
+        <form @submit.prevent="sendMessage" class="p-3 border-t border-white/[0.06]">
             <div class="flex gap-2">
                 <input
                     v-model="input"
                     type="text"
                     :disabled="loading"
                     placeholder="Escribe un mensaje..."
-                    class="flex-1 px-3.5 py-2.5 bg-surface-800 border border-surface-700 rounded-xl text-sm text-surface-100 placeholder-surface-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    class="flex-1 px-3.5 py-2.5 bg-white/[0.05] border border-white/[0.08] rounded-xl text-sm text-surface-100 placeholder-surface-500 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent backdrop-blur-sm transition-colors"
                     @keydown.enter.prevent="sendMessage"
                 />
                 <button
                     type="submit"
                     :disabled="loading || !input.trim()"
-                    class="px-3.5 py-2.5 bg-primary-600 hover:bg-primary-500 disabled:opacity-50 text-white rounded-xl transition-colors"
+                    class="px-3.5 py-2.5 bg-primary-600/80 hover:bg-primary-500/80 disabled:opacity-50 text-white rounded-xl transition-colors backdrop-blur-sm"
                 >
                     <PaperAirplaneIcon class="w-4 h-4" />
                 </button>
@@ -113,7 +113,6 @@ async function sendMessage() {
     try {
         const { data } = await api.post('/ai/chat', { message: text })
         messages.value.push({ role: 'assistant', content: data.text })
-        // Refresh habits in case the coach created/toggled one
         queryClient.invalidateQueries({ queryKey: ['habits'] })
     } catch (e) {
         messages.value.push({

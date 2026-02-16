@@ -1,0 +1,447 @@
+/* ============================================
+   LIQUID GLASS — iOS-Inspired Glassmorphism
+
+   Simulates Apple's Liquid Glass aesthetic
+   with animated reflective borders, specular
+   highlights, and frosted translucency.
+
+   References:
+   - css-tricks.com/getting-clarity-on-apples-liquid-glass
+   - blog.logrocket.com/how-create-liquid-glass-effects-css-and-svg
+   - kube.io/blog/liquid-glass-css-svg
+   ============================================ */
+
+/* --- Design tokens --- */
+:root {
+    --glass-blur: 40px;
+    --glass-saturate: 180%;
+    --glass-bg: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.07),
+        rgba(255, 255, 255, 0.02)
+    );
+    --glass-border-w: 1px;
+    --glass-radius: 24px;
+    --glass-shadow:
+        0 8px 32px rgba(0, 0, 0, 0.35),
+        0 2px 8px rgba(0, 0, 0, 0.2);
+    --glass-edge-hi: rgba(255, 255, 255, 0.18);
+    --glass-edge-lo: rgba(255, 255, 255, 0.03);
+}
+
+/* ==========================================
+   1. BASE LIQUID GLASS
+   ========================================== */
+.liquid-glass {
+    position: relative;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    border-radius: var(--glass-radius);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow:
+        var(--glass-shadow),
+        /* Top edge — strong highlight, simulates light hitting the glass */
+        inset 0 1px 0 0 var(--glass-edge-hi),
+        /* Bottom edge — softer reflected light */
+        inset 0 -1px 0 0 rgba(255, 255, 255, 0.06),
+        /* Side edges — very subtle refraction glow */
+        inset 1px 0 0 0 rgba(255, 255, 255, 0.05),
+        inset -1px 0 0 0 rgba(255, 255, 255, 0.05);
+    isolation: isolate;
+}
+
+/* Ensure content renders above pseudo-element overlays */
+.liquid-glass > * {
+    position: relative;
+    z-index: 3;
+}
+
+/* Animated reflective gradient border
+   Mask technique: a gradient visible only as a thin border ring.
+   The gradient slowly shifts, simulating light traveling along
+   the edge of the glass as surrounding content changes. */
+.liquid-glass::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: var(--glass-border-w);
+    background: linear-gradient(
+        135deg,
+        var(--glass-edge-hi) 0%,
+        rgba(255, 255, 255, 0.06) 20%,
+        var(--glass-edge-lo) 40%,
+        rgba(255, 255, 255, 0.06) 60%,
+        var(--glass-edge-hi) 80%,
+        rgba(255, 255, 255, 0.04) 100%
+    );
+    background-size: 300% 300%;
+    animation: glass-shimmer 10s ease-in-out infinite;
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Specular highlight + edge distortion
+   Three radial gradients simulate:
+   1. Primary caustic — top-left (main light source)
+   2. Secondary reflection — bottom-right (environment bounce)
+   3. Top-edge shine — linear gradient rim light */
+.liquid-glass::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+        radial-gradient(
+            ellipse 60% 40% at 20% 0%,
+            rgba(255, 255, 255, 0.12) 0%,
+            transparent 70%
+        ),
+        radial-gradient(
+            ellipse 50% 30% at 85% 100%,
+            rgba(255, 255, 255, 0.04) 0%,
+            transparent 60%
+        ),
+        linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.06) 0%,
+            transparent 15%
+        );
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* ==========================================
+   2. SHIMMER ANIMATION
+   Slowly orbits the gradient highlight around
+   the border to give a "living glass" feel.
+   ========================================== */
+@keyframes glass-shimmer {
+    0%, 100% { background-position: 0% 0%; }
+    25%      { background-position: 100% 0%; }
+    50%      { background-position: 100% 100%; }
+    75%      { background-position: 0% 100%; }
+}
+
+/* ==========================================
+   3. VARIANTS
+   ========================================== */
+
+/* Dock — heavier blur, subtle tint */
+.liquid-glass-dock {
+    --glass-blur: 50px;
+    --glass-radius: 22px;
+    --glass-bg: linear-gradient(
+        135deg,
+        rgba(15, 23, 42, 0.45),
+        rgba(15, 23, 42, 0.35)
+    );
+    --glass-shadow:
+        0 12px 44px rgba(0, 0, 0, 0.45),
+        0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+/* Side panel — deeper, more opaque for readability */
+.liquid-glass-panel {
+    --glass-blur: 44px;
+    --glass-radius: 20px;
+    --glass-bg: linear-gradient(
+        180deg,
+        rgba(15, 23, 42, 0.6),
+        rgba(15, 23, 42, 0.7)
+    );
+    --glass-shadow:
+        0 16px 48px rgba(0, 0, 0, 0.4),
+        0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Logo chip — compact, punchy */
+.liquid-glass-chip {
+    --glass-blur: 30px;
+    --glass-radius: 14px;
+    --glass-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.25),
+        0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* Sidebar — floating vertical nav */
+.liquid-glass-sidebar {
+    --glass-blur: 44px;
+    --glass-radius: 20px;
+    --glass-bg: linear-gradient(
+        180deg,
+        rgba(15, 23, 42, 0.5),
+        rgba(15, 23, 42, 0.6)
+    );
+    --glass-shadow:
+        0 12px 40px rgba(0, 0, 0, 0.4),
+        0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Content card — subtle, less dramatic */
+.liquid-glass-card {
+    --glass-blur: 24px;
+    --glass-radius: 16px;
+    --glass-bg: linear-gradient(
+        135deg,
+        rgba(15, 23, 42, 0.5),
+        rgba(15, 23, 42, 0.6)
+    );
+    --glass-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    --glass-edge-hi: rgba(255, 255, 255, 0.1);
+}
+
+/* ==========================================
+   4. INTERACTIVE GLASS BUTTON
+   ========================================== */
+.glass-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid transparent;
+    color: var(--color-surface-400);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.glass-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--color-surface-100);
+    transform: translateY(-3px) scale(1.08);
+    box-shadow:
+        0 6px 20px rgba(0, 0, 0, 0.25),
+        0 0 12px rgba(255, 255, 255, 0.03);
+}
+
+.glass-btn:active {
+    transform: translateY(0) scale(0.95);
+    transition-duration: 0.1s;
+}
+
+/* Active state — primary glow */
+.glass-btn.active {
+    background: rgba(99, 102, 241, 0.12);
+    border-color: rgba(99, 102, 241, 0.2);
+    color: var(--color-primary-400);
+    box-shadow:
+        0 0 24px rgba(99, 102, 241, 0.15),
+        0 0 8px rgba(99, 102, 241, 0.08),
+        inset 0 0 12px rgba(99, 102, 241, 0.06);
+}
+
+.glass-btn.active:hover {
+    background: rgba(99, 102, 241, 0.18);
+    border-color: rgba(99, 102, 241, 0.3);
+    box-shadow:
+        0 0 28px rgba(99, 102, 241, 0.2),
+        0 0 10px rgba(99, 102, 241, 0.1),
+        inset 0 0 14px rgba(99, 102, 241, 0.08);
+}
+
+/* ==========================================
+   5. DOCK TOOLTIP
+   ========================================== */
+.dock-tooltip {
+    position: absolute;
+    bottom: calc(100% + 12px);
+    left: 50%;
+    transform: translateX(-50%) translateY(6px);
+    padding: 5px 12px;
+    background: rgba(15, 23, 42, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--color-surface-200);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.025em;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 100;
+}
+
+/* Arrow */
+.dock-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: rgba(15, 23, 42, 0.92);
+}
+
+/* Reveal on hover */
+.glass-btn:hover > .dock-tooltip,
+.glass-avatar-wrap:hover > .dock-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* ==========================================
+   6. DOCK ACTIVE INDICATOR
+   ========================================== */
+.dock-indicator {
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--color-primary-400);
+    box-shadow: 0 0 10px rgba(129, 140, 248, 0.6);
+}
+
+/* ==========================================
+   7. DOCK DIVIDER
+   ========================================== */
+.dock-divider {
+    width: 1px;
+    height: 28px;
+    background: linear-gradient(
+        180deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.1) 30%,
+        rgba(255, 255, 255, 0.1) 70%,
+        transparent 100%
+    );
+    margin: 0 6px;
+    flex-shrink: 0;
+}
+
+/* ==========================================
+   8. USER AVATAR
+   ========================================== */
+.glass-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    background: rgba(99, 102, 241, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-primary-400);
+    transition: all 0.3s ease;
+    cursor: default;
+}
+
+.glass-avatar-wrap {
+    position: relative;
+}
+
+.glass-avatar-wrap:hover .glass-avatar {
+    background: rgba(99, 102, 241, 0.18);
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+/* ==========================================
+   9. TRANSITIONS
+   ========================================== */
+
+/* Slide from right (chat panel) */
+.slide-right-enter-active,
+.slide-right-leave-active {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.slide-right-enter-from,
+.slide-right-leave-to {
+    opacity: 0;
+    transform: translateX(24px);
+}
+
+/* Slide up (dock entrance) */
+.slide-up-enter-active,
+.slide-up-leave-active {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.slide-up-enter-from,
+.slide-up-leave-to {
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+/* Fade */
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+
+/* ==========================================
+   10. WALLPAPER OVERLAY
+   Three-layer darkening: base tint,
+   directional gradient, and vignette.
+   ========================================== */
+.wallpaper-overlay {
+    background:
+        /* Vignette — darkens corners/edges */
+        radial-gradient(
+            ellipse 80% 80% at 50% 50%,
+            transparent 30%,
+            rgba(2, 6, 23, 0.55) 100%
+        ),
+        /* Vertical gradient — darker at bottom for dock readability */
+        linear-gradient(
+            180deg,
+            rgba(2, 6, 23, 0.4) 0%,
+            rgba(2, 6, 23, 0.5) 60%,
+            rgba(2, 6, 23, 0.7) 100%
+        );
+}
+
+/* ==========================================
+   11. SCROLLBAR
+   ========================================== */
+.glass-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+.glass-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.glass-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+}
+.glass-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Firefox */
+.glass-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}
+
+/* ==========================================
+   12. FALLBACK
+   ========================================== */
+@supports not (backdrop-filter: blur(1px)) {
+    .liquid-glass {
+        background: rgba(15, 23, 42, 0.88);
+    }
+}
