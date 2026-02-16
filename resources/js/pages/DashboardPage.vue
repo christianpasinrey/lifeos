@@ -1,46 +1,46 @@
 <template>
     <div class="p-8">
         <div class="mb-8">
-            <h1 class="text-2xl font-bold text-white">Buenos días, {{ auth.user?.name }} 👋</h1>
-            <p class="text-surface-400 mt-1">{{ formattedDate }}</p>
+            <h1 class="page-title">Buenos días, {{ auth.user?.name }} 👋</h1>
+            <p class="page-subtitle">{{ formattedDate }}</p>
         </div>
 
         <!-- Quick Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div class="liquid-glass liquid-glass-card p-5">
+        <div class="dashboard-grid">
+            <div class="liquid-glass liquid-glass-card glass-card">
                 <div class="flex items-center gap-3 mb-3">
-                    <div class="w-10 h-10 rounded-lg bg-primary-500/10 flex items-center justify-center">
+                    <div class="stat-icon-wrap bg-primary-500/10">
                         <SparklesIcon class="w-5 h-5 text-primary-400" />
                     </div>
-                    <span class="text-sm font-medium text-surface-400">Hábitos hoy</span>
+                    <span class="stat-label">Hábitos hoy</span>
                 </div>
-                <p class="text-2xl font-bold text-white">
+                <p class="stat-value">
                     {{ todayStats.completed }}/{{ todayStats.total }}
                 </p>
-                <div class="mt-2 h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+                <div class="mt-2 progress-track">
                     <div
-                        class="h-full bg-primary-500 rounded-full transition-all duration-500"
+                        class="progress-fill"
                         :style="{ width: todayStats.percentage + '%' }"
                     />
                 </div>
             </div>
 
-            <div class="liquid-glass liquid-glass-card p-5">
+            <div class="liquid-glass liquid-glass-card glass-card">
                 <div class="flex items-center gap-3 mb-3">
-                    <div class="w-10 h-10 rounded-lg bg-accent-500/10 flex items-center justify-center">
+                    <div class="stat-icon-wrap bg-accent-500/10">
                         <FireIcon class="w-5 h-5 text-accent-400" />
                     </div>
-                    <span class="text-sm font-medium text-surface-400">Mejor racha</span>
+                    <span class="stat-label">Mejor racha</span>
                 </div>
-                <p class="text-2xl font-bold text-white">{{ todayStats.bestStreak }} días</p>
+                <p class="stat-value">{{ todayStats.bestStreak }} días</p>
             </div>
 
-            <div class="liquid-glass liquid-glass-card p-5">
+            <div class="liquid-glass liquid-glass-card glass-card">
                 <div class="flex items-center gap-3 mb-3">
-                    <div class="w-10 h-10 rounded-lg bg-accent-500/10 flex items-center justify-center">
+                    <div class="stat-icon-wrap bg-accent-500/10">
                         <ChatBubbleLeftRightIcon class="w-5 h-5 text-accent-400" />
                     </div>
-                    <span class="text-sm font-medium text-surface-400">Coach AI</span>
+                    <span class="stat-label">Coach AI</span>
                 </div>
                 <p class="text-sm text-surface-300">Pregúntale al coach sobre tus hábitos</p>
             </div>
@@ -49,7 +49,7 @@
         <!-- Today's habits preview -->
         <div class="liquid-glass liquid-glass-card p-6">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-semibold text-white">Hábitos de hoy</h2>
+                <h2 class="section-title">Hábitos de hoy</h2>
                 <router-link to="/habits" class="text-sm text-primary-400 hover:text-primary-300 transition-colors">
                     Ver todos →
                 </router-link>
@@ -58,7 +58,7 @@
             <div v-else-if="habits.length === 0" class="text-surface-400 text-sm">
                 No tienes hábitos aún. <router-link to="/habits" class="text-primary-400">Crea el primero</router-link>
             </div>
-            <div v-else class="space-y-2">
+            <div v-else class="habits-list">
                 <div
                     v-for="habit in habits.slice(0, 5)"
                     :key="habit.id"
@@ -81,10 +81,10 @@
                     >
                         #
                     </div>
-                    <span class="flex-1 text-sm" :class="habit.completed_today ? 'text-surface-400 line-through' : 'text-surface-200'">
+                    <span class="flex-1 text-sm" :class="habit.completed_today ? 'habit-name-done' : 'text-surface-200'">
                         {{ habit.name }}
                     </span>
-                    <span v-if="habit.current_streak > 0" class="text-xs text-accent-400">
+                    <span v-if="habit.current_streak > 0" class="habit-streak">
                         🔥 {{ habit.current_streak }}
                     </span>
                 </div>

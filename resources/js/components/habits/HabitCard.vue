@@ -1,13 +1,11 @@
 <template>
-    <div class="flex items-center gap-4 p-4 bg-slate-900/50 border border-white/[0.06] rounded-xl hover:bg-slate-900/60 hover:border-white/[0.1] backdrop-blur-xl transition-all group">
+    <div class="habit-card group">
         <!-- Toggle / Value -->
         <button
             v-if="habit.type === 'boolean'"
             @click="$emit('toggle', habit)"
-            class="w-7 h-7 rounded-lg border-2 flex items-center justify-center transition-all shrink-0"
-            :class="habit.completed_today
-                ? 'bg-accent-500 border-accent-500 scale-110'
-                : 'border-surface-600 hover:border-primary-400 hover:scale-105'"
+            class="habit-checkbox"
+            :class="habit.completed_today ? 'habit-checkbox-done' : 'habit-checkbox-pending'"
         >
             <CheckIcon v-if="habit.completed_today" class="w-4 h-4 text-white" />
         </button>
@@ -25,11 +23,11 @@
             <div class="flex items-center gap-2">
                 <span
                     class="text-sm font-medium transition-colors"
-                    :class="habit.completed_today ? 'text-surface-500 line-through' : 'text-surface-100'"
+                    :class="habit.completed_today ? 'habit-name-done' : 'habit-name'"
                 >
                     {{ habit.name }}
                 </span>
-                <span v-if="habit.current_streak > 0" class="text-xs text-accent-400 font-medium">
+                <span v-if="habit.current_streak > 0" class="habit-streak">
                     🔥 {{ habit.current_streak }}
                 </span>
             </div>
@@ -59,7 +57,7 @@
                 </span>
                 <!-- Progress bar -->
                 <div v-if="habit.progress !== null" class="flex-1 max-w-32">
-                    <div class="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+                    <div class="progress-track">
                         <div
                             class="h-full rounded-full transition-all duration-500"
                             :class="habit.progress >= 100 ? 'bg-accent-500' : 'bg-primary-500'"
@@ -80,14 +78,14 @@
         <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
                 @click="$emit('stats', habit)"
-                class="p-1.5 text-surface-500 hover:text-primary-400 rounded-lg hover:bg-white/[0.06] transition-colors"
+                class="btn-icon"
                 title="Estadísticas"
             >
                 <ChartBarIcon class="w-4 h-4" />
             </button>
             <button
                 @click="$emit('edit', habit)"
-                class="p-1.5 text-surface-500 hover:text-primary-400 rounded-lg hover:bg-white/[0.06] transition-colors"
+                class="btn-icon"
                 title="Editar"
             >
                 <PencilSquareIcon class="w-4 h-4" />

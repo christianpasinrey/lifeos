@@ -1,0 +1,10 @@
+@utility badge-primary {
+    display: inline-flex;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    font-weight: 500;
+    border-radius: 9999px;
+    background-color: oklch(from var(--color-primary-500) l c h / 0.1);
+    color: var(--color-primary-400);
+}

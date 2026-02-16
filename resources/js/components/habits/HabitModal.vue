@@ -1,31 +1,31 @@
 <template>
     <Teleport to="body">
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="modal-overlay">
             <!-- Backdrop -->
-            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="$emit('close')" />
+            <div class="modal-backdrop" @click="$emit('close')" />
 
             <!-- Modal -->
-            <div class="relative liquid-glass liquid-glass-panel w-full max-w-md p-6" style="--glass-radius: 20px;">
-                <h2 class="text-lg font-bold text-white mb-5">
+            <div class="modal-content liquid-glass liquid-glass-panel" style="--glass-radius: 20px;">
+                <h2 class="section-title mb-5">
                     {{ habit ? 'Editar hábito' : 'Nuevo hábito' }}
                 </h2>
 
-                <form @submit.prevent="handleSubmit" class="space-y-4">
+                <form @submit.prevent="handleSubmit" class="form-group">
                     <!-- Name -->
                     <div>
-                        <label class="block text-sm font-medium text-surface-300 mb-1.5">Nombre</label>
+                        <label class="form-label">Nombre</label>
                         <input
                             v-model="form.name"
                             type="text"
                             required
-                            class="w-full px-3.5 py-2.5 bg-white/[0.05] border border-white/[0.08] rounded-lg text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent backdrop-blur-sm"
+                            class="form-input"
                             placeholder="Ej: Meditar, Leer, Ejercicio..."
                         />
                     </div>
 
                     <!-- Type -->
                     <div>
-                        <label class="block text-sm font-medium text-surface-300 mb-1.5">Tipo</label>
+                        <label class="form-label">Tipo</label>
                         <div class="flex gap-2">
                             <button
                                 type="button"
@@ -53,22 +53,22 @@
                     <!-- Numeric fields -->
                     <div v-if="form.type === 'numeric'" class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-sm font-medium text-surface-300 mb-1.5">Unidad</label>
+                            <label class="form-label">Unidad</label>
                             <input
                                 v-model="form.unit"
                                 type="text"
-                                class="w-full px-3 py-2 bg-white/[0.05] border border-white/[0.08] rounded-lg text-surface-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 backdrop-blur-sm"
+                                class="form-input-sm"
                                 placeholder="pasos, litros, min..."
                             />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-surface-300 mb-1.5">Objetivo</label>
+                            <label class="form-label">Objetivo</label>
                             <input
                                 v-model.number="form.target_value"
                                 type="number"
                                 step="any"
                                 min="0"
-                                class="w-full px-3 py-2 bg-white/[0.05] border border-white/[0.08] rounded-lg text-surface-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 backdrop-blur-sm"
+                                class="form-input-sm"
                                 placeholder="10000"
                             />
                         </div>
@@ -76,7 +76,7 @@
 
                     <!-- Frequency -->
                     <div>
-                        <label class="block text-sm font-medium text-surface-300 mb-1.5">Frecuencia</label>
+                        <label class="form-label">Frecuencia</label>
                         <div class="flex gap-2">
                             <button
                                 v-for="freq in frequencies"
@@ -95,7 +95,7 @@
 
                     <!-- Day selector -->
                     <div v-if="form.frequency !== 'daily'">
-                        <label class="block text-sm font-medium text-surface-300 mb-1.5">Días</label>
+                        <label class="form-label">Días</label>
                         <div class="flex gap-1.5">
                             <button
                                 v-for="day in days"
@@ -114,7 +114,7 @@
 
                     <!-- Color picker -->
                     <div>
-                        <label class="block text-sm font-medium text-surface-300 mb-1.5">Color</label>
+                        <label class="form-label">Color</label>
                         <div class="flex gap-2">
                             <button
                                 v-for="color in colors"
@@ -133,14 +133,14 @@
                         <button
                             type="button"
                             @click="$emit('close')"
-                            class="flex-1 py-2.5 px-4 border border-white/[0.08] text-surface-300 font-medium rounded-lg hover:bg-white/[0.06] transition-colors"
+                            class="flex-1 btn-secondary"
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
                             :disabled="saving"
-                            class="flex-1 py-2.5 px-4 bg-primary-600/80 hover:bg-primary-500/80 disabled:opacity-50 text-white font-medium rounded-lg transition-colors backdrop-blur-sm"
+                            class="flex-1 btn-primary"
                         >
                             {{ saving ? 'Guardando...' : (habit ? 'Guardar' : 'Crear') }}
                         </button>

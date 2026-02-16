@@ -6,7 +6,7 @@
     <title>lifeOS</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-gray-950 text-gray-100 antialiased">
+<body class="body-base">
     <div id="app"></div>
 </body>
 </html>

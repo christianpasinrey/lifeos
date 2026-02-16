@@ -1,0 +1,24 @@
+@utility admin-table {
+    width: 100%;
+}
+
+@utility table-th {
+    text-align: left;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    font-weight: 500;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+@utility table-td {
+    padding: 1rem 1.25rem;
+}
+
+@utility table-row {
+    &:hover {
+        background-color: oklch(from var(--color-surface-800) l c h / 0.5);
+    }
+}

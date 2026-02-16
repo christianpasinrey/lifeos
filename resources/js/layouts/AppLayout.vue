@@ -1,7 +1,7 @@
 <template>
     <div class="relative min-h-screen">
         <!-- Wallpaper -->
-        <div class="fixed inset-0 z-0">
+        <div class="layout-wallpaper">
             <img
                 src="/wallpaper.png"
                 alt=""
@@ -12,28 +12,24 @@
         </div>
 
         <!-- Layout shell -->
-        <div class="relative z-10 flex h-screen p-4 gap-4">
+        <div class="layout-shell">
             <!-- Floating Sidebar -->
-            <aside class="w-64 shrink-0 liquid-glass liquid-glass-sidebar flex flex-col">
+            <aside class="sidebar liquid-glass liquid-glass-sidebar">
                 <!-- Logo -->
-                <div class="p-6">
+                <div class="sidebar-brand">
                     <h1 class="text-xl font-bold text-white tracking-tight">
                         <span class="text-primary-400">life</span>OS
                     </h1>
                 </div>
 
                 <!-- Navigation -->
-                <nav class="flex-1 px-3 space-y-1">
+                <nav class="sidebar-nav">
                     <router-link
                         v-for="item in navItems"
                         :key="item.to"
                         :to="item.to"
-                        class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
-                        :class="[
-                            isActive(item)
-                                ? 'bg-primary-500/15 text-primary-400 shadow-[inset_0_0_12px_rgba(99,102,241,0.06)]'
-                                : 'text-surface-400 hover:bg-white/[0.06] hover:text-surface-200'
-                        ]"
+                        class="nav-link"
+                        :class="[isActive(item) ? 'nav-link-active' : '']"
                     >
                         <component :is="item.icon" class="w-5 h-5" />
                         {{ item.label }}
@@ -44,10 +40,8 @@
                 <div class="px-3 pb-2">
                     <button
                         @click="showChat = !showChat"
-                        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200"
-                        :class="showChat
-                            ? 'bg-primary-500/15 text-primary-400 shadow-[inset_0_0_12px_rgba(99,102,241,0.06)]'
-                            : 'text-surface-400 hover:bg-white/[0.06] hover:text-surface-200'"
+                        class="w-full nav-link"
+                        :class="showChat ? 'nav-link-active' : ''"
                     >
                         <ChatBubbleLeftRightIcon class="w-5 h-5" />
                         Coach IA
@@ -55,7 +49,7 @@
                 </div>
 
                 <!-- User -->
-                <div class="p-4 border-t border-white/[0.06]">
+                <div class="sidebar-footer">
                     <div class="flex items-center gap-3">
                         <div class="glass-avatar">
                             {{ auth.user?.name?.charAt(0) }}
@@ -77,7 +71,7 @@
             </aside>
 
             <!-- Main content -->
-            <main class="flex-1 overflow-y-auto glass-scroll rounded-2xl">
+            <main class="main-content glass-scroll">
                 <router-view />
             </main>
 
@@ -85,7 +79,7 @@
             <Transition name="slide-right">
                 <aside
                     v-if="showChat"
-                    class="w-96 shrink-0 liquid-glass liquid-glass-panel flex flex-col"
+                    class="chat-aside liquid-glass liquid-glass-panel"
                 >
                     <ChatPanel @close="showChat = false" />
                 </aside>

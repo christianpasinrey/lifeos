@@ -1,22 +1,22 @@
 <template>
     <div class="overflow-x-auto">
-        <div class="inline-grid grid-flow-col gap-1" style="grid-template-rows: repeat(7, 1fr)">
+        <div class="heatmap-grid" style="grid-template-rows: repeat(7, 1fr)">
             <div
                 v-for="day in calendarDays"
                 :key="day.date"
-                class="w-3 h-3 rounded-sm transition-colors"
+                class="heatmap-cell"
                 :style="{ backgroundColor: day.color }"
                 :title="day.date + (day.completed ? ' ✓' : '')"
             />
         </div>
-        <div class="flex items-center gap-2 mt-3 text-xs text-surface-500">
+        <div class="heatmap-legend">
             <span>Menos</span>
             <div class="flex gap-0.5">
-                <div class="w-3 h-3 rounded-sm bg-surface-800" />
-                <div class="w-3 h-3 rounded-sm" :style="{ backgroundColor: baseColor + '30' }" />
-                <div class="w-3 h-3 rounded-sm" :style="{ backgroundColor: baseColor + '60' }" />
-                <div class="w-3 h-3 rounded-sm" :style="{ backgroundColor: baseColor + '90' }" />
-                <div class="w-3 h-3 rounded-sm" :style="{ backgroundColor: baseColor }" />
+                <div class="heatmap-cell bg-surface-800" />
+                <div class="heatmap-cell" :style="{ backgroundColor: baseColor + '30' }" />
+                <div class="heatmap-cell" :style="{ backgroundColor: baseColor + '60' }" />
+                <div class="heatmap-cell" :style="{ backgroundColor: baseColor + '90' }" />
+                <div class="heatmap-cell" :style="{ backgroundColor: baseColor }" />
             </div>
             <span>Más</span>
         </div>

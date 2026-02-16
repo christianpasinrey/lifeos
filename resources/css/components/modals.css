@@ -1,0 +1,23 @@
+@utility modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+@utility modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+@utility modal-content {
+    position: relative;
+    width: 100%;
+    max-width: 28rem;
+    padding: 1.5rem;
+}

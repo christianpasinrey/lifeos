@@ -1,0 +1,84 @@
+@utility habits-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+@utility habits-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+@utility habit-checkbox {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 0.5rem;
+    border-width: 2px;
+    border-style: solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition-property: all;
+    transition-duration: 150ms;
+    flex-shrink: 0;
+}
+
+@utility habit-checkbox-done {
+    background-color: var(--color-accent-500);
+    border-color: var(--color-accent-500);
+    transform: scale(1.1);
+}
+
+@utility habit-checkbox-pending {
+    border-color: var(--color-surface-600);
+
+    &:hover {
+        border-color: var(--color-primary-400);
+        transform: scale(1.05);
+    }
+}
+
+@utility habit-name {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 500;
+    color: var(--color-surface-100);
+}
+
+@utility habit-name-done {
+    color: var(--color-surface-500);
+    text-decoration: line-through;
+}
+
+@utility habit-streak {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: var(--color-accent-400);
+    font-weight: 500;
+}
+
+@utility heatmap-grid {
+    display: inline-grid;
+    grid-auto-flow: column;
+    gap: 0.25rem;
+}
+
+@utility heatmap-cell {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 0.125rem;
+    transition-property: background-color;
+    transition-duration: 150ms;
+}
+
+@utility heatmap-legend {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: var(--color-surface-500);
+}

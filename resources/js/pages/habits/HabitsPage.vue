@@ -1,15 +1,15 @@
 <template>
     <div class="p-8">
-        <div class="flex items-center justify-between mb-6">
+        <div class="habits-header">
             <div>
-                <h1 class="text-2xl font-bold text-white">Hábitos</h1>
-                <p class="text-surface-400 text-sm mt-1">
+                <h1 class="page-title">Hábitos</h1>
+                <p class="page-subtitle">
                     {{ completedCount }}/{{ habits.length }} completados hoy
                 </p>
             </div>
             <button
                 @click="showModal = true; editingHabit = null"
-                class="flex items-center gap-2 px-4 py-2.5 bg-primary-600 hover:bg-primary-500 text-white text-sm font-medium rounded-lg transition-colors"
+                class="btn-add"
             >
                 <PlusIcon class="w-4 h-4" />
                 Nuevo hábito
@@ -18,9 +18,9 @@
 
         <!-- Progress bar -->
         <div class="mb-6">
-            <div class="h-2 bg-white/[0.06] rounded-full overflow-hidden">
+            <div class="progress-lg">
                 <div
-                    class="h-full bg-gradient-to-r from-primary-500 to-accent-500 rounded-full transition-all duration-700"
+                    class="progress-fill-gradient"
                     :style="{ width: progressPercentage + '%' }"
                 />
             </div>
@@ -36,14 +36,14 @@
             <p class="text-surface-500 mb-6">Crea tu primer hábito o dile al coach qué quieres mejorar</p>
             <button
                 @click="showModal = true"
-                class="px-4 py-2 bg-primary-600 hover:bg-primary-500 text-white text-sm font-medium rounded-lg transition-colors"
+                class="btn-add"
             >
                 Crear primer hábito
             </button>
         </div>
 
         <!-- Habit list -->
-        <div v-else class="space-y-2">
+        <div v-else class="habits-list">
             <HabitCard
                 v-for="habit in habits"
                 :key="habit.id"

@@ -1,0 +1,20 @@
+@utility page-title {
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 700;
+    color: white;
+}
+
+@utility page-subtitle {
+    color: var(--color-surface-400);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    margin-top: 0.25rem;
+}
+
+@utility section-title {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    font-weight: 600;
+    color: white;
+}

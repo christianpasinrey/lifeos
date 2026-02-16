@@ -1,5 +1,29 @@
 @import "tailwindcss";
+@source "../../app/Modules/Admin/Views/**/*.blade.php";
 @import "./glass.css";
+@import "./base.css";
+@import "./typography.css";
+
+/* Components */
+@import "./components/buttons.css";
+@import "./components/forms.css";
+@import "./components/cards.css";
+@import "./components/badges.css";
+@import "./components/modals.css";
+@import "./components/nav.css";
+@import "./components/tables.css";
+@import "./components/progress.css";
+@import "./components/toggles.css";
+@import "./components/chat.css";
+
+/* Layouts */
+@import "./layouts/app-layout.css";
+@import "./layouts/admin-layout.css";
+
+/* Pages */
+@import "./pages/login.css";
+@import "./pages/dashboard.css";
+@import "./pages/habits.css";
 
 @theme {
     --font-sans: 'Inter', system-ui, sans-serif;
