@@ -7,7 +7,7 @@
 
         <!-- Quick Stats -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div class="bg-surface-900 border border-surface-800 rounded-xl p-5">
+            <div class="liquid-glass liquid-glass-card p-5">
                 <div class="flex items-center gap-3 mb-3">
                     <div class="w-10 h-10 rounded-lg bg-primary-500/10 flex items-center justify-center">
                         <SparklesIcon class="w-5 h-5 text-primary-400" />
@@ -17,7 +17,7 @@
                 <p class="text-2xl font-bold text-white">
                     {{ todayStats.completed }}/{{ todayStats.total }}
                 </p>
-                <div class="mt-2 h-1.5 bg-surface-800 rounded-full overflow-hidden">
+                <div class="mt-2 h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
                     <div
                         class="h-full bg-primary-500 rounded-full transition-all duration-500"
                         :style="{ width: todayStats.percentage + '%' }"
@@ -25,7 +25,7 @@
                 </div>
             </div>
 
-            <div class="bg-surface-900 border border-surface-800 rounded-xl p-5">
+            <div class="liquid-glass liquid-glass-card p-5">
                 <div class="flex items-center gap-3 mb-3">
                     <div class="w-10 h-10 rounded-lg bg-accent-500/10 flex items-center justify-center">
                         <FireIcon class="w-5 h-5 text-accent-400" />
@@ -35,7 +35,7 @@
                 <p class="text-2xl font-bold text-white">{{ todayStats.bestStreak }} días</p>
             </div>
 
-            <div class="bg-surface-900 border border-surface-800 rounded-xl p-5">
+            <div class="liquid-glass liquid-glass-card p-5">
                 <div class="flex items-center gap-3 mb-3">
                     <div class="w-10 h-10 rounded-lg bg-accent-500/10 flex items-center justify-center">
                         <ChatBubbleLeftRightIcon class="w-5 h-5 text-accent-400" />
@@ -47,7 +47,7 @@
         </div>
 
         <!-- Today's habits preview -->
-        <div class="bg-surface-900 border border-surface-800 rounded-xl p-6">
+        <div class="liquid-glass liquid-glass-card p-6">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="text-lg font-semibold text-white">Hábitos de hoy</h2>
                 <router-link to="/habits" class="text-sm text-primary-400 hover:text-primary-300 transition-colors">
@@ -62,7 +62,7 @@
                 <div
                     v-for="habit in habits.slice(0, 5)"
                     :key="habit.id"
-                    class="flex items-center gap-3 p-3 rounded-lg hover:bg-surface-800/50 transition-colors"
+                    class="flex items-center gap-3 p-3 rounded-lg hover:bg-white/[0.06] transition-colors"
                 >
                     <button
                         v-if="habit.type === 'boolean'"

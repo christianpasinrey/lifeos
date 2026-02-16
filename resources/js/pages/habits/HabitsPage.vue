@@ -18,7 +18,7 @@
 
         <!-- Progress bar -->
         <div class="mb-6">
-            <div class="h-2 bg-surface-800 rounded-full overflow-hidden">
+            <div class="h-2 bg-white/[0.06] rounded-full overflow-hidden">
                 <div
                     class="h-full bg-gradient-to-r from-primary-500 to-accent-500 rounded-full transition-all duration-700"
                     :style="{ width: progressPercentage + '%' }"

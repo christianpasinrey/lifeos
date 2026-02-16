@@ -2,10 +2,10 @@
     <Teleport to="body">
         <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
             <!-- Backdrop -->
-            <div class="absolute inset-0 bg-black/60" @click="$emit('close')" />
+            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="$emit('close')" />
 
             <!-- Modal -->
-            <div class="relative bg-surface-900 border border-surface-700 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+            <div class="relative liquid-glass liquid-glass-panel w-full max-w-md p-6" style="--glass-radius: 20px;">
                 <h2 class="text-lg font-bold text-white mb-5">
                     {{ habit ? 'Editar hábito' : 'Nuevo hábito' }}
                 </h2>
@@ -18,7 +18,7 @@
                             v-model="form.name"
                             type="text"
                             required
-                            class="w-full px-3.5 py-2.5 bg-surface-800 border border-surface-700 rounded-lg text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            class="w-full px-3.5 py-2.5 bg-white/[0.05] border border-white/[0.08] rounded-lg text-surface-100 focus:outline-none focus:ring-2 focus:ring-primary-500/50 focus:border-transparent backdrop-blur-sm"
                             placeholder="Ej: Meditar, Leer, Ejercicio..."
                         />
                     </div>
@@ -32,8 +32,8 @@
                                 @click="form.type = 'boolean'"
                                 class="flex-1 py-2 px-3 rounded-lg text-sm font-medium border transition-colors"
                                 :class="form.type === 'boolean'
-                                    ? 'bg-primary-500/10 border-primary-500 text-primary-400'
-                                    : 'border-surface-700 text-surface-400 hover:border-surface-600'"
+                                    ? 'bg-primary-500/10 border-primary-500/40 text-primary-400'
+                                    : 'border-white/[0.08] text-surface-400 hover:border-white/[0.15]'"
                             >
                                 ✓ Sí/No
                             </button>
@@ -42,8 +42,8 @@
                                 @click="form.type = 'numeric'"
                                 class="flex-1 py-2 px-3 rounded-lg text-sm font-medium border transition-colors"
                                 :class="form.type === 'numeric'
-                                    ? 'bg-primary-500/10 border-primary-500 text-primary-400'
-                                    : 'border-surface-700 text-surface-400 hover:border-surface-600'"
+                                    ? 'bg-primary-500/10 border-primary-500/40 text-primary-400'
+                                    : 'border-white/[0.08] text-surface-400 hover:border-white/[0.15]'"
                             >
                                 # Numérico
                             </button>
@@ -57,7 +57,7 @@
                             <input
                                 v-model="form.unit"
                                 type="text"
-                                class="w-full px-3 py-2 bg-surface-800 border border-surface-700 rounded-lg text-surface-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                class="w-full px-3 py-2 bg-white/[0.05] border border-white/[0.08] rounded-lg text-surface-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 backdrop-blur-sm"
                                 placeholder="pasos, litros, min..."
                             />
                         </div>
@@ -68,7 +68,7 @@
                                 type="number"
                                 step="any"
                                 min="0"
-                                class="w-full px-3 py-2 bg-surface-800 border border-surface-700 rounded-lg text-surface-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                                class="w-full px-3 py-2 bg-white/[0.05] border border-white/[0.08] rounded-lg text-surface-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 backdrop-blur-sm"
                                 placeholder="10000"
                             />
                         </div>
@@ -85,8 +85,8 @@
                                 @click="form.frequency = freq.value"
                                 class="flex-1 py-2 px-2 rounded-lg text-xs font-medium border transition-colors"
                                 :class="form.frequency === freq.value
-                                    ? 'bg-primary-500/10 border-primary-500 text-primary-400'
-                                    : 'border-surface-700 text-surface-400 hover:border-surface-600'"
+                                    ? 'bg-primary-500/10 border-primary-500/40 text-primary-400'
+                                    : 'border-white/[0.08] text-surface-400 hover:border-white/[0.15]'"
                             >
                                 {{ freq.label }}
                             </button>
@@ -104,8 +104,8 @@
                                 @click="toggleDay(day.value)"
                                 class="w-10 h-10 rounded-lg text-xs font-medium border transition-all"
                                 :class="form.target_days.includes(day.value)
-                                    ? 'bg-primary-500/20 border-primary-500 text-primary-300'
-                                    : 'border-surface-700 text-surface-500 hover:border-surface-600'"
+                                    ? 'bg-primary-500/20 border-primary-500/40 text-primary-300'
+                                    : 'border-white/[0.08] text-surface-500 hover:border-white/[0.15]'"
                             >
                                 {{ day.label }}
                             </button>
@@ -123,7 +123,7 @@
                                 @click="form.color = color"
                                 class="w-8 h-8 rounded-full transition-all"
                                 :style="{ backgroundColor: color }"
-                                :class="form.color === color ? 'ring-2 ring-white ring-offset-2 ring-offset-surface-900 scale-110' : 'hover:scale-105'"
+                                :class="form.color === color ? 'ring-2 ring-white/80 ring-offset-2 ring-offset-transparent scale-110' : 'hover:scale-105'"
                             />
                         </div>
                     </div>
@@ -133,14 +133,14 @@
                         <button
                             type="button"
                             @click="$emit('close')"
-                            class="flex-1 py-2.5 px-4 border border-surface-700 text-surface-300 font-medium rounded-lg hover:bg-surface-800 transition-colors"
+                            class="flex-1 py-2.5 px-4 border border-white/[0.08] text-surface-300 font-medium rounded-lg hover:bg-white/[0.06] transition-colors"
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
                             :disabled="saving"
-                            class="flex-1 py-2.5 px-4 bg-primary-600 hover:bg-primary-500 disabled:opacity-50 text-white font-medium rounded-lg transition-colors"
+                            class="flex-1 py-2.5 px-4 bg-primary-600/80 hover:bg-primary-500/80 disabled:opacity-50 text-white font-medium rounded-lg transition-colors backdrop-blur-sm"
                         >
                             {{ saving ? 'Guardando...' : (habit ? 'Guardar' : 'Crear') }}
                         </button>

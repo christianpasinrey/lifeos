@@ -1,5 +1,5 @@
 <template>
-    <div class="flex items-center gap-4 p-4 bg-surface-900 border border-surface-800 rounded-xl hover:border-surface-700 transition-all group">
+    <div class="flex items-center gap-4 p-4 bg-slate-900/50 border border-white/[0.06] rounded-xl hover:bg-slate-900/60 hover:border-white/[0.1] backdrop-blur-xl transition-all group">
         <!-- Toggle / Value -->
         <button
             v-if="habit.type === 'boolean'"
@@ -43,7 +43,7 @@
                     type="number"
                     step="any"
                     min="0"
-                    class="w-20 px-2 py-1 bg-surface-800 border border-surface-600 rounded text-sm text-surface-100 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    class="w-20 px-2 py-1 bg-white/[0.05] border border-white/[0.08] rounded text-sm text-surface-100 focus:outline-none focus:ring-1 focus:ring-primary-500"
                     @keydown.enter="saveValue"
                     @blur="saveValue"
                 />
@@ -59,7 +59,7 @@
                 </span>
                 <!-- Progress bar -->
                 <div v-if="habit.progress !== null" class="flex-1 max-w-32">
-                    <div class="h-1.5 bg-surface-800 rounded-full overflow-hidden">
+                    <div class="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
                         <div
                             class="h-full rounded-full transition-all duration-500"
                             :class="habit.progress >= 100 ? 'bg-accent-500' : 'bg-primary-500'"
@@ -80,14 +80,14 @@
         <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
                 @click="$emit('stats', habit)"
-                class="p-1.5 text-surface-500 hover:text-primary-400 rounded-lg hover:bg-surface-800 transition-colors"
+                class="p-1.5 text-surface-500 hover:text-primary-400 rounded-lg hover:bg-white/[0.06] transition-colors"
                 title="Estadísticas"
             >
                 <ChartBarIcon class="w-4 h-4" />
             </button>
             <button
                 @click="$emit('edit', habit)"
-                class="p-1.5 text-surface-500 hover:text-primary-400 rounded-lg hover:bg-surface-800 transition-colors"
+                class="p-1.5 text-surface-500 hover:text-primary-400 rounded-lg hover:bg-white/[0.06] transition-colors"
                 title="Editar"
             >
                 <PencilSquareIcon class="w-4 h-4" />
