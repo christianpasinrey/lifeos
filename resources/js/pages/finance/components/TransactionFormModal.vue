@@ -144,7 +144,7 @@ function resetForm() {
         form.description = tx.description
         form.category_id = tx.category ? String(tx.category.id) : ''
         form.account_id = tx.account ? String(tx.account.id) : (tx.account_id ? String(tx.account_id) : '')
-        form.date = tx.date
+        form.date = tx.date ? tx.date.slice(0, 10) : ''
         form.notes = tx.notes ?? ''
 
         if (tx.lines && tx.lines.length > 0) {

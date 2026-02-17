@@ -6,7 +6,7 @@
             class="form-input flex items-center justify-between gap-2 text-left cursor-pointer"
             @click="toggle"
         >
-            <span :class="modelValue ? 'text-surface-100' : 'text-surface-500'">
+            <span :class="hasValue ? 'text-surface-100' : 'text-surface-500'">
                 {{ selectedLabel || placeholder }}
             </span>
             <ChevronUpDownIcon class="w-4 h-4 text-surface-400 shrink-0" />
@@ -24,15 +24,17 @@
             >
                 <ul
                     v-if="open"
+                    ref="dropdown"
                     :style="dropdownStyle"
                     class="fixed z-[100] w-max py-1 rounded-lg border border-white/10
                            bg-slate-900/90 backdrop-blur-xl shadow-xl overflow-auto max-h-52"
+                    @mousedown.stop
                 >
                     <li
                         v-for="opt in options"
-                        :key="opt.value"
+                        :key="String(opt.value)"
                         class="px-3 py-2 text-sm cursor-pointer transition-colors"
-                        :class="opt.value === modelValue
+                        :class="isSelected(opt.value)
                             ? 'bg-primary-500/20 text-primary-300'
                             : 'text-surface-300 hover:bg-white/5'"
                         @click="select(opt.value)"
@@ -59,10 +61,21 @@ const emit = defineEmits(['update:modelValue'])
 
 const open = ref(false)
 const wrapper = ref(null)
+const dropdown = ref(null)
 const dropdownStyle = ref({})
 
+// Use loose equality (==) to handle string/number mismatches ("5" == 5)
+function isSelected(optValue) {
+    // eslint-disable-next-line eqeqeq
+    return optValue == props.modelValue
+}
+
+const hasValue = computed(() => {
+    return props.modelValue !== null && props.modelValue !== undefined && props.modelValue !== ''
+})
+
 const selectedLabel = computed(() => {
-    const found = props.options.find(o => o.value === props.modelValue)
+    const found = props.options.find(o => isSelected(o.value))
     return found?.label ?? ''
 })
 
@@ -98,9 +111,10 @@ function select(value) {
 }
 
 function onClickOutside(e) {
-    if (wrapper.value && !wrapper.value.contains(e.target)) {
-        open.value = false
-    }
+    if (!wrapper.value) return
+    if (wrapper.value.contains(e.target)) return
+    if (dropdown.value && dropdown.value.contains(e.target)) return
+    open.value = false
 }
 
 function onScroll() {
