@@ -31,5 +31,24 @@ registerModule({
             emit: 'show-analysis',
             order: 10,
         },
+        {
+            slot: 'finance-page-toolbar',
+            id: 'auto-categorize-finance',
+            component: defineAsyncComponent(() => import('@/components/finance/AutoCategorizeButton.vue')),
+            order: 10,
+        },
+        {
+            slot: 'finance-page-toolbar',
+            label: 'Analizar con IA',
+            icon: markRaw(SparklesIcon),
+            emit: 'open-coach-chat',
+            order: 20,
+        },
+        {
+            slot: 'transactions-toolbar',
+            id: 'auto-categorize-transactions',
+            component: defineAsyncComponent(() => import('@/components/finance/AutoCategorizeButton.vue')),
+            order: 10,
+        },
     ],
 })

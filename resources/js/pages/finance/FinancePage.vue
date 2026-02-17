@@ -19,22 +19,17 @@
                 >
                     Gestionar categorías
                 </button>
-                <button
-                    v-if="isActive('ai_coach')"
-                    class="ai-chip"
-                    :disabled="autoCategorize.isPending.value"
-                    @click="runAutoCategorize"
-                >
-                    <SparklesIcon class="w-4 h-4" />
-                    {{ autoCategorize.isPending.value ? 'Analizando...' : 'Auto-clasificar' }}
-                </button>
-                <button
-                    v-if="isActive('ai_coach')"
-                    class="px-4 py-2 rounded-xl text-sm font-medium bg-primary-500/20 text-primary-100 hover:bg-primary-500/30 transition"
-                    @click="openCoach"
-                >
-                    Analizar con IA
-                </button>
+                <template v-for="action in toolbarActions" :key="action.id || action.label">
+                    <component v-if="action.component" :is="action.component" :transactions="transactions" />
+                    <button
+                        v-else
+                        class="px-4 py-2 rounded-xl text-sm font-medium bg-primary-500/20 text-primary-100 hover:bg-primary-500/30 transition flex items-center gap-2"
+                        @click="onSlotAction(action)"
+                    >
+                        <component v-if="action.icon" :is="action.icon" class="w-4 h-4" />
+                        {{ action.label }}
+                    </button>
+                </template>
             </div>
         </header>
 
@@ -141,19 +136,10 @@
                                     </span>
                                 </p>
                                 <p v-if="tx.notes" class="text-xs text-surface-500 mt-1">{{ tx.notes }}</p>
-                                <!-- Attachments -->
-                                <div v-if="isActive('storage') && tx.media?.length" class="flex flex-wrap gap-2 mt-2">
-                                    <span
-                                        v-for="m in tx.media"
-                                        :key="m.id"
-                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.06] border border-white/10 text-xs text-surface-300"
-                                    >
-                                        <PaperClipIcon class="w-3.5 h-3.5 text-primary-400" />
-                                        <a :href="`/api/storage/transactions/${tx.id}/media/${m.id}/download`" class="hover:text-white transition truncate max-w-[120px]">{{ m.file_name }}</a>
-                                        <span class="text-surface-500">{{ formatFileSize(m.size) }}</span>
-                                        <button @click="removeAttachment(tx, m)" class="text-danger-400 hover:text-danger-300 ml-1">&times;</button>
-                                    </span>
-                                </div>
+                                <!-- Row info slots (e.g. attachments) -->
+                                <template v-for="slot in rowInfoSlots" :key="slot.id">
+                                    <component :is="slot.component" :transaction="tx" />
+                                </template>
                             </div>
                         </div>
                         <div class="flex flex-col items-start gap-2 text-right md:items-end">
@@ -164,10 +150,10 @@
                                 {{ tx.type === 'income' ? '+' : '-' }}{{ formatCurrency(tx.amount) }}
                             </p>
                             <div class="flex gap-2">
-                                <label v-if="isActive('storage')" class="text-xs font-medium text-primary-300 hover:text-primary-200 transition cursor-pointer">
-                                    <PaperClipIcon class="w-3.5 h-3.5 inline" />
-                                    <input type="file" class="hidden" @change="attachFile(tx, $event)" />
-                                </label>
+                                <!-- Row action slots (e.g. attach button) -->
+                                <template v-for="slot in rowActionSlots" :key="slot.id">
+                                    <component :is="slot.component" :transaction="tx" />
+                                </template>
                                 <button class="text-xs font-medium text-surface-400 hover:text-white transition" @click="openTransactionForm(tx)">Editar</button>
                                 <button class="text-xs font-medium text-danger-400 hover:text-danger-500 transition" @click="deleteTx(tx)">Eliminar</button>
                             </div>
@@ -293,94 +279,6 @@
                 </div>
             </div>
         </Teleport>
-
-        <!-- Auto-categorize modal -->
-        <Teleport to="body">
-            <div v-if="showCategorizeModal" class="modal-overlay" @mousedown.self="closeCategorizeModal">
-                <div class="modal-backdrop" />
-                <div class="modal-content liquid-glass liquid-glass-panel max-w-2xl">
-                    <div class="flex items-center justify-between mb-5">
-                        <div>
-                            <h2 class="section-title">Auto-clasificar transacciones</h2>
-                            <p class="text-sm text-surface-400 mt-1">Revisa las propuestas y confirma los cambios</p>
-                        </div>
-                        <button class="btn-close" @click="closeCategorizeModal">
-                            <XMarkIcon class="w-5 h-5" />
-                        </button>
-                    </div>
-
-                    <div v-if="categorizeProposals.length === 0" class="text-center py-8 text-surface-500">
-                        No hay propuestas disponibles.
-                    </div>
-
-                    <ul v-else class="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
-                        <li
-                            v-for="(p, i) in categorizeProposals"
-                            :key="p.transaction_id"
-                            class="rounded-2xl border border-white/5 bg-white/[0.02] p-4"
-                        >
-                            <div class="flex items-start gap-3">
-                                <input
-                                    v-model="p.selected"
-                                    type="checkbox"
-                                    class="mt-1 accent-primary-500"
-                                />
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center justify-between gap-2">
-                                        <p class="text-sm font-medium text-white truncate">{{ p.transaction_description }}</p>
-                                        <p
-                                            class="text-sm font-semibold whitespace-nowrap"
-                                            :class="p.transaction_type === 'income' ? 'text-accent-400' : 'text-danger-400'"
-                                        >
-                                            {{ p.transaction_type === 'income' ? '+' : '-' }}{{ formatCurrency(p.transaction_amount) }}
-                                        </p>
-                                    </div>
-                                    <p class="text-xs text-surface-500 mt-0.5">{{ p.transaction_date }}</p>
-                                    <div class="flex items-center gap-2 mt-2">
-                                        <ArrowRightIcon class="w-3.5 h-3.5 text-primary-400 shrink-0" />
-                                        <span
-                                            v-if="p.category_id"
-                                            class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-medium"
-                                            :style="{ background: (p.category_color || '#6366f1') + '22', color: p.category_color || '#6366f1' }"
-                                        >
-                                            <span class="w-1.5 h-1.5 rounded-full" :style="{ background: p.category_color || '#6366f1' }" />
-                                            {{ p.category_name }}
-                                        </span>
-                                        <span
-                                            v-else-if="p.new_category"
-                                            class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-medium border border-dashed border-primary-400/40"
-                                            :style="{ background: (p.new_category.color || '#6366f1') + '22', color: p.new_category.color || '#6366f1' }"
-                                        >
-                                            <PlusIcon class="w-3 h-3" />
-                                            {{ p.new_category.name }}
-                                            <span class="text-surface-500 font-normal">(nueva)</span>
-                                        </span>
-                                    </div>
-                                    <p class="text-xs text-surface-500 mt-1 italic">{{ p.reason }}</p>
-                                </div>
-                            </div>
-                        </li>
-                    </ul>
-
-                    <div class="flex items-center justify-between mt-5 pt-4 border-t border-white/5">
-                        <div class="flex items-center gap-3">
-                            <button class="text-xs text-primary-300 hover:text-primary-200" @click="toggleAllProposals(true)">Seleccionar todo</button>
-                            <button class="text-xs text-surface-400 hover:text-surface-300" @click="toggleAllProposals(false)">Deseleccionar</button>
-                        </div>
-                        <div class="flex gap-3">
-                            <button class="btn-secondary" @click="closeCategorizeModal">Cancelar</button>
-                            <button
-                                class="btn-primary"
-                                :disabled="applyCategories.isPending.value || selectedProposalsCount === 0"
-                                @click="confirmCategorize"
-                            >
-                                Aplicar {{ selectedProposalsCount }} cambios
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </Teleport>
     </div>
 </template>
 
@@ -390,12 +288,8 @@ import { useModuleRegistry } from '@/modules/registry'
 import {
     ArrowDownCircleIcon,
     ArrowUpCircleIcon,
-    ArrowRightIcon,
     WalletIcon,
     PlusIcon,
-    PaperClipIcon,
-    SparklesIcon,
-    XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import CustomSelect from '@/components/ui/CustomSelect.vue'
 import {
@@ -408,12 +302,19 @@ import {
     useCreateCategory,
     useUpdateCategory,
     useDeleteCategory,
-    useAutoCategorize,
-    useApplyCategories,
 } from '@/composables/useFinance'
-import { useUploadTransactionMedia, useDeleteTransactionMedia } from '@/composables/useStorage'
 
-const { isActive } = useModuleRegistry()
+const { actionsForSlot } = useModuleRegistry()
+
+const toolbarActions = actionsForSlot('finance-page-toolbar')
+const rowInfoSlots = actionsForSlot('transaction-row-info')
+const rowActionSlots = actionsForSlot('transaction-row-actions')
+
+function onSlotAction(action) {
+    if (action.emit === 'open-coach-chat') {
+        window.dispatchEvent(new CustomEvent('open-coach-chat'))
+    }
+}
 
 function formatDateInput(date) {
     const d = new Date(date)
@@ -503,27 +404,6 @@ const deleteTransactionMutation = useDeleteTransaction()
 const createCategory = useCreateCategory()
 const updateCategory = useUpdateCategory()
 const deleteCategoryMutation = useDeleteCategory()
-
-const uploadMedia = useUploadTransactionMedia()
-const deleteMedia = useDeleteTransactionMedia()
-
-function attachFile(tx, event) {
-    const file = event.target.files?.[0]
-    if (!file) return
-    uploadMedia.mutate({ transactionId: tx.id, file })
-    event.target.value = ''
-}
-
-function removeAttachment(tx, media) {
-    if (!confirm('¿Eliminar este archivo adjunto?')) return
-    deleteMedia.mutate({ transactionId: tx.id, mediaId: media.id })
-}
-
-function formatFileSize(bytes) {
-    if (bytes < 1024) return bytes + ' B'
-    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB'
-    return (bytes / 1048576).toFixed(1) + ' MB'
-}
 
 const showTransactionForm = ref(false)
 const editingTransaction = ref(null)
@@ -683,69 +563,5 @@ function formatCurrency(value) {
 function formatDate(date) {
     const d = new Date(date)
     return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })
-}
-
-function openCoach() {
-    window.dispatchEvent(new CustomEvent('open-coach-chat'))
-}
-
-// --- Auto-categorize ---
-const autoCategorize = useAutoCategorize()
-const applyCategories = useApplyCategories()
-
-const showCategorizeModal = ref(false)
-const categorizeProposals = ref([])
-
-const selectedProposalsCount = computed(() =>
-    categorizeProposals.value.filter(p => p.selected).length
-)
-
-async function runAutoCategorize() {
-    try {
-        const uncategorizedIds = transactions.value
-            .filter(tx => !tx.category_id)
-            .map(tx => tx.id)
-
-        const result = await autoCategorize.mutateAsync(
-            uncategorizedIds.length > 0 ? uncategorizedIds : null
-        )
-
-        const proposals = result.data ?? []
-        if (proposals.length === 0) {
-            alert('No hay transacciones sin categorizar o el modelo no generó propuestas.')
-            return
-        }
-
-        categorizeProposals.value = proposals.map(p => ({ ...p, selected: true }))
-        showCategorizeModal.value = true
-    } catch (error) {
-        alert(error.response?.data?.error ?? error.response?.data?.message ?? 'Error al auto-clasificar.')
-    }
-}
-
-function closeCategorizeModal() {
-    showCategorizeModal.value = false
-    categorizeProposals.value = []
-}
-
-function toggleAllProposals(value) {
-    categorizeProposals.value.forEach(p => { p.selected = value })
-}
-
-async function confirmCategorize() {
-    const selected = categorizeProposals.value.filter(p => p.selected)
-
-    const assignments = selected.map(p => ({
-        transaction_id: p.transaction_id,
-        category_id: p.category_id || null,
-        new_category: p.new_category || null,
-    }))
-
-    try {
-        await applyCategories.mutateAsync(assignments)
-        closeCategorizeModal()
-    } catch (error) {
-        alert(error.response?.data?.message ?? 'Error al aplicar categorías.')
-    }
 }
 </script>
