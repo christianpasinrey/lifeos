@@ -66,6 +66,15 @@ Route::middleware(['api', 'auth:sanctum', 'module:finance'])->prefix('api/financ
     Route::post('invoices/{invoice}/unlink-payment/{transaction}', [InvoiceController::class, 'unlinkPayment']);
     Route::post('invoices/{invoice}/status', [InvoiceController::class, 'updateStatus']);
 
+    // Banking
+    Route::post('banking/connections', [BankConnectionController::class, 'store']);
+    Route::get('banking/connections', [BankConnectionController::class, 'index']);
+    Route::get('banking/connections/{connection}', [BankConnectionController::class, 'show']);
+    Route::delete('banking/connections/{connection}', [BankConnectionController::class, 'destroy']);
+    Route::get('banking/connections/{connection}/authorize', [BankConnectionController::class, 'authorize']);
+    Route::get('banking/callback', [BankConnectionController::class, 'callback']);
+    Route::post('banking/connections/{connection}/sync', [BankConnectionController::class, 'sync']);
+
     // Categories
     Route::apiResource('categories', CategoryController::class)->except(['show']);
 });
