@@ -25,6 +25,18 @@ const routes = [
                 meta: { module: 'habits' },
             },
             {
+                path: 'habits/week',
+                name: 'habits-week',
+                component: () => import('@/pages/habits/HabitsWeekPage.vue'),
+                meta: { module: 'habits' },
+            },
+            {
+                path: 'habits/calendar',
+                name: 'habits-calendar',
+                component: () => import('@/pages/habits/HabitsCalendarPage.vue'),
+                meta: { module: 'habits' },
+            },
+            {
                 path: 'habits/:id/stats',
                 name: 'habit-stats',
                 component: () => import('@/pages/habits/HabitStatsPage.vue'),

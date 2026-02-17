@@ -37,6 +37,7 @@
                         id="limits-{{ $module['slug'] }}"
                         class="{{ $module['plan'] === 'premium' ? 'hidden' : '' }}"
                     >
+                        {{-- Limits --}}
                         <div class="grid grid-cols-2 gap-3">
                             @foreach($module['free_limits'] as $key => $defaultValue)
                                 @php
@@ -65,6 +66,59 @@
                         @if($module['plan'] === 'free')
                             <p class="text-xs text-gray-500 mt-2">Los límites del plan Free son fijos. Cambia a Custom para personalizarlos.</p>
                         @endif
+
+                        {{-- Features --}}
+                        @if(!empty($module['free_features']))
+                            <div class="mt-4 pt-4 border-t border-gray-800">
+                                <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Features</h4>
+                                <div
+                                    id="features-{{ $module['slug'] }}"
+                                    class="grid grid-cols-2 md:grid-cols-3 gap-2"
+                                >
+                                    @foreach($module['free_features'] as $featureKey => $defaultEnabled)
+                                        @php
+                                            $isEnabled = $module['features'][$featureKey] ?? $defaultEnabled;
+                                            $featureLabel = match($featureKey) {
+                                                'weekly_view' => 'Vista semanal',
+                                                'routines' => 'Rutinas',
+                                                'sparklines' => 'Sparklines',
+                                                'notes' => 'Notas',
+                                                'badges' => 'Insignias',
+                                                'streak_freeze' => 'Congelación racha',
+                                                'celebrations' => 'Celebraciones',
+                                                'charts' => 'Gráficos',
+                                                'ai_analyzer' => 'Análisis IA',
+                                                'templates' => 'Plantillas',
+                                                'calendar_view' => 'Vista calendario',
+                                                'vacation_mode' => 'Modo vacaciones',
+                                                'reminders' => 'Recordatorios',
+                                                default => str_replace('_', ' ', ucfirst($featureKey)),
+                                            };
+                                            $isFreeDefault = $defaultEnabled;
+                                        @endphp
+                                        <label class="flex items-center gap-2 py-1.5 px-2 rounded-lg cursor-pointer hover:bg-white/[0.03] transition-colors feature-label-{{ $module['slug'] }}">
+                                            <input
+                                                type="checkbox"
+                                                name="modules[{{ $module['slug'] }}][features][{{ $featureKey }}]"
+                                                value="1"
+                                                {{ $isEnabled ? 'checked' : '' }}
+                                                {{ $module['plan'] === 'free' ? 'disabled' : '' }}
+                                                class="rounded border-gray-600 bg-gray-800 text-primary-500 focus:ring-primary-500 focus:ring-offset-0 feature-cb-{{ $module['slug'] }}"
+                                            >
+                                            <span class="text-sm text-gray-300">{{ $featureLabel }}</span>
+                                            @if($isFreeDefault)
+                                                <span class="text-[10px] text-green-500">free</span>
+                                            @else
+                                                <span class="text-[10px] text-yellow-500">premium</span>
+                                            @endif
+                                        </label>
+                                    @endforeach
+                                </div>
+                                @if($module['plan'] === 'free')
+                                    <p class="text-xs text-gray-500 mt-2">Las features del plan Free son fijas. Cambia a Custom para personalizarlas.</p>
+                                @endif
+                            </div>
+                        @endif
                     </div>
                 </div>
                 @endforeach
@@ -82,7 +136,8 @@
 <script>
 function toggleLimits(select, slug) {
     const limitsDiv = document.getElementById('limits-' + slug);
-    const inputs = limitsDiv.querySelectorAll('input[type="number"]');
+    const numberInputs = limitsDiv.querySelectorAll('input[type="number"]');
+    const featureCheckboxes = limitsDiv.querySelectorAll('.feature-cb-' + slug);
 
     if (select.value === 'premium') {
         limitsDiv.classList.add('hidden');
@@ -90,8 +145,12 @@ function toggleLimits(select, slug) {
         limitsDiv.classList.remove('hidden');
     }
 
-    inputs.forEach(input => {
+    numberInputs.forEach(input => {
         input.readOnly = select.value === 'free';
+    });
+
+    featureCheckboxes.forEach(cb => {
+        cb.disabled = select.value === 'free';
     });
 }
 </script>

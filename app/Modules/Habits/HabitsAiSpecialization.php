@@ -4,9 +4,11 @@ namespace App\Modules\Habits;
 
 use App\Models\User;
 use App\Modules\Ai\Contracts\AiSpecialization;
+use App\Modules\Ai\Tools\AnalyzeHabits;
 use App\Modules\Ai\Tools\CreateHabit;
 use App\Modules\Ai\Tools\GetHabitStats;
 use App\Modules\Ai\Tools\GetUserHabits;
+use App\Modules\Ai\Tools\SuggestHabitImprovements;
 use App\Modules\Ai\Tools\ToggleHabit;
 
 class HabitsAiSpecialization implements AiSpecialization
@@ -26,6 +28,8 @@ class HabitsAiSpecialization implements AiSpecialization
         - Ver estadísticas detalladas de cualquier hábito (rachas, porcentajes, tendencias)
         - Crear nuevos hábitos cuando el usuario lo pida
         - Marcar o desmarcar hábitos como completados
+        - Analizar patrones generales de todos los hábitos (si el análisis IA está habilitado)
+        - Sugerir mejoras personalizadas para hábitos específicos (si el análisis IA está habilitado)
 
         Usa estas herramientas para consultar y modificar los hábitos del usuario.
         INSTRUCTIONS;
@@ -33,11 +37,18 @@ class HabitsAiSpecialization implements AiSpecialization
 
     public function tools(User $user): array
     {
-        return [
+        $tools = [
             new GetUserHabits($user),
             new GetHabitStats($user),
             new CreateHabit($user),
             new ToggleHabit($user),
         ];
+
+        if ($user->hasModuleFeature('habits', 'ai_analyzer')) {
+            $tools[] = new AnalyzeHabits($user);
+            $tools[] = new SuggestHabitImprovements($user);
+        }
+
+        return $tools;
     }
 }

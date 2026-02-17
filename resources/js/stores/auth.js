@@ -20,6 +20,13 @@ export const useAuthStore = defineStore('auth', () => {
         return mod.limits?.[key] ?? null
     }
 
+    function hasFeature(slug, featureKey) {
+        const mod = modules.value[slug]
+        if (!mod) return false
+        if (mod.plan === 'premium') return true
+        return mod.features?.[featureKey] ?? false
+    }
+
     async function fetchUser() {
         try {
             const { data } = await api.get('/me')
@@ -42,5 +49,5 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = null
     }
 
-    return { user, checked, isAuthenticated, modules, hasModule, getModuleLimit, fetchUser, login, logout }
+    return { user, checked, isAuthenticated, modules, hasModule, getModuleLimit, hasFeature, fetchUser, login, logout }
 })

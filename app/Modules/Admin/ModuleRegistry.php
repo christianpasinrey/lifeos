@@ -9,6 +9,21 @@ class ModuleRegistry
             'name' => 'Hábitos',
             'description' => 'Tracking de hábitos diarios con rachas y estadísticas',
             'free_limits' => ['max_habits' => 5],
+            'free_features' => [
+                'weekly_view' => true,
+                'routines' => true,
+                'sparklines' => true,
+                'notes' => true,
+                'badges' => false,
+                'streak_freeze' => false,
+                'celebrations' => true,
+                'charts' => false,
+                'ai_analyzer' => false,
+                'templates' => false,
+                'calendar_view' => false,
+                'vacation_mode' => false,
+                'reminders' => false,
+            ],
         ],
         'custom_entities' => [
             'name' => 'Entidades Custom',
@@ -62,5 +77,10 @@ class ModuleRegistry
     public static function freeLimits(string $slug): array
     {
         return self::$modules[$slug]['free_limits'] ?? [];
+    }
+
+    public static function freeFeatures(string $slug): array
+    {
+        return self::$modules[$slug]['free_features'] ?? [];
     }
 }

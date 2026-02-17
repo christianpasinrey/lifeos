@@ -7,13 +7,37 @@
                     {{ completedCount }}/{{ habits.length }} completados hoy
                 </p>
             </div>
-            <button
-                @click="showModal = true; editingHabit = null"
-                class="btn-add"
-            >
-                <PlusIcon class="w-4 h-4" />
-                Nuevo hábito
-            </button>
+            <div class="flex items-center gap-3">
+                <!-- View switcher -->
+                <div v-if="hasWeeklyView" class="flex rounded-lg border border-white/[0.08] overflow-hidden">
+                    <router-link
+                        :to="{ name: 'habits' }"
+                        class="px-3 py-1.5 text-xs font-medium bg-primary-500/10 text-primary-400"
+                    >
+                        Hoy
+                    </router-link>
+                    <router-link
+                        :to="{ name: 'habits-week' }"
+                        class="px-3 py-1.5 text-xs font-medium text-surface-400 hover:text-surface-200 transition-colors"
+                    >
+                        Semana
+                    </router-link>
+                    <router-link
+                        v-if="hasCalendarView"
+                        :to="{ name: 'habits-calendar' }"
+                        class="px-3 py-1.5 text-xs font-medium text-surface-400 hover:text-surface-200 transition-colors"
+                    >
+                        Mes
+                    </router-link>
+                </div>
+                <button
+                    @click="showModal = true; editingHabit = null"
+                    class="btn-add"
+                >
+                    <PlusIcon class="w-4 h-4" />
+                    Nuevo hábito
+                </button>
+            </div>
         </div>
 
         <!-- Progress bar -->
@@ -24,6 +48,17 @@
                     :style="{ width: progressPercentage + '%' }"
                 />
             </div>
+        </div>
+
+        <!-- AI Analyze button -->
+        <div v-if="hasAiAnalyzer && habits.length > 0" class="mb-4">
+            <button
+                @click="openAiAnalysis"
+                class="btn-secondary text-xs"
+            >
+                <SparklesIcon class="w-4 h-4" />
+                Analizar con IA
+            </button>
         </div>
 
         <!-- Loading -->
@@ -42,17 +77,52 @@
         </div>
 
         <!-- Habit list -->
-        <div v-else class="habits-list">
-            <HabitCard
-                v-for="habit in habits"
-                :key="habit.id"
-                :habit="habit"
-                @toggle="handleToggle"
-                @update-value="handleUpdateValue"
-                @edit="openEdit"
-                @stats="goToStats"
-            />
+        <div v-else>
+            <!-- Grouped by routine -->
+            <template v-if="hasRoutines && hasMultipleRoutines">
+                <div v-for="group in routineGroups" :key="group.key" class="mb-6">
+                    <button
+                        @click="toggleRoutineCollapse(group.key)"
+                        class="flex items-center gap-2 mb-3 text-sm font-medium text-surface-300 hover:text-surface-100 transition-colors"
+                    >
+                        <span class="transition-transform" :class="collapsedRoutines[group.key] ? '-rotate-90' : 'rotate-0'">▼</span>
+                        {{ group.icon }} {{ group.label }}
+                        <span class="text-surface-500">({{ group.habits.length }})</span>
+                    </button>
+                    <div v-show="!collapsedRoutines[group.key]" class="habits-list">
+                        <HabitCard
+                            v-for="habit in group.habits"
+                            :key="habit.id"
+                            :habit="habit"
+                            :sparkline="sparklines[habit.id]"
+                            @toggle="handleToggle"
+                            @update-value="handleUpdateValue"
+                            @save-notes="handleSaveNotes"
+                            @edit="openEdit"
+                            @stats="goToStats"
+                        />
+                    </div>
+                </div>
+            </template>
+
+            <!-- Flat list -->
+            <div v-else class="habits-list">
+                <HabitCard
+                    v-for="habit in habits"
+                    :key="habit.id"
+                    :habit="habit"
+                    :sparkline="sparklines[habit.id]"
+                    @toggle="handleToggle"
+                    @update-value="handleUpdateValue"
+                    @save-notes="handleSaveNotes"
+                    @edit="openEdit"
+                    @stats="goToStats"
+                />
+            </div>
         </div>
+
+        <!-- Badge celebration -->
+        <BadgeCelebrationOverlay :badge="pendingBadge" />
 
         <!-- Modal -->
         <HabitModal
@@ -61,23 +131,38 @@
             @close="showModal = false"
             @saved="showModal = false"
         />
+
+        <!-- AI Analysis Modal -->
+        <HabitAnalysisModal
+            v-if="showAnalysis"
+            @close="showAnalysis = false"
+        />
     </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useHabitsToday, useToggleHabit } from '@/composables/useHabits'
+import { useHabitsToday, useToggleHabit, useHabitSparklines } from '@/composables/useHabits'
+import { useHabitFeatures } from '@/composables/useHabitFeatures'
+import { useCelebration } from '@/composables/useCelebration'
 import HabitCard from '@/components/habits/HabitCard.vue'
 import HabitModal from '@/components/habits/HabitModal.vue'
+import HabitAnalysisModal from '@/components/habits/HabitAnalysisModal.vue'
+import BadgeCelebrationOverlay from '@/components/habits/BadgeCelebrationOverlay.vue'
 import { PlusIcon, SparklesIcon } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
 const showModal = ref(false)
+const showAnalysis = ref(false)
 const editingHabit = ref(null)
+const { hasRoutines, hasSparklines, hasCelebrations, hasWeeklyView, hasCalendarView, hasAiAnalyzer } = useHabitFeatures()
+const { celebrateHabit, celebrateBadge, pendingBadge } = useCelebration()
 
 const { data: habitsData, isLoading } = useHabitsToday()
 const { mutate: toggle } = useToggleHabit()
+const { data: sparklinesData } = useHabitSparklines()
+const sparklines = computed(() => sparklinesData.value ?? {})
 
 const habits = computed(() => habitsData.value?.data ?? [])
 const completedCount = computed(() => habits.value.filter(h => h.completed_today).length)
@@ -86,12 +171,57 @@ const progressPercentage = computed(() => {
     return Math.round((completedCount.value / habits.value.length) * 100)
 })
 
-function handleToggle(habit) {
-    toggle({ habitId: habit.id })
+const routineOrder = [
+    { key: 'morning', label: 'Mañana', icon: '🌅' },
+    { key: 'afternoon', label: 'Tarde', icon: '☀️' },
+    { key: 'evening', label: 'Noche', icon: '🌙' },
+    { key: 'anytime', label: 'Cualquier momento', icon: '⏰' },
+]
+
+const collapsedRoutines = reactive({})
+
+const hasMultipleRoutines = computed(() => {
+    const routines = new Set(habits.value.map(h => h.routine || 'anytime'))
+    return routines.size > 1
+})
+
+const routineGroups = computed(() => {
+    return routineOrder
+        .map(r => ({
+            ...r,
+            habits: habits.value.filter(h => (h.routine || 'anytime') === r.key),
+        }))
+        .filter(g => g.habits.length > 0)
+})
+
+function toggleRoutineCollapse(key) {
+    collapsedRoutines[key] = !collapsedRoutines[key]
+}
+
+function openAiAnalysis() {
+    showAnalysis.value = true
+}
+
+function handleToggle(habit, event) {
+    toggle({ habitId: habit.id }, {
+        onSuccess: (data) => {
+            if (hasCelebrations.value && data.completed) {
+                const el = event?.target?.closest?.('.habit-card')
+                celebrateHabit(el)
+                if (data.new_badges?.length) {
+                    celebrateBadge(data.new_badges[0])
+                }
+            }
+        },
+    })
 }
 
 function handleUpdateValue(habit, value) {
     toggle({ habitId: habit.id, value })
+}
+
+function handleSaveNotes(habit, notes) {
+    toggle({ habitId: habit.id, notes, value: habit.type === 'numeric' ? habit.today_value : undefined })
 }
 
 function openEdit(habit) {

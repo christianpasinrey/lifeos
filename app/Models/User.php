@@ -94,6 +94,13 @@ class User extends Authenticatable implements HasMedia
         return $module?->getLimit($key);
     }
 
+    public function hasModuleFeature(string $slug, string $feature): bool
+    {
+        $module = $this->getModule($slug);
+
+        return $module?->hasFeature($feature) ?? false;
+    }
+
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('drive')

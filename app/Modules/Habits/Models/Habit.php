@@ -15,9 +15,9 @@ class Habit extends Model
     protected $fillable = [
         'user_id', 'name', 'description', 'icon', 'color',
         'type', 'unit', 'target_value',
-        'frequency', 'target_days',
+        'frequency', 'target_days', 'routine',
         'current_streak', 'best_streak',
-        'is_active', 'sort_order',
+        'is_active', 'sort_order', 'reminder_time',
     ];
 
     protected $casts = [
@@ -34,6 +34,26 @@ class Habit extends Model
     public function logs(): HasMany
     {
         return $this->hasMany(HabitLog::class);
+    }
+
+    public function badges(): HasMany
+    {
+        return $this->hasMany(HabitBadge::class);
+    }
+
+    public function vacations(): HasMany
+    {
+        return $this->hasMany(HabitVacation::class);
+    }
+
+    public function isOnVacationOn($date): bool
+    {
+        $dateStr = $date instanceof \Carbon\Carbon ? $date->format('Y-m-d') : $date;
+
+        return $this->vacations()
+            ->where('starts_at', '<=', $dateStr)
+            ->where('ends_at', '>=', $dateStr)
+            ->exists();
     }
 
     public function isDueToday(): bool

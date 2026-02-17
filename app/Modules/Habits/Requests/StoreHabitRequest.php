@@ -21,6 +21,8 @@ class StoreHabitRequest extends FormRequest
             'frequency' => 'in:daily,weekly,custom',
             'target_days' => 'nullable|array',
             'target_days.*' => 'in:mon,tue,wed,thu,fri,sat,sun',
+            'routine' => 'in:morning,afternoon,evening,anytime',
+            'reminder_time' => 'nullable|date_format:H:i',
             'sort_order' => 'nullable|integer|min:0',
         ];
     }

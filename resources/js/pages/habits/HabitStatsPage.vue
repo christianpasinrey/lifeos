@@ -46,10 +46,43 @@
                 </div>
             </div>
 
+            <!-- Charts -->
+            <div v-if="hasCharts" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div v-if="stats.trend" class="liquid-glass liquid-glass-card p-6">
+                    <h2 class="section-title mb-4">Tendencia (30 días)</h2>
+                    <TrendChart :data="stats.trend" :color="stats.habit?.color" />
+                </div>
+                <div v-if="stats.day_of_week" class="liquid-glass liquid-glass-card p-6">
+                    <h2 class="section-title mb-4">Consistencia por día</h2>
+                    <WeeklyBarChart :data="stats.day_of_week" :color="stats.habit?.color" />
+                </div>
+            </div>
+
+            <!-- Badges -->
+            <div v-if="hasBadges && stats.habit?.badges?.length" class="liquid-glass liquid-glass-card p-6 mb-6">
+                <h2 class="section-title mb-4">Insignias</h2>
+                <BadgeDisplay :badges="stats.habit.badges" />
+            </div>
+
             <!-- Heatmap -->
             <div class="liquid-glass liquid-glass-card p-6">
                 <h2 class="section-title mb-4">Actividad</h2>
                 <HeatmapCalendar :data="stats.calendar" :color="stats.habit?.color" />
+            </div>
+
+            <!-- Recent notes -->
+            <div v-if="hasNotes && stats.recent_notes?.length" class="liquid-glass liquid-glass-card p-6 mt-6">
+                <h2 class="section-title mb-4">Notas recientes</h2>
+                <div class="space-y-3">
+                    <div
+                        v-for="note in stats.recent_notes"
+                        :key="note.date"
+                        class="flex items-start gap-3 text-sm"
+                    >
+                        <span class="text-surface-500 shrink-0 w-24">{{ note.date }}</span>
+                        <span class="text-surface-200">{{ note.notes }}</span>
+                    </div>
+                </div>
             </div>
         </template>
     </div>
@@ -59,8 +92,14 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useHabitStats } from '@/composables/useHabits'
+import { useHabitFeatures } from '@/composables/useHabitFeatures'
 import HeatmapCalendar from '@/components/habits/HeatmapCalendar.vue'
+import BadgeDisplay from '@/components/habits/BadgeDisplay.vue'
+import TrendChart from '@/components/habits/TrendChart.vue'
+import WeeklyBarChart from '@/components/habits/WeeklyBarChart.vue'
 import { ArrowLeftIcon } from '@heroicons/vue/24/outline'
+
+const { hasNotes, hasBadges, hasCharts } = useHabitFeatures()
 
 const route = useRoute()
 const habitId = computed(() => route.params.id)

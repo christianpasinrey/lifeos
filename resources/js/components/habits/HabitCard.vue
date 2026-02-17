@@ -3,7 +3,7 @@
         <!-- Toggle / Value -->
         <button
             v-if="habit.type === 'boolean'"
-            @click="$emit('toggle', habit)"
+            @click="$emit('toggle', habit, $event)"
             class="habit-checkbox"
             :class="habit.completed_today ? 'habit-checkbox-done' : 'habit-checkbox-pending'"
         >
@@ -30,6 +30,15 @@
                 <span v-if="habit.current_streak > 0" class="habit-streak">
                     🔥 {{ habit.current_streak }}
                 </span>
+                <span v-if="hasStreakFreeze && habit.streak_freeze_count > 0" class="text-xs text-blue-400" title="Congelaciones disponibles">
+                    🧊 {{ habit.streak_freeze_count }}
+                </span>
+                <SparklineChart
+                    v-if="hasSparklines && sparkline"
+                    :data="sparkline"
+                    :type="habit.type"
+                    :color="habit.color"
+                />
             </div>
 
             <!-- Numeric input / progress -->
@@ -68,6 +77,17 @@
             </div>
         </div>
 
+        <!-- Notes toggle -->
+        <button
+            v-if="hasNotes && habit.completed_today"
+            @click="showNotes = !showNotes"
+            class="btn-icon shrink-0"
+            :class="{ 'text-primary-400': habit.today_notes || showNotes }"
+            title="Nota"
+        >
+            <ChatBubbleLeftIcon class="w-4 h-4" />
+        </button>
+
         <!-- Color dot -->
         <div
             class="w-2.5 h-2.5 rounded-full shrink-0"
@@ -92,18 +112,41 @@
             </button>
         </div>
     </div>
+
+    <!-- Notes expandable -->
+    <div v-if="hasNotes && showNotes && habit.completed_today" class="habit-card mt-1 !py-2">
+        <input
+            v-model="localNotes"
+            type="text"
+            class="flex-1 bg-transparent text-sm text-surface-200 placeholder-surface-500 focus:outline-none"
+            placeholder="Agregar nota..."
+            @keydown.enter="saveNotes"
+            @blur="saveNotes"
+        />
+    </div>
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
-import { CheckIcon, ChartBarIcon, PencilSquareIcon } from '@heroicons/vue/24/outline'
+import { ref, nextTick, watch } from 'vue'
+import { CheckIcon, ChartBarIcon, PencilSquareIcon, ChatBubbleLeftIcon } from '@heroicons/vue/24/outline'
+import { useHabitFeatures } from '@/composables/useHabitFeatures'
+import SparklineChart from './SparklineChart.vue'
 
-const props = defineProps({ habit: Object })
-const emit = defineEmits(['toggle', 'edit', 'stats', 'update-value'])
+const { hasNotes, hasSparklines, hasStreakFreeze } = useHabitFeatures()
+
+const props = defineProps({
+    habit: Object,
+    sparkline: { type: Array, default: null },
+})
+const emit = defineEmits(['toggle', 'edit', 'stats', 'update-value', 'save-notes'])
 
 const editingValue = ref(false)
 const localValue = ref(0)
 const valueInput = ref(null)
+const showNotes = ref(false)
+const localNotes = ref(props.habit?.today_notes ?? '')
+
+watch(() => props.habit?.today_notes, (v) => { localNotes.value = v ?? '' })
 
 function startEditing() {
     localValue.value = props.habit.today_value || 0
@@ -115,6 +158,12 @@ function saveValue() {
     editingValue.value = false
     if (localValue.value > 0) {
         emit('update-value', props.habit, localValue.value)
+    }
+}
+
+function saveNotes() {
+    if (localNotes.value !== (props.habit.today_notes ?? '')) {
+        emit('save-notes', props.habit, localNotes.value)
     }
 }
 </script>

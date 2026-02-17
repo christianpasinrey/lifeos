@@ -52,6 +52,7 @@ class AuthController extends Controller
             ->map(fn ($m) => [
                 'plan' => $m->plan,
                 'limits' => $m->limits,
+                'features' => $m->resolvedFeatures(),
             ])
             ->toArray();
 

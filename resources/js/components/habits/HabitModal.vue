@@ -10,6 +10,23 @@
                     {{ habit ? 'Editar hábito' : 'Nuevo hábito' }}
                 </h2>
 
+                <!-- Template button -->
+                <div v-if="hasTemplates && !habit" class="mb-4">
+                    <button
+                        type="button"
+                        @click="showTemplates = true"
+                        class="w-full py-2 px-3 rounded-lg border border-dashed border-white/[0.15] text-sm text-surface-300 hover:border-white/[0.25] hover:bg-white/[0.03] transition-all"
+                    >
+                        O elegir plantilla...
+                    </button>
+                </div>
+
+                <HabitTemplateGallery
+                    v-if="showTemplates"
+                    @close="showTemplates = false"
+                    @applied="emit('saved')"
+                />
+
                 <form @submit.prevent="handleSubmit" class="form-group">
                     <!-- Name -->
                     <div>
@@ -93,6 +110,25 @@
                         </div>
                     </div>
 
+                    <!-- Routine selector -->
+                    <div v-if="hasRoutines">
+                        <label class="form-label">Rutina</label>
+                        <div class="flex gap-2">
+                            <button
+                                v-for="r in routines"
+                                :key="r.value"
+                                type="button"
+                                @click="form.routine = r.value"
+                                class="flex-1 py-2 px-2 rounded-lg text-xs font-medium border transition-colors"
+                                :class="form.routine === r.value
+                                    ? 'bg-primary-500/10 border-primary-500/40 text-primary-400'
+                                    : 'border-white/[0.08] text-surface-400 hover:border-white/[0.15]'"
+                            >
+                                {{ r.icon }} {{ r.label }}
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Day selector -->
                     <div v-if="form.frequency !== 'daily'">
                         <label class="form-label">Días</label>
@@ -128,6 +164,36 @@
                         </div>
                     </div>
 
+                    <!-- Reminder -->
+                    <div v-if="hasReminders">
+                        <label class="form-label">Recordatorio</label>
+                        <div class="flex items-center gap-2">
+                            <input
+                                v-model="form.reminder_time"
+                                type="time"
+                                class="form-input-sm flex-1"
+                            />
+                            <span class="text-xs text-surface-500">Notificaciones próximamente</span>
+                        </div>
+                    </div>
+
+                    <!-- Vacation mode -->
+                    <div v-if="hasVacationMode && habit">
+                        <label class="form-label">Modo vacaciones</label>
+                        <div class="space-y-2">
+                            <div v-for="v in vacations" :key="v.id" class="flex items-center gap-2 text-sm text-surface-300">
+                                <span>{{ v.starts_at }} → {{ v.ends_at }}</span>
+                                <span v-if="v.reason" class="text-surface-500">— {{ v.reason }}</span>
+                                <button type="button" @click="removeVacation(v.id)" class="text-danger-400 text-xs hover:underline">Eliminar</button>
+                            </div>
+                            <div class="flex gap-2">
+                                <input v-model="vacationForm.starts_at" type="date" class="form-input-sm flex-1" />
+                                <input v-model="vacationForm.ends_at" type="date" class="form-input-sm flex-1" />
+                                <button type="button" @click="addVacation" class="btn-secondary text-xs px-2" :disabled="!vacationForm.starts_at || !vacationForm.ends_at">+</button>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Actions -->
                     <div class="flex gap-3 pt-2">
                         <button
@@ -152,16 +218,39 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
-import { useCreateHabit, useUpdateHabit } from '@/composables/useHabits'
+import { ref, reactive, computed } from 'vue'
+import { useCreateHabit, useUpdateHabit, useHabitVacations, useCreateVacation, useDeleteVacation } from '@/composables/useHabits'
+import { useHabitFeatures } from '@/composables/useHabitFeatures'
+import HabitTemplateGallery from './HabitTemplateGallery.vue'
 
 const props = defineProps({ habit: Object })
 const emit = defineEmits(['close', 'saved'])
 
 const { mutateAsync: createHabit } = useCreateHabit()
 const { mutateAsync: updateHabit } = useUpdateHabit()
+const { hasRoutines, hasVacationMode, hasTemplates, hasReminders } = useHabitFeatures()
 
 const saving = ref(false)
+const showTemplates = ref(false)
+
+// Vacation mode
+const habitId = computed(() => props.habit?.id)
+const { data: vacationsData } = useHabitVacations(habitId)
+const vacations = computed(() => vacationsData.value ?? [])
+const { mutateAsync: createVacation } = useCreateVacation()
+const { mutateAsync: deleteVacation } = useDeleteVacation()
+const vacationForm = reactive({ starts_at: '', ends_at: '' })
+
+async function addVacation() {
+    if (!vacationForm.starts_at || !vacationForm.ends_at) return
+    await createVacation({ habitId: props.habit.id, data: { ...vacationForm } })
+    vacationForm.starts_at = ''
+    vacationForm.ends_at = ''
+}
+
+async function removeVacation(vacationId) {
+    await deleteVacation({ habitId: props.habit.id, vacationId })
+}
 
 const form = reactive({
     name: props.habit?.name ?? '',
@@ -170,6 +259,8 @@ const form = reactive({
     target_value: props.habit?.target_value ?? null,
     frequency: props.habit?.frequency ?? 'daily',
     target_days: props.habit?.target_days ?? [],
+    routine: props.habit?.routine ?? 'anytime',
+    reminder_time: props.habit?.reminder_time ?? null,
     color: props.habit?.color ?? '#6366f1',
 })
 
@@ -187,6 +278,13 @@ const days = [
     { value: 'fri', label: 'Vie' },
     { value: 'sat', label: 'Sáb' },
     { value: 'sun', label: 'Dom' },
+]
+
+const routines = [
+    { value: 'morning', label: 'Mañana', icon: '🌅' },
+    { value: 'afternoon', label: 'Tarde', icon: '☀️' },
+    { value: 'evening', label: 'Noche', icon: '🌙' },
+    { value: 'anytime', label: 'Cualquiera', icon: '⏰' },
 ]
 
 const colors = [

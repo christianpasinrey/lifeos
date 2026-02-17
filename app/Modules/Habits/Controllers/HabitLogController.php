@@ -28,4 +28,23 @@ class HabitLogController extends Controller
 
         return response()->json($result);
     }
+
+    public function toggleDate(Request $request, Habit $habit, string $date)
+    {
+        abort_unless($habit->user_id === $request->user()->id, 403);
+
+        $request->validate([
+            'value' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $result = $this->service->toggle(
+            $habit,
+            $request->input('value'),
+            $request->input('notes'),
+            $date,
+        );
+
+        return response()->json($result);
+    }
 }

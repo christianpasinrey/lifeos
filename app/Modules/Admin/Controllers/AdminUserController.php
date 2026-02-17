@@ -85,6 +85,9 @@ class AdminUserController extends Controller
                     'plan' => $userModule->plan,
                     'limits' => $userModule->limits ?? $info['free_limits'],
                     'free_limits' => $info['free_limits'],
+                    'free_features' => $info['free_features'] ?? [],
+                    'features' => $userModule->resolvedFeatures(),
+                    'custom_features' => $userModule->features,
                 ];
             })
             ->filter();
@@ -98,6 +101,7 @@ class AdminUserController extends Controller
             'modules' => 'required|array',
             'modules.*.plan' => 'required|in:free,premium,custom',
             'modules.*.limits' => 'nullable|array',
+            'modules.*.features' => 'nullable|array',
         ]);
 
         foreach ($request->input('modules') as $slug => $data) {
@@ -105,19 +109,31 @@ class AdminUserController extends Controller
 
             $plan = $data['plan'];
             $limits = null;
+            $features = null;
 
             if ($plan === 'free') {
                 $limits = ModuleRegistry::freeLimits($slug);
+                // Free plan: no custom features (use defaults from registry)
+                $features = null;
             } elseif ($plan === 'custom') {
                 $limits = array_map('intval', $data['limits'] ?? []);
+                // Custom plan: save feature overrides
+                $freeFeatures = ModuleRegistry::freeFeatures($slug);
+                if (!empty($freeFeatures) && isset($data['features'])) {
+                    $features = [];
+                    foreach ($freeFeatures as $key => $defaultValue) {
+                        $features[$key] = isset($data['features'][$key]);
+                    }
+                }
             }
-            // premium: limits = null (sin límite)
+            // premium: limits = null, features = null (all enabled via isPremium)
 
             $user->modules()
                 ->where('module', $slug)
                 ->update([
                     'plan' => $plan,
                     'limits' => $limits ? json_encode($limits) : null,
+                    'features' => $features ? json_encode($features) : null,
                 ]);
         }
 

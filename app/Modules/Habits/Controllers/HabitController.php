@@ -51,11 +51,16 @@ class HabitController extends Controller
         return response()->json(['message' => 'Hábito eliminado']);
     }
 
+    public function sparklines(Request $request)
+    {
+        return response()->json($this->service->getSparklines($request->user()));
+    }
+
     public function stats(Request $request, Habit $habit)
     {
         abort_unless($habit->user_id === $request->user()->id, 403);
         $stats = $this->service->getStats($habit);
-        $habit->load(['logs' => fn($q) => $q->where('completed_at', today())]);
+        $habit->load(['logs' => fn($q) => $q->where('completed_at', today()), 'badges']);
         $stats['habit'] = new HabitResource($habit);
         return response()->json($stats);
     }

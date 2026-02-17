@@ -4,6 +4,7 @@ namespace App\Modules\Habits;
 
 use App\Models\User;
 use App\Modules\Habits\Models\Habit;
+use App\Modules\Habits\Models\HabitBadge;
 use App\Modules\Habits\Models\HabitLog;
 use Carbon\Carbon;
 
@@ -24,7 +25,7 @@ class HabitService
             ->with(['logs' => fn($q) => $q->where('completed_at', today())])
             ->orderBy('sort_order')
             ->get()
-            ->filter(fn(Habit $habit) => $habit->isDueToday());
+            ->filter(fn(Habit $habit) => $habit->isDueToday() && !$habit->isOnVacationOn(today()));
     }
 
     public function create(User $user, array $data): Habit
@@ -66,21 +67,23 @@ class HabitService
                 ]);
             }
             $this->recalculateStreaks($habit);
+            $newBadges = $this->checkAndAwardBadges($habit);
 
-            return ['completed' => true, 'value' => $log->value, 'streak' => $habit->fresh()->current_streak];
+            return ['completed' => true, 'value' => $log->value, 'streak' => $habit->fresh()->current_streak, 'new_badges' => $newBadges];
         }
 
         // Boolean toggle
         if ($existingLog) {
             $existingLog->delete();
             $this->recalculateStreaks($habit);
-            return ['completed' => false, 'streak' => $habit->fresh()->current_streak];
+            return ['completed' => false, 'streak' => $habit->fresh()->current_streak, 'new_badges' => []];
         }
 
         $habit->logs()->create(['completed_at' => $date, 'notes' => $notes]);
         $this->recalculateStreaks($habit);
+        $newBadges = $this->checkAndAwardBadges($habit);
 
-        return ['completed' => true, 'streak' => $habit->fresh()->current_streak];
+        return ['completed' => true, 'streak' => $habit->fresh()->current_streak, 'new_badges' => $newBadges];
     }
 
     public function recalculateStreaks(Habit $habit): void
@@ -97,30 +100,73 @@ class HabitService
 
         $streak = 0;
         $date = now()->startOfDay();
+        $hasFreezeFeature = $habit->user->hasModuleFeature('habits', 'streak_freeze');
+        $hasVacationFeature = $habit->user->hasModuleFeature('habits', 'vacation_mode');
+        $freezeUsed = false;
+
+        // Preload vacation periods for efficiency
+        $vacations = $hasVacationFeature
+            ? $habit->vacations()->orderBy('starts_at', 'desc')->get()
+            : collect();
+
+        $isOnVacation = function ($d) use ($vacations) {
+            $ds = $d->format('Y-m-d');
+            return $vacations->contains(fn($v) => $v->starts_at->format('Y-m-d') <= $ds && $v->ends_at->format('Y-m-d') >= $ds);
+        };
 
         if (!$logs->contains(fn($d) => $d->isSameDay($date))) {
             $date = $date->subDay();
         }
 
-        foreach ($logs as $log) {
+        $logDates = $logs->map(fn($d) => $d->format('Y-m-d'))->flip();
+        $maxLookback = 400; // safety limit
+
+        while ($maxLookback-- > 0) {
+            // Skip non-due dates
             if ($habit->frequency !== 'daily') {
-                while (!$habit->isDueOnDate($date) && $date->gte($log)) {
+                while (!$habit->isDueOnDate($date)) {
                     $date = $date->subDay();
                 }
             }
 
-            if ($log->isSameDay($date)) {
+            $dateStr = $date->format('Y-m-d');
+
+            // Skip vacation days — they don't break or add to streak
+            if ($hasVacationFeature && $isOnVacation($date)) {
+                $date = $date->subDay();
+                continue;
+            }
+
+            if ($logDates->has($dateStr)) {
                 $streak++;
+                $date = $date->subDay();
+            } elseif ($hasFreezeFeature && !$freezeUsed && $habit->streak_freeze_count > 0) {
+                // Use freeze for 1 missed day
+                $freezeUsed = true;
                 $date = $date->subDay();
             } else {
                 break;
             }
         }
 
-        $habit->update([
+        // Award freeze: 1 freeze per 7 days of completed streak
+        $freezeCount = $freezeUsed
+            ? max(0, intdiv($streak, 7) - 1)
+            : intdiv($streak, 7);
+
+        $updates = [
             'current_streak' => $streak,
             'best_streak' => max($streak, $habit->best_streak),
-        ]);
+        ];
+
+        if ($hasFreezeFeature) {
+            $updates['streak_freeze_count'] = $freezeCount;
+            if ($freezeUsed) {
+                $updates['streak_freeze_used_at'] = now()->toDateString();
+            }
+        }
+
+        $habit->update($updates);
     }
 
     public function getStats(Habit $habit): array
@@ -145,6 +191,36 @@ class HabitService
                 ]
             ]);
 
+        $recentNotes = $habit->logs()
+            ->whereNotNull('notes')
+            ->where('notes', '!=', '')
+            ->orderBy('completed_at', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(fn($log) => [
+                'date' => $log->completed_at->format('Y-m-d'),
+                'notes' => $log->notes,
+            ]);
+
+        // Day-of-week consistency (last 30 days)
+        $dayOfWeek = $habit->logs()
+            ->where('completed_at', '>=', $thirtyDaysAgo)
+            ->get()
+            ->groupBy(fn($log) => strtolower($log->completed_at->format('D')))
+            ->map(fn($group) => $group->count());
+
+        $daysInMonth = ['mon' => 0, 'tue' => 0, 'wed' => 0, 'thu' => 0, 'fri' => 0, 'sat' => 0, 'sun' => 0];
+        $d = now()->subDays(29)->startOfDay();
+        for ($i = 0; $i < 30; $i++) {
+            $daysInMonth[strtolower($d->copy()->addDays($i)->format('D'))]++;
+        }
+
+        $dayOfWeekRate = [];
+        foreach ($daysInMonth as $day => $total) {
+            $completed = $dayOfWeek->get($day, 0);
+            $dayOfWeekRate[$day] = $total > 0 ? round($completed / $total * 100) : 0;
+        }
+
         $response = [
             'current_streak' => $habit->current_streak,
             'best_streak' => $habit->best_streak,
@@ -154,6 +230,8 @@ class HabitService
             'rate_7' => round($last7 / 7 * 100),
             'rate_30' => round($last30 / 30 * 100),
             'calendar' => $calendarData,
+            'recent_notes' => $recentNotes,
+            'day_of_week' => $dayOfWeekRate,
         ];
 
         if ($habit->type === 'numeric') {
@@ -175,6 +253,63 @@ class HabitService
         }
 
         return $response;
+    }
+
+    public function checkAndAwardBadges(Habit $habit): array
+    {
+        $user = $habit->user;
+        if (!$user->hasModuleFeature('habits', 'badges')) {
+            return [];
+        }
+
+        $streak = $habit->fresh()->current_streak;
+        $existingBadges = $habit->badges()->pluck('badge_key')->toArray();
+        $newBadges = [];
+
+        foreach (HabitBadge::$milestones as $threshold => $milestone) {
+            if ($streak >= $threshold && !in_array($milestone['key'], $existingBadges)) {
+                $habit->badges()->create([
+                    'badge_key' => $milestone['key'],
+                    'streak_value' => $streak,
+                    'earned_at' => now(),
+                ]);
+                $newBadges[] = $milestone;
+            }
+        }
+
+        return $newBadges;
+    }
+
+    public function getSparklines(User $user): array
+    {
+        $sevenDaysAgo = now()->subDays(6)->startOfDay();
+
+        $habits = $user->habits()
+            ->where('is_active', true)
+            ->get();
+
+        $logs = HabitLog::whereIn('habit_id', $habits->pluck('id'))
+            ->where('completed_at', '>=', $sevenDaysAgo)
+            ->get()
+            ->groupBy('habit_id');
+
+        $dates = collect(range(0, 6))->map(fn($i) => now()->subDays(6 - $i)->format('Y-m-d'));
+
+        $result = [];
+        foreach ($habits as $habit) {
+            $habitLogs = $logs->get($habit->id, collect())->keyBy(fn($l) => $l->completed_at->format('Y-m-d'));
+
+            $result[$habit->id] = $dates->map(function ($date) use ($habit, $habitLogs) {
+                $log = $habitLogs->get($date);
+                return [
+                    'date' => $date,
+                    'completed' => (bool) $log,
+                    'value' => $log?->value,
+                ];
+            })->values()->all();
+        }
+
+        return $result;
     }
 
     public function getSummaryForAi(User $user): string
