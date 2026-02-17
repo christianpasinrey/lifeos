@@ -242,9 +242,18 @@ class TransactionController extends Controller
             'file' => 'required|file|mimes:csv,xls,xlsx,txt|max:5120',
         ]);
 
-        $path = $request->file('file')->store('temp/imports');
+        $file = $request->file('file');
+        $path = $file->storeAs(
+            'temp/imports',
+            uniqid('import_') . '.' . $file->getClientOriginalExtension()
+        );
 
-        $preview = $this->importService->preview(storage_path("app/{$path}"));
+        if (!$path) {
+            return response()->json(['message' => 'No se pudo guardar el archivo.'], 500);
+        }
+
+        $fullPath = \Illuminate\Support\Facades\Storage::path($path);
+        $preview = $this->importService->preview($fullPath);
 
         return response()->json([
             'data' => $preview,
