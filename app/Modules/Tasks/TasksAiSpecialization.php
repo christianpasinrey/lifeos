@@ -20,13 +20,13 @@ class TasksAiSpecialization implements AiSpecialization
     {
         return <<<'INSTRUCTIONS'
         ## Capacidades de Gestión de Tareas (Kanban)
-        
+
         Puedes ayudar al usuario a gestionar sus tareas y proyectos:
         - Ver los tableros Kanban del usuario con sus columnas
         - Ver las tareas organizadas por columnas (Por hacer, En curso, Hecho, etc.)
         - Crear nuevas tareas en las columnas especificadas
         - Mover tareas entre columnas (por ejemplo, pasar de "Por hacer" a "En curso")
-        
+
         Las tareas pueden tener prioridades (low, medium, high) y fechas de vencimiento.
         Usa estas herramientas para organizar el trabajo del usuario.
         INSTRUCTIONS;

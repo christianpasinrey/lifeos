@@ -20,13 +20,13 @@ class HabitsAiSpecialization implements AiSpecialization
     {
         return <<<'INSTRUCTIONS'
         ## Capacidades de Hábitos
-        
+
         Puedes ayudar al usuario con sus hábitos diarios:
         - Ver los hábitos del usuario y su progreso de hoy
         - Ver estadísticas detalladas de cualquier hábito (rachas, porcentajes, tendencias)
         - Crear nuevos hábitos cuando el usuario lo pida
         - Marcar o desmarcar hábitos como completados
-        
+
         Usa estas herramientas para consultar y modificar los hábitos del usuario.
         INSTRUCTIONS;
     }

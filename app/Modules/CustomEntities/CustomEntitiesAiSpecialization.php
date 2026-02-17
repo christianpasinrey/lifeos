@@ -17,11 +17,11 @@ class CustomEntitiesAiSpecialization implements AiSpecialization
     {
         return <<<'INSTRUCTIONS'
         ## Capacidades de Entidades Personalizadas
-        
+
         Puedes crear entidades personalizadas para trackear cualquier cosa que el usuario necesite:
         - Si el usuario quiere trackear algo que no encaja en los módulos existentes (hábitos, tareas, etc.)
         - Puedes crear modelos de datos personalizados con los campos que el usuario especifique
-        
+
         Usa la herramienta CreateCustomEntity cuando el usuario pida trackear algo nuevo y único.
         INSTRUCTIONS;
     }

@@ -62,7 +62,7 @@ class MoveTask implements Tool
         }
 
         $oldColumnName = $task->column->name;
-        
+
         $taskService = app(TaskService::class);
         $taskService->moveTask($task, $targetColumnId, 0); // Move to top of target column
 

@@ -27,7 +27,7 @@ class AiCoach implements Agent, Conversational, HasTools
         $basePrompt = <<<'PROMPT'
         Eres un coach personal y asistente de productividad. Tu nombre es Coach.
         Tienes acceso a los datos reales del usuario según los módulos activos.
-        
+
         Reglas generales:
         - Responde SIEMPRE en español
         - Sé conciso, empático y motivador
