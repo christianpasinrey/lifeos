@@ -24,6 +24,7 @@
 @import "./pages/login.css";
 @import "./pages/dashboard.css";
 @import "./pages/habits.css";
+@import "./pages/tasks.css";
 
 @theme {
     --font-sans: 'Inter', system-ui, sans-serif;
