@@ -1,5 +1,19 @@
 <template>
     <div class="calendar-day">
+        <!-- Source dots banner -->
+        <div v-if="daySourceDots.length" class="flex items-center gap-2 mb-3">
+            <div class="calendar-source-dots">
+                <span
+                    v-for="src in daySourceDots"
+                    :key="src.source"
+                    class="w-2 h-2 rounded-full"
+                    :style="{ backgroundColor: src.color }"
+                    :title="src.label"
+                />
+            </div>
+            <span class="text-xs text-surface-500">{{ daySourceDots.map(s => s.label).join(', ') }}</span>
+        </div>
+
         <!-- All-day events -->
         <div v-if="allDayEvents.length" class="calendar-day-allday liquid-glass liquid-glass-card">
             <div class="text-xs text-surface-500 mb-2">Todo el día</div>
@@ -23,7 +37,7 @@
                     <span class="text-xs text-surface-500">{{ String(hour).padStart(2, '0') }}:00</span>
                 </div>
                 <div
-                    class="calendar-day-slot"
+                    class="calendar-day-slot group"
                     @click="$emit('day-click', dateStr + 'T' + String(hour).padStart(2, '0') + ':00')"
                 >
                     <!-- Events at this hour -->
@@ -32,7 +46,7 @@
                         :key="event.id"
                         class="calendar-day-event"
                         :style="{ backgroundColor: event.color + '20', borderLeftColor: event.color }"
-                        @click="$emit('event-click', event)"
+                        @click.stop="$emit('event-click', event)"
                     >
                         <div class="flex items-center gap-2">
                             <span
@@ -50,6 +64,17 @@
                         </div>
                         <div class="text-xs text-surface-600 mt-1">{{ event.source }}</div>
                     </div>
+
+                    <!-- Quick create button (shows on hover of empty slots) -->
+                    <button
+                        v-if="getEventsAtHour(hour).length === 0"
+                        class="calendar-cell-add-inline"
+                        @click.stop="$emit('quick-create', { dateStr: dateStr, event: $event })"
+                    >
+                        <svg class="w-3 h-3" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="8" y1="3" x2="8" y2="13" /><line x1="3" y1="8" x2="13" y2="8" />
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>
@@ -61,10 +86,11 @@ import { computed } from 'vue'
 
 const props = defineProps({
     events: { type: Array, default: () => [] },
+    sourceStates: { type: Array, default: () => [] },
     currentDate: { type: Date, required: true },
 })
 
-defineEmits(['event-click', 'day-click'])
+defineEmits(['event-click', 'day-click', 'quick-create'])
 
 const hours = Array.from({ length: 24 }, (_, i) => i)
 
@@ -76,6 +102,12 @@ const dayEvents = computed(() =>
 
 const allDayEvents = computed(() => dayEvents.value.filter(e => e.all_day))
 const timedEvents = computed(() => dayEvents.value.filter(e => !e.all_day))
+
+const daySourceDots = computed(() =>
+    props.sourceStates
+        .filter(s => s.events.some(e => e.start.substring(0, 10) === dateStr.value))
+        .map(s => ({ source: s.source, color: s.color, label: s.label }))
+)
 
 function getEventsAtHour(hour) {
     return timedEvents.value.filter(e => {

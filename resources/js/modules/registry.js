@@ -37,5 +37,9 @@ export function useModuleRegistry() {
         return auth.hasModule(moduleSlug)
     }
 
-    return { navItems, dashboardWidgets, sidebarWidgets, actionsForSlot, isActive }
+    const calendarSlots = computed(() =>
+        active.value.filter(m => m.calendarSlot).map(m => m.calendarSlot).sort((a, b) => a.order - b.order)
+    )
+
+    return { navItems, dashboardWidgets, sidebarWidgets, calendarSlots, actionsForSlot, isActive }
 }

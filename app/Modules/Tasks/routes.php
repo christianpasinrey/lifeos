@@ -2,6 +2,7 @@
 
 use App\Modules\Tasks\Controllers\BoardController;
 use App\Modules\Tasks\Controllers\ColumnController;
+use App\Modules\Tasks\Controllers\QuickTaskController;
 use App\Modules\Tasks\Controllers\TaskController;
 use App\Modules\Tasks\Controllers\TaskGeneratorController;
 use Illuminate\Support\Facades\Route;
@@ -12,6 +13,9 @@ Route::middleware(['api', 'auth:sanctum', 'module:tasks', 'module:ai_coach'])->p
 });
 
 Route::middleware(['api', 'auth:sanctum', 'module:tasks'])->prefix('api')->group(function () {
+    // Quick task (from calendar)
+    Route::post('tasks/quick', [QuickTaskController::class, 'store']);
+
     // Boards
     Route::apiResource('boards', BoardController::class);
 

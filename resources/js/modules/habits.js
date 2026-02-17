@@ -7,6 +7,14 @@ registerModule({
     navItems: [
         { to: '/habits', label: 'Hábitos', icon: markRaw(SparklesIcon), order: 10 },
     ],
+    calendarSlot: {
+        source: 'habits',
+        label: 'Hábito',
+        icon: markRaw(SparklesIcon),
+        color: '#10b981',
+        order: 30,
+        detailComponent: defineAsyncComponent(() => import('@/components/calendar/slots/HabitsDayDetail.vue')),
+    },
     dashboardWidgets: [
         {
             component: defineAsyncComponent(() => import('@/components/dashboard/HabitsWidget.vue')),

@@ -21,7 +21,7 @@ class CalendarEventRegistry
      */
     public function getEvents(User $user, Carbon $start, Carbon $end, ?array $sources = null): array
     {
-        $activeModules = $user->modules->pluck('slug')->toArray();
+        $activeModules = $user->modules->pluck('module')->toArray();
         $events = [];
 
         foreach ($this->providers as $slug => $provider) {
@@ -46,9 +46,35 @@ class CalendarEventRegistry
         return $events;
     }
 
+    /**
+     * @return \App\Modules\Calendar\DTOs\CalendarEventDTO[]
+     */
+    public function getEventsForSource(User $user, string $source, Carbon $start, Carbon $end): array
+    {
+        if (!isset($this->providers[$source])) {
+            return [];
+        }
+
+        $activeModules = $user->modules->pluck('module')->toArray();
+        $moduleSlug = $source === 'calendar' ? 'calendar' : $source;
+
+        if (!in_array($moduleSlug, $activeModules)) {
+            return [];
+        }
+
+        $events = [];
+        foreach ($this->providers[$source]->events($user, $start, $end) as $event) {
+            $events[] = $event;
+        }
+
+        usort($events, fn ($a, $b) => strcmp($a->start, $b->start));
+
+        return $events;
+    }
+
     public function availableSources(User $user): array
     {
-        $activeModules = $user->modules->pluck('slug')->toArray();
+        $activeModules = $user->modules->pluck('module')->toArray();
         $sources = [];
 
         foreach ($this->providers as $slug => $provider) {

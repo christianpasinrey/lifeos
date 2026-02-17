@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['api', 'auth:sanctum', 'module:calendar'])->prefix('api/calendar')->group(function () {
     Route::get('events', [CalendarController::class, 'events']);
+    Route::get('sources/{source}/events', [CalendarController::class, 'sourceEvents']);
     Route::post('events', [CalendarEventController::class, 'store']);
     Route::put('events/{calendarEvent}', [CalendarEventController::class, 'update']);
     Route::delete('events/{calendarEvent}', [CalendarEventController::class, 'destroy']);

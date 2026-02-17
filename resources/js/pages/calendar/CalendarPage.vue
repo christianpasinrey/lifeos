@@ -34,18 +34,18 @@
             </div>
         </div>
 
-        <!-- Source filters -->
-        <div v-if="sources.length > 1" class="flex flex-wrap gap-2 mb-4">
+        <!-- Source filters (dynamic from calendarSlots) -->
+        <div v-if="calendarSlots.length > 1" class="flex flex-wrap gap-2 mb-4">
             <button
-                v-for="src in sources"
-                :key="src.slug"
-                @click="toggleSource(src.slug)"
+                v-for="slot in calendarSlots"
+                :key="slot.source"
+                @click="toggleSource(slot.source)"
                 class="calendar-source-chip"
-                :class="{ active: activeSources.includes(src.slug) }"
-                :style="activeSources.includes(src.slug) ? { backgroundColor: src.color + '20', borderColor: src.color, color: src.color } : {}"
+                :class="{ active: activeSources.includes(slot.source) }"
+                :style="activeSources.includes(slot.source) ? { backgroundColor: slot.color + '20', borderColor: slot.color, color: slot.color } : {}"
             >
-                <span class="w-2 h-2 rounded-full inline-block" :style="{ backgroundColor: src.color }" />
-                {{ src.label }}
+                <span class="w-2 h-2 rounded-full inline-block" :style="{ backgroundColor: slot.color }" />
+                {{ slot.label }}
             </button>
         </div>
 
@@ -59,33 +59,39 @@
             <MonthView
                 v-if="currentView === 'month'"
                 :events="filteredEvents"
+                :source-states="filteredSourceStates"
                 :current-date="currentDate"
                 @day-click="handleDayClick"
                 @event-click="handleEventClick"
+                @quick-create="handleQuickCreateFromCell"
             />
             <WeekView
                 v-if="currentView === 'week'"
                 :events="filteredEvents"
+                :source-states="filteredSourceStates"
                 :current-date="currentDate"
                 @day-click="handleDayClick"
                 @event-click="handleEventClick"
+                @quick-create="handleQuickCreateFromCell"
             />
             <DayView
                 v-if="currentView === 'day'"
                 :events="filteredEvents"
+                :source-states="filteredSourceStates"
                 :current-date="currentDate"
                 @day-click="handleDayClick"
                 @event-click="handleEventClick"
+                @quick-create="handleQuickCreateFromCell"
             />
         </template>
 
-        <!-- Event Modal -->
+        <!-- Event Modal (for native calendar events) -->
         <CalendarEventModal
             v-if="showEventModal"
             :event="editingEvent"
             :initial-date="selectedDate"
             @close="showEventModal = false"
-            @saved="showEventModal = false"
+            @saved="onEventSaved"
         />
 
         <!-- Event Detail Panel -->
@@ -96,17 +102,46 @@
             @edit="openEditEvent"
             @deleted="selectedEvent = null"
         />
+
+        <!-- Day Summary Panel -->
+        <DaySummaryPanel
+            v-if="showDaySummary && !selectedEvent && !showEventModal && !quickCreateSlot"
+            :date="summaryDate"
+            :source-states="filteredSourceStates"
+            @close="showDaySummary = false"
+            @event-click="handleEventClick"
+            @quick-create="openQuickMenuFromPanel"
+        />
+
+        <!-- Quick Create Menu -->
+        <QuickCreateMenu
+            v-if="showQuickMenu"
+            :position="quickMenuPosition"
+            @select="handleQuickMenuSelect"
+            @close="showQuickMenu = false"
+        />
+
+        <!-- Dynamic Quick Create Panel (Tasks, Finance, etc.) -->
+        <component
+            v-if="quickCreateSlot"
+            :is="quickCreateSlot.quickCreateComponent"
+            :date="quickCreateDate"
+            @close="quickCreateSlot = null"
+            @saved="onQuickCreateSaved"
+        />
     </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useCalendarEvents } from '@/composables/useCalendar'
+import { useCalendarSources } from '@/composables/useCalendarSources'
 import MonthView from '@/components/calendar/MonthView.vue'
 import WeekView from '@/components/calendar/WeekView.vue'
 import DayView from '@/components/calendar/DayView.vue'
 import CalendarEventModal from '@/components/calendar/CalendarEventModal.vue'
 import EventDetailPanel from '@/components/calendar/EventDetailPanel.vue'
+import DaySummaryPanel from '@/components/calendar/DaySummaryPanel.vue'
+import QuickCreateMenu from '@/components/calendar/QuickCreateMenu.vue'
 import { PlusIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
 
 const currentDate = ref(new Date())
@@ -116,6 +151,17 @@ const showEventModal = ref(false)
 const editingEvent = ref(null)
 const selectedEvent = ref(null)
 const selectedDate = ref(null)
+
+// Day summary panel state
+const showDaySummary = ref(false)
+const summaryDate = ref(null)
+
+// Quick create state
+const showQuickMenu = ref(false)
+const quickMenuPosition = ref({ x: 0, y: 0 })
+const quickMenuDate = ref(null)
+const quickCreateSlot = ref(null)
+const quickCreateDate = ref(null)
 
 const views = [
     { key: 'month', label: 'Mes' },
@@ -127,8 +173,8 @@ const startDate = computed(() => {
     const d = new Date(currentDate.value)
     if (currentView.value === 'month') {
         d.setDate(1)
-        d.setDate(d.getDate() - d.getDay() + 1) // Monday start
-        if (d.getDay() === 0) d.setDate(d.getDate() - 6) // adjust Sunday
+        d.setDate(d.getDate() - d.getDay() + 1)
+        if (d.getDay() === 0) d.setDate(d.getDate() - 6)
     } else if (currentView.value === 'week') {
         const day = d.getDay()
         const diff = d.getDate() - day + (day === 0 ? -6 : 1)
@@ -140,7 +186,7 @@ const startDate = computed(() => {
 const endDate = computed(() => {
     const d = new Date(currentDate.value)
     if (currentView.value === 'month') {
-        d.setMonth(d.getMonth() + 1, 0) // last day of month
+        d.setMonth(d.getMonth() + 1, 0)
         const remaining = 7 - d.getDay()
         if (remaining < 7) d.setDate(d.getDate() + remaining)
     } else if (currentView.value === 'week') {
@@ -151,14 +197,16 @@ const endDate = computed(() => {
     return formatDate(d)
 })
 
-const { data: calendarData, isLoading } = useCalendarEvents(startDate, endDate, activeSources)
-
-const events = computed(() => calendarData.value?.data ?? [])
-const sources = computed(() => calendarData.value?.sources ?? [])
+const { allEvents, isLoading, sourceStates, calendarSlots, invalidateAll } = useCalendarSources(startDate, endDate)
 
 const filteredEvents = computed(() => {
-    if (!activeSources.value.length) return events.value
-    return events.value.filter(e => activeSources.value.includes(e.source))
+    if (!activeSources.value.length) return allEvents.value
+    return allEvents.value.filter(e => activeSources.value.includes(e.source))
+})
+
+const filteredSourceStates = computed(() => {
+    if (!activeSources.value.length) return sourceStates.value
+    return sourceStates.value.filter(s => activeSources.value.includes(s.source))
 })
 
 const headerLabel = computed(() => {
@@ -205,19 +253,66 @@ function toggleSource(slug) {
 }
 
 function handleDayClick(dateStr) {
-    selectedDate.value = dateStr
-    showEventModal.value = true
-    editingEvent.value = null
+    const dateOnly = dateStr.substring(0, 10)
+    const hasEvents = allEvents.value.some(e => e.start.substring(0, 10) === dateOnly)
+
+    if (hasEvents) {
+        // Open day summary panel
+        summaryDate.value = dateOnly
+        showDaySummary.value = true
+    } else {
+        // Open event creation modal with date
+        selectedDate.value = dateStr
+        showEventModal.value = true
+        editingEvent.value = null
+    }
+}
+
+function handleQuickCreateFromCell({ dateStr, event }) {
+    quickMenuDate.value = dateStr
+    quickMenuPosition.value = { x: event.clientX, y: event.clientY }
+    showQuickMenu.value = true
+}
+
+function openQuickMenuFromPanel({ x, y }) {
+    quickMenuPosition.value = { x, y }
+    quickMenuDate.value = summaryDate.value
+    showQuickMenu.value = true
+}
+
+function handleQuickMenuSelect(slot) {
+    showQuickMenu.value = false
+
+    if (slot.source === 'calendar') {
+        // Use the existing event modal
+        selectedDate.value = quickMenuDate.value
+        showEventModal.value = true
+        editingEvent.value = null
+    } else {
+        quickCreateSlot.value = slot
+        quickCreateDate.value = quickMenuDate.value
+    }
 }
 
 function handleEventClick(event) {
     selectedEvent.value = event
+    showDaySummary.value = false
 }
 
 function openEditEvent(event) {
     selectedEvent.value = null
     editingEvent.value = event
     showEventModal.value = true
+}
+
+function onEventSaved() {
+    showEventModal.value = false
+    invalidateAll()
+}
+
+function onQuickCreateSaved() {
+    quickCreateSlot.value = null
+    invalidateAll()
 }
 
 function formatDate(d) {

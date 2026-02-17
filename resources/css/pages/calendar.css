@@ -317,3 +317,79 @@
         filter: brightness(1.15);
     }
 }
+
+/* ============================================
+   SOURCE DOTS — colored indicators per source
+   ============================================ */
+.calendar-source-dots {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+/* ============================================
+   CELL ADD BUTTON — "+" on hover
+   ============================================ */
+.calendar-cell-add {
+    position: absolute;
+    bottom: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-surface-500);
+    background: rgba(255, 255, 255, 0.04);
+    opacity: 0;
+    transition: all 0.15s;
+    cursor: pointer;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.12);
+        color: var(--color-surface-200);
+    }
+}
+
+.calendar-day-cell {
+    position: relative;
+}
+
+.group:hover .calendar-cell-add,
+.calendar-day-cell:hover .calendar-cell-add {
+    opacity: 1;
+}
+
+/* Inline add button for week/day cells */
+.calendar-cell-add-inline {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-surface-500);
+    background: transparent;
+    opacity: 0;
+    transition: all 0.15s;
+    cursor: pointer;
+    margin: auto;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.12);
+        color: var(--color-surface-200);
+    }
+}
+
+.group:hover .calendar-cell-add-inline {
+    opacity: 1;
+}
+
+/* ============================================
+   DAY SUMMARY PANEL — slot sections
+   ============================================ */
+.calendar-slot-section {
+    border-left: 3px solid;
+    padding-left: 0.75rem;
+}

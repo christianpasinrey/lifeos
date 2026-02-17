@@ -13,6 +13,16 @@
                 <span class="text-lg font-semibold" :class="day.isToday ? 'text-primary-400' : 'text-surface-200'">
                     {{ day.day }}
                 </span>
+                <!-- Source dots -->
+                <div class="calendar-source-dots mt-0.5">
+                    <span
+                        v-for="src in getSourceDots(day.dateStr)"
+                        :key="src.source"
+                        class="w-1.5 h-1.5 rounded-full"
+                        :style="{ backgroundColor: src.color }"
+                        :title="src.label"
+                    />
+                </div>
             </div>
         </div>
 
@@ -47,9 +57,18 @@
                     <div
                         v-for="day in weekDays"
                         :key="day.dateStr + '-' + hour"
-                        class="calendar-week-cell"
+                        class="calendar-week-cell group"
                         @click="$emit('day-click', day.dateStr + 'T' + String(hour).padStart(2, '0') + ':00')"
-                    />
+                    >
+                        <button
+                            class="calendar-cell-add-inline"
+                            @click.stop="$emit('quick-create', { dateStr: day.dateStr, event: $event })"
+                        >
+                            <svg class="w-3 h-3" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="8" y1="3" x2="8" y2="13" /><line x1="3" y1="8" x2="13" y2="8" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Positioned timed events -->
@@ -73,10 +92,11 @@ import { computed } from 'vue'
 
 const props = defineProps({
     events: { type: Array, default: () => [] },
+    sourceStates: { type: Array, default: () => [] },
     currentDate: { type: Date, required: true },
 })
 
-defineEmits(['event-click', 'day-click'])
+defineEmits(['event-click', 'day-click', 'quick-create'])
 
 const dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 const hours = Array.from({ length: 24 }, (_, i) => i)
@@ -109,6 +129,12 @@ const timedEvents = computed(() => props.events.filter(e => !e.all_day))
 
 function getAllDayEventsForDate(dateStr) {
     return allDayEvents.value.filter(e => e.start.substring(0, 10) === dateStr)
+}
+
+function getSourceDots(dateStr) {
+    return props.sourceStates
+        .filter(s => s.events.some(e => e.start.substring(0, 10) === dateStr))
+        .map(s => ({ source: s.source, color: s.color, label: s.label }))
 }
 
 const timedEventsPositioned = computed(() => {

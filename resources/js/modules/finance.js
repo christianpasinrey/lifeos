@@ -1,4 +1,4 @@
-import { markRaw } from 'vue'
+import { defineAsyncComponent, markRaw } from 'vue'
 import { BanknotesIcon } from '@heroicons/vue/24/outline'
 import { registerModule } from './registry'
 
@@ -32,6 +32,15 @@ registerModule({
     navItems: [
         { to: '/finance', label: 'Finanzas', icon: markRaw(BanknotesIcon), order: 30 },
     ],
+    calendarSlot: {
+        source: 'finance',
+        label: 'Registro',
+        icon: markRaw(BanknotesIcon),
+        color: '#fbbf24',
+        order: 40,
+        detailComponent: defineAsyncComponent(() => import('@/components/calendar/slots/FinanceDayDetail.vue')),
+        quickCreateComponent: defineAsyncComponent(() => import('@/components/calendar/slots/FinanceQuickCreate.vue')),
+    },
     actions: [
         {
             slot: 'drive-file-actions',
