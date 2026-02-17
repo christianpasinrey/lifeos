@@ -65,16 +65,23 @@
                         <div class="text-xs text-surface-600 mt-1">{{ event.source }}</div>
                     </div>
 
-                    <!-- Quick create button (shows on hover of empty slots) -->
-                    <button
-                        v-if="getEventsAtHour(hour).length === 0"
-                        class="calendar-cell-add-inline"
-                        @click.stop="$emit('quick-create', { dateStr: dateStr, event: $event })"
-                    >
-                        <svg class="w-3 h-3" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="8" y1="3" x2="8" y2="13" /><line x1="3" y1="8" x2="13" y2="8" />
-                        </svg>
-                    </button>
+                    <!-- Quick create button -->
+                    <template v-if="getEventsAtHour(hour).length === 0">
+                        <button
+                            class="calendar-cell-add-inline"
+                            @click.stop="toggleQuickMenu(hour, $event)"
+                        >
+                            <svg class="w-3 h-3" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="8" y1="3" x2="8" y2="13" /><line x1="3" y1="8" x2="13" y2="8" />
+                            </svg>
+                        </button>
+                        <QuickCreateMenu
+                            v-if="openMenuHour === hour"
+                            :anchor-rect="menuAnchor"
+                            @select="onMenuSelect($event)"
+                            @close="openMenuHour = null"
+                        />
+                    </template>
                 </div>
             </div>
         </div>
@@ -82,7 +89,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
+import QuickCreateMenu from './QuickCreateMenu.vue'
 
 const props = defineProps({
     events: { type: Array, default: () => [] },
@@ -90,9 +98,26 @@ const props = defineProps({
     currentDate: { type: Date, required: true },
 })
 
-defineEmits(['event-click', 'day-click', 'quick-create'])
+const emit = defineEmits(['event-click', 'day-click', 'quick-create'])
 
 const hours = Array.from({ length: 24 }, (_, i) => i)
+const openMenuHour = ref(null)
+const menuAnchor = ref({ left: 0, top: 0, right: 0, bottom: 0 })
+
+function toggleQuickMenu(hour, e) {
+    if (openMenuHour.value === hour) {
+        openMenuHour.value = null
+        return
+    }
+    const r = e.currentTarget.getBoundingClientRect()
+    menuAnchor.value = { left: r.left, top: r.top, right: r.right, bottom: r.bottom }
+    openMenuHour.value = hour
+}
+
+function onMenuSelect(slot) {
+    openMenuHour.value = null
+    emit('quick-create', { dateStr: dateStr.value, slot })
+}
 
 const dateStr = computed(() => formatDate(props.currentDate))
 

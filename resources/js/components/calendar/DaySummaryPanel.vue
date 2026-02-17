@@ -8,7 +8,8 @@
                         <div class="flex items-center gap-3">
                             <h3 class="text-sm font-semibold text-white">{{ formattedDate }}</h3>
                             <button
-                                @click="handleQuickCreateClick"
+                                ref="addBtn"
+                                @click="toggleMenu"
                                 class="w-6 h-6 rounded-md bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center transition-colors"
                             >
                                 <PlusIcon class="w-3.5 h-3.5 text-surface-300" />
@@ -47,11 +48,20 @@
             </aside>
         </Transition>
     </Teleport>
+
+    <!-- Menu teleported to body, positioned from button rect -->
+    <QuickCreateMenu
+        v-if="showMenu"
+        :anchor-rect="btnRect"
+        @select="onMenuSelect"
+        @close="showMenu = false"
+    />
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { PlusIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import QuickCreateMenu from './QuickCreateMenu.vue'
 
 const props = defineProps({
     date: { type: String, required: true },
@@ -59,6 +69,10 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close', 'quick-create', 'event-click'])
+
+const showMenu = ref(false)
+const addBtn = ref(null)
+const btnRect = ref({ left: 0, top: 0, right: 0, bottom: 0 })
 
 const formattedDate = computed(() => {
     const d = new Date(props.date + 'T12:00:00')
@@ -75,7 +89,18 @@ const activeSources = computed(() =>
     props.sourceStates.filter(s => dayEvents(s).length > 0)
 )
 
-function handleQuickCreateClick(e) {
-    emit('quick-create', { x: e.clientX, y: e.clientY })
+function toggleMenu() {
+    if (showMenu.value) {
+        showMenu.value = false
+        return
+    }
+    const r = addBtn.value.getBoundingClientRect()
+    btnRect.value = { left: r.left, top: r.top, right: r.right, bottom: r.bottom }
+    showMenu.value = true
+}
+
+function onMenuSelect(slot) {
+    showMenu.value = false
+    emit('quick-create', { dateStr: props.date, slot })
 }
 </script>

@@ -52,20 +52,27 @@
                 <!-- Quick create button -->
                 <button
                     class="calendar-cell-add"
-                    @click.stop="$emit('quick-create', { dateStr: day.dateStr, event: $event })"
+                    @click.stop="toggleQuickMenu(day.dateStr, $event)"
                     title="Crear..."
                 >
                     <svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="8" y1="3" x2="8" y2="13" /><line x1="3" y1="8" x2="13" y2="8" />
                     </svg>
                 </button>
+                <QuickCreateMenu
+                    v-if="openMenuDate === day.dateStr"
+                    :anchor-rect="menuAnchor"
+                    @select="onMenuSelect(day.dateStr, $event)"
+                    @close="openMenuDate = null"
+                />
             </div>
         </div>
     </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
+import QuickCreateMenu from './QuickCreateMenu.vue'
 
 const props = defineProps({
     events: { type: Array, default: () => [] },
@@ -73,9 +80,26 @@ const props = defineProps({
     currentDate: { type: Date, required: true },
 })
 
-defineEmits(['day-click', 'event-click', 'quick-create'])
+const emit = defineEmits(['day-click', 'event-click', 'quick-create'])
 
 const dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+const openMenuDate = ref(null)
+const menuAnchor = ref({ left: 0, top: 0, right: 0, bottom: 0 })
+
+function toggleQuickMenu(dateStr, e) {
+    if (openMenuDate.value === dateStr) {
+        openMenuDate.value = null
+        return
+    }
+    const r = e.currentTarget.getBoundingClientRect()
+    menuAnchor.value = { left: r.left, top: r.top, right: r.right, bottom: r.bottom }
+    openMenuDate.value = dateStr
+}
+
+function onMenuSelect(dateStr, slot) {
+    openMenuDate.value = null
+    emit('quick-create', { dateStr, slot })
+}
 
 const calendarDays = computed(() => {
     const year = props.currentDate.getFullYear()
@@ -92,21 +116,18 @@ const calendarDays = computed(() => {
 
     const days = []
 
-    // Previous month days
     for (let i = startOffset - 1; i >= 0; i--) {
         const d = new Date(year, month, -i)
         const dateStr = formatDate(d)
         days.push(buildDay(d.getDate(), dateStr, dateStr === todayStr, false))
     }
 
-    // Current month days
     for (let i = 1; i <= totalDays; i++) {
         const d = new Date(year, month, i)
         const dateStr = formatDate(d)
         days.push(buildDay(i, dateStr, dateStr === todayStr, true))
     }
 
-    // Next month days to fill 6 rows
     const remaining = 42 - days.length
     for (let i = 1; i <= remaining; i++) {
         const d = new Date(year, month + 1, i)
@@ -118,13 +139,12 @@ const calendarDays = computed(() => {
 })
 
 function buildDay(day, dateStr, isToday, isCurrentMonth) {
-    const events = getEventsForDate(dateStr)
     return {
         day,
         dateStr,
         isToday,
         isCurrentMonth,
-        events,
+        events: getEventsForDate(dateStr),
         sourceDots: getSourceDots(dateStr),
     }
 }

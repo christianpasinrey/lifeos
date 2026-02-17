@@ -387,6 +387,28 @@
 }
 
 /* ============================================
+   QUICK CREATE MENU — dropdown below "+"
+   ============================================ */
+.calendar-quick-menu-wrapper {
+    position: relative;
+    z-index: 50;
+}
+
+.calendar-quick-menu {
+    position: absolute;
+    left: 0;
+    top: calc(100% + 4px);
+    min-width: 180px;
+    padding: 0.375rem;
+    border-radius: 12px;
+    background: rgba(30, 30, 45, 0.97);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    z-index: 50;
+}
+
+/* ============================================
    DAY SUMMARY PANEL — slot sections
    ============================================ */
 .calendar-slot-section {

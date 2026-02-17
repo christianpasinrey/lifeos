@@ -62,12 +62,18 @@
                     >
                         <button
                             class="calendar-cell-add-inline"
-                            @click.stop="$emit('quick-create', { dateStr: day.dateStr, event: $event })"
+                            @click.stop="toggleQuickMenu(day.dateStr, $event)"
                         >
                             <svg class="w-3 h-3" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2">
                                 <line x1="8" y1="3" x2="8" y2="13" /><line x1="3" y1="8" x2="13" y2="8" />
                             </svg>
                         </button>
+                        <QuickCreateMenu
+                            v-if="openMenuDate === day.dateStr"
+                            :anchor-rect="menuAnchor"
+                            @select="onMenuSelect(day.dateStr, $event)"
+                            @close="openMenuDate = null"
+                        />
                     </div>
                 </div>
 
@@ -88,7 +94,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
+import QuickCreateMenu from './QuickCreateMenu.vue'
 
 const props = defineProps({
     events: { type: Array, default: () => [] },
@@ -96,10 +103,27 @@ const props = defineProps({
     currentDate: { type: Date, required: true },
 })
 
-defineEmits(['event-click', 'day-click', 'quick-create'])
+const emit = defineEmits(['event-click', 'day-click', 'quick-create'])
 
 const dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 const hours = Array.from({ length: 24 }, (_, i) => i)
+const openMenuDate = ref(null)
+const menuAnchor = ref({ left: 0, top: 0, right: 0, bottom: 0 })
+
+function toggleQuickMenu(dateStr, e) {
+    if (openMenuDate.value === dateStr) {
+        openMenuDate.value = null
+        return
+    }
+    const r = e.currentTarget.getBoundingClientRect()
+    menuAnchor.value = { left: r.left, top: r.top, right: r.right, bottom: r.bottom }
+    openMenuDate.value = dateStr
+}
+
+function onMenuSelect(dateStr, slot) {
+    openMenuDate.value = null
+    emit('quick-create', { dateStr, slot })
+}
 
 const weekStart = computed(() => {
     const d = new Date(props.currentDate)

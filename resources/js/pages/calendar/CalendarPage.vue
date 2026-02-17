@@ -63,7 +63,7 @@
                 :current-date="currentDate"
                 @day-click="handleDayClick"
                 @event-click="handleEventClick"
-                @quick-create="handleQuickCreateFromCell"
+                @quick-create="handleQuickCreate"
             />
             <WeekView
                 v-if="currentView === 'week'"
@@ -72,7 +72,7 @@
                 :current-date="currentDate"
                 @day-click="handleDayClick"
                 @event-click="handleEventClick"
-                @quick-create="handleQuickCreateFromCell"
+                @quick-create="handleQuickCreate"
             />
             <DayView
                 v-if="currentView === 'day'"
@@ -81,7 +81,7 @@
                 :current-date="currentDate"
                 @day-click="handleDayClick"
                 @event-click="handleEventClick"
-                @quick-create="handleQuickCreateFromCell"
+                @quick-create="handleQuickCreate"
             />
         </template>
 
@@ -110,15 +110,7 @@
             :source-states="filteredSourceStates"
             @close="showDaySummary = false"
             @event-click="handleEventClick"
-            @quick-create="openQuickMenuFromPanel"
-        />
-
-        <!-- Quick Create Menu -->
-        <QuickCreateMenu
-            v-if="showQuickMenu"
-            :position="quickMenuPosition"
-            @select="handleQuickMenuSelect"
-            @close="showQuickMenu = false"
+            @quick-create="handleQuickCreate"
         />
 
         <!-- Dynamic Quick Create Panel (Tasks, Finance, etc.) -->
@@ -141,7 +133,6 @@ import DayView from '@/components/calendar/DayView.vue'
 import CalendarEventModal from '@/components/calendar/CalendarEventModal.vue'
 import EventDetailPanel from '@/components/calendar/EventDetailPanel.vue'
 import DaySummaryPanel from '@/components/calendar/DaySummaryPanel.vue'
-import QuickCreateMenu from '@/components/calendar/QuickCreateMenu.vue'
 import { PlusIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/24/outline'
 
 const currentDate = ref(new Date())
@@ -157,9 +148,6 @@ const showDaySummary = ref(false)
 const summaryDate = ref(null)
 
 // Quick create state
-const showQuickMenu = ref(false)
-const quickMenuPosition = ref({ x: 0, y: 0 })
-const quickMenuDate = ref(null)
 const quickCreateSlot = ref(null)
 const quickCreateDate = ref(null)
 
@@ -268,29 +256,14 @@ function handleDayClick(dateStr) {
     }
 }
 
-function handleQuickCreateFromCell({ dateStr, event }) {
-    quickMenuDate.value = dateStr
-    quickMenuPosition.value = { x: event.clientX, y: event.clientY }
-    showQuickMenu.value = true
-}
-
-function openQuickMenuFromPanel({ x, y }) {
-    quickMenuPosition.value = { x, y }
-    quickMenuDate.value = summaryDate.value
-    showQuickMenu.value = true
-}
-
-function handleQuickMenuSelect(slot) {
-    showQuickMenu.value = false
-
+function handleQuickCreate({ dateStr, slot }) {
     if (slot.source === 'calendar') {
-        // Use the existing event modal
-        selectedDate.value = quickMenuDate.value
+        selectedDate.value = dateStr
         showEventModal.value = true
         editingEvent.value = null
     } else {
         quickCreateSlot.value = slot
-        quickCreateDate.value = quickMenuDate.value
+        quickCreateDate.value = dateStr
     }
 }
 
