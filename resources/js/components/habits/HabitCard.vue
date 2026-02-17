@@ -110,6 +110,13 @@
             >
                 <PencilSquareIcon class="w-4 h-4" />
             </button>
+            <button
+                @click="confirmDelete"
+                class="btn-icon text-danger-400/60 hover:text-danger-400"
+                title="Eliminar"
+            >
+                <TrashIcon class="w-4 h-4" />
+            </button>
         </div>
     </div>
 
@@ -124,13 +131,24 @@
             @blur="saveNotes"
         />
     </div>
+
+    <ConfirmModal
+        v-if="showDeleteConfirm"
+        title="Eliminar hábito"
+        :message="`¿Eliminar &quot;${habit.name}&quot;? Esta acción no se puede deshacer.`"
+        confirm-text="Eliminar"
+        :danger="true"
+        @confirm="emit('delete', habit); showDeleteConfirm = false"
+        @cancel="showDeleteConfirm = false"
+    />
 </template>
 
 <script setup>
 import { ref, nextTick, watch } from 'vue'
-import { CheckIcon, ChartBarIcon, PencilSquareIcon, ChatBubbleLeftIcon } from '@heroicons/vue/24/outline'
+import { CheckIcon, ChartBarIcon, PencilSquareIcon, ChatBubbleLeftIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import { useHabitFeatures } from '@/composables/useHabitFeatures'
 import SparklineChart from './SparklineChart.vue'
+import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 
 const { hasNotes, hasSparklines, hasStreakFreeze } = useHabitFeatures()
 
@@ -138,8 +156,9 @@ const props = defineProps({
     habit: Object,
     sparkline: { type: Array, default: null },
 })
-const emit = defineEmits(['toggle', 'edit', 'stats', 'update-value', 'save-notes'])
+const emit = defineEmits(['toggle', 'edit', 'stats', 'delete', 'update-value', 'save-notes'])
 
+const showDeleteConfirm = ref(false)
 const editingValue = ref(false)
 const localValue = ref(0)
 const valueInput = ref(null)
@@ -165,5 +184,9 @@ function saveNotes() {
     if (localNotes.value !== (props.habit.today_notes ?? '')) {
         emit('save-notes', props.habit, localNotes.value)
     }
+}
+
+function confirmDelete() {
+    showDeleteConfirm.value = true
 }
 </script>

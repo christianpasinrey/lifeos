@@ -77,6 +77,7 @@
                             @update-value="handleUpdateValue"
                             @save-notes="handleSaveNotes"
                             @edit="openEdit"
+                            @delete="handleDelete"
                             @stats="goToStats"
                         />
                     </div>
@@ -94,6 +95,7 @@
                     @update-value="handleUpdateValue"
                     @save-notes="handleSaveNotes"
                     @edit="openEdit"
+                    @delete="handleDelete"
                     @stats="goToStats"
                 />
             </div>
@@ -121,7 +123,7 @@
 <script setup>
 import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useHabitsToday, useToggleHabit, useHabitSparklines } from '@/composables/useHabits'
+import { useHabitsToday, useToggleHabit, useHabitSparklines, useDeleteHabit } from '@/composables/useHabits'
 import { useHabitFeatures } from '@/composables/useHabitFeatures'
 import { useCelebration } from '@/composables/useCelebration'
 import HabitCard from '@/components/habits/HabitCard.vue'
@@ -139,6 +141,7 @@ const { celebrateHabit, celebrateBadge, pendingBadge } = useCelebration()
 
 const { data: habitsData, isLoading } = useHabitsToday()
 const { mutate: toggle } = useToggleHabit()
+const { mutate: deleteHabit } = useDeleteHabit()
 const { data: sparklinesData } = useHabitSparklines()
 const sparklines = computed(() => sparklinesData.value ?? {})
 
@@ -205,6 +208,10 @@ function handleSaveNotes(habit, notes) {
 function openEdit(habit) {
     editingHabit.value = habit
     showModal.value = true
+}
+
+function handleDelete(habit) {
+    deleteHabit(habit.id)
 }
 
 function goToStats(habit) {
