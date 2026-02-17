@@ -20,7 +20,7 @@ class FileAnalyzer implements Agent
 
     public function model(): string
     {
-        return config('ai.openai_model', env('CHATGPT_MODEL', 'gpt-4o-mini'));
+        return config('ai.providers.openai.model', env('CHATGPT_MODEL', 'gpt-4o-mini'));
     }
 
     public function timeout(): int
