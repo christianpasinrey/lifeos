@@ -12,14 +12,17 @@
                 </div>
             </div>
             <div class="ml-auto flex gap-3">
-                <button
-                    v-for="action in toolbarActions"
-                    :key="action.label"
-                    class="px-4 py-2 rounded-xl text-sm font-medium bg-primary-500/20 text-primary-100 hover:bg-primary-500/30 transition"
-                    @click="onSlotAction(action)"
-                >
-                    Analizar con IA
-                </button>
+                <template v-for="action in toolbarActions" :key="action.id || action.label">
+                    <component v-if="action.component" :is="action.component" :start-date="range.startDate" :end-date="range.endDate" />
+                    <button
+                        v-else
+                        class="px-4 py-2 rounded-xl text-sm font-medium bg-primary-500/20 text-primary-100 hover:bg-primary-500/30 transition"
+                        @click="onSlotAction(action)"
+                    >
+                        <component v-if="action.icon" :is="action.icon" class="w-4 h-4 inline mr-1" />
+                        {{ action.label }}
+                    </button>
+                </template>
             </div>
         </div>
 
@@ -106,12 +109,6 @@
                 </li>
             </ul>
         </div>
-        <FinanceAnalysisModal
-            v-if="showAnalysis"
-            :initial-start-date="range.startDate"
-            :initial-end-date="range.endDate"
-            @close="showAnalysis = false"
-        />
     </div>
 </template>
 
@@ -120,7 +117,6 @@ import { computed, reactive, ref } from 'vue'
 import { useModuleRegistry } from '@/modules/registry'
 import { ArrowUpCircleIcon, ArrowDownCircleIcon, ArrowsRightLeftIcon } from '@heroicons/vue/24/outline'
 import SummaryCards from './components/SummaryCards.vue'
-import FinanceAnalysisModal from '@/components/finance/FinanceAnalysisModal.vue'
 import { useFinanceSummary, useFinanceTransactions } from '@/composables/useFinance'
 import { useFinanceAccounts } from '@/composables/useFinanceAccounts'
 
@@ -128,7 +124,9 @@ const { actionsForSlot } = useModuleRegistry()
 const toolbarActions = actionsForSlot('finance-dashboard-toolbar')
 
 function onSlotAction(action) {
-    if (action.emit === 'show-analysis') showAnalysis.value = true
+    if (action.emit) {
+        window.dispatchEvent(new CustomEvent(action.emit))
+    }
 }
 
 function formatDateInput(date) {
@@ -197,5 +195,4 @@ function formatDate(date) {
     return new Date(date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })
 }
 
-const showAnalysis = ref(false)
 </script>

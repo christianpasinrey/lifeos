@@ -39,15 +39,13 @@
 
                 <!-- Actions -->
                 <div class="flex items-center gap-2">
-                    <button
-                        v-for="action in toolbarActions"
-                        :key="action.label"
-                        class="btn-add"
-                        @click="onSlotAction(action)"
-                    >
-                        <component :is="action.icon" class="w-4 h-4" />
-                        {{ action.label }}
-                    </button>
+                    <template v-for="action in toolbarActions" :key="action.id || action.label">
+                        <component v-if="action.component" :is="action.component" :board-id="boardId" :columns="columns" />
+                        <button v-else class="btn-add" @click="onSlotAction(action)">
+                            <component :is="action.icon" class="w-4 h-4" />
+                            {{ action.label }}
+                        </button>
+                    </template>
                     <button class="btn-add" @click="showCreateColumn = true">
                         <PlusIcon class="w-4 h-4" />
                         Columna
@@ -108,13 +106,6 @@
             @close="editingTask = null"
             @saved="editingTask = null"
         />
-        <TaskGeneratorModal
-            v-if="showGenerator"
-            :board-id="boardId"
-            :columns="columns"
-            @close="showGenerator = false"
-            @saved="showGenerator = false"
-        />
     </div>
 </template>
 
@@ -127,7 +118,6 @@ import KanbanColumn from '@/components/tasks/KanbanColumn.vue'
 import BoardModal from '@/components/tasks/BoardModal.vue'
 import ColumnModal from '@/components/tasks/ColumnModal.vue'
 import TaskModal from '@/components/tasks/TaskModal.vue'
-import TaskGeneratorModal from '@/components/tasks/TaskGeneratorModal.vue'
 import {
     ArrowLeftIcon,
     PlusIcon,
@@ -159,8 +149,6 @@ const showCreateColumn = ref(false)
 const editingColumn = ref(null)
 const creatingTaskColumnId = ref(null)
 const editingTask = ref(null)
-const showGenerator = ref(false)
-
 function editColumn(col) {
     editingColumn.value = col
 }
@@ -193,6 +181,8 @@ function handleDropColumn(payload, targetIndex) {
 }
 
 function onSlotAction(action) {
-    if (action.emit === 'show-generator') showGenerator.value = true
+    if (action.emit) {
+        window.dispatchEvent(new CustomEvent(action.emit))
+    }
 }
 </script>

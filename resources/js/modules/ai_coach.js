@@ -19,16 +19,14 @@ registerModule({
     actions: [
         {
             slot: 'board-toolbar',
-            label: 'Generar con IA',
-            icon: markRaw(SparklesIcon),
-            emit: 'show-generator',
+            id: 'task-generator',
+            component: defineAsyncComponent(() => import('@/components/tasks/TaskGeneratorAction.vue')),
             order: 10,
         },
         {
             slot: 'finance-dashboard-toolbar',
-            label: 'Analizar con IA',
-            icon: markRaw(SparklesIcon),
-            emit: 'show-analysis',
+            id: 'finance-analysis',
+            component: defineAsyncComponent(() => import('@/components/finance/FinanceAnalysisAction.vue')),
             order: 10,
         },
         {
