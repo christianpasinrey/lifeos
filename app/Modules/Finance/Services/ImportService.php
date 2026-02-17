@@ -41,18 +41,6 @@ class ImportService
                     continue;
                 }
 
-                // Deduplicate: same user, date, amount, description
-                $exists = Transaction::where('user_id', $user->id)
-                    ->where('date', $parsed['date'])
-                    ->where('amount', $parsed['amount'])
-                    ->where('description', $parsed['description'])
-                    ->exists();
-
-                if ($exists) {
-                    $skipped++;
-                    continue;
-                }
-
                 Transaction::create([
                     'user_id' => $user->id,
                     'account_id' => $accountId,
@@ -377,7 +365,11 @@ class ImportService
             $value = str_replace('.', '', $value);
             $value = str_replace(',', '.', $value);
         }
-        // US format or simple: just remove commas
+        // US format with thousands: 1,533.52 (comma before dot)
+        elseif (str_contains($value, ',') && str_contains($value, '.') && strrpos($value, '.') > strrpos($value, ',')) {
+            $value = str_replace(',', '', $value);
+        }
+        // Only commas, no dots
         elseif (str_contains($value, ',') && !str_contains($value, '.')) {
             // Could be european without dots: "1234,56"
             if (preg_match('/,\d{1,2}$/', $value)) {
