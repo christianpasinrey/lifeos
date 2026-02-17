@@ -8,14 +8,16 @@ use App\Modules\Ai\Tools\GetHabitStats;
 use App\Modules\Ai\Tools\GetUserHabits;
 use App\Modules\Ai\Tools\ToggleHabit;
 use App\Modules\Ai\Tools\CreateCustomEntity;
+use Laravel\Ai\Concerns\RemembersConversations;
 use Laravel\Ai\Contracts\Agent;
+use Laravel\Ai\Contracts\Conversational;
 use Laravel\Ai\Contracts\HasTools;
 use Laravel\Ai\Promptable;
 use Stringable;
 
-class HabitCoach implements Agent, HasTools
+class HabitCoach implements Agent, Conversational, HasTools
 {
-    use Promptable;
+    use Promptable, RemembersConversations;
 
     public function __construct(private User $user) {}
 

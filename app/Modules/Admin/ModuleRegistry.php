@@ -18,7 +18,7 @@ class ModuleRegistry
         'ai_coach' => [
             'name' => 'Coach IA',
             'description' => 'Asistente IA con acceso a datos del usuario',
-            'free_limits' => ['max_messages_per_day' => 10],
+            'free_limits' => ['max_messages_per_day' => 10, 'max_conversations' => 10],
         ],
         'tasks' => [
             'name' => 'Tareas',
