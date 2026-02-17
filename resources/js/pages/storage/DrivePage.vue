@@ -752,11 +752,14 @@ async function createTransactionsFromAnalysis() {
 
 function formatAiResponse(text) {
     if (!text) return ''
-    return text
+    // Hide the JSON data block from display
+    let clean = text.replace(/TRANSACTIONS_JSON_START[\s\S]*?TRANSACTIONS_JSON_END/g, '')
+    return clean
         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.*?)\*/g, '<em>$1</em>')
         .replace(/\n/g, '<br>')
+        .replace(/(<br>)+$/g, '')
 }
 
 async function loadExcelPreview(file) {
