@@ -131,3 +131,21 @@ export function useMoveTask() {
         },
     })
 }
+
+// AI Generation
+export function useSuggestTasks() {
+    return useMutation({
+        mutationFn: (prompt) => api.post('/tasks/ai/suggest', { prompt }).then(r => r.data),
+    })
+}
+
+export function useConfirmGeneratedTasks() {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: ({ columnId, tasks, boardId }) =>
+            api.post('/tasks/ai/confirm', { column_id: columnId, tasks }).then(r => r.data),
+        onSuccess: (_, { boardId }) => {
+            qc.invalidateQueries({ queryKey: ['boards', boardId] })
+        },
+    })
+}

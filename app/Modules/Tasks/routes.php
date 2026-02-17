@@ -3,7 +3,13 @@
 use App\Modules\Tasks\Controllers\BoardController;
 use App\Modules\Tasks\Controllers\ColumnController;
 use App\Modules\Tasks\Controllers\TaskController;
+use App\Modules\Tasks\Controllers\TaskGeneratorController;
 use Illuminate\Support\Facades\Route;
+
+Route::middleware(['api', 'auth:sanctum', 'module:tasks', 'module:ai_coach'])->prefix('api')->group(function () {
+    Route::post('tasks/ai/suggest', [TaskGeneratorController::class, 'suggest']);
+    Route::post('tasks/ai/confirm', [TaskGeneratorController::class, 'confirm']);
+});
 
 Route::middleware(['api', 'auth:sanctum', 'module:tasks'])->prefix('api')->group(function () {
     // Boards

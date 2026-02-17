@@ -39,8 +39,41 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
     flex-shrink: 0;
+}
+
+@utility kanban-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 0.75rem;
+    flex-shrink: 0;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.5));
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(24px);
+}
+
+@utility toolbar-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: var(--color-surface-400);
+    white-space: nowrap;
+
+    & .stat-value {
+        color: var(--color-surface-200);
+        font-weight: 600;
+    }
 }
 
 @utility kanban-scroll {
@@ -53,7 +86,7 @@
 @utility kanban-track {
     display: flex;
     gap: 1rem;
-    align-items: flex-start;
+    align-items: stretch;
     min-height: 0;
     height: 100%;
 }
@@ -62,7 +95,7 @@
     flex: 0 0 300px;
     display: flex;
     flex-direction: column;
-    max-height: calc(100vh - 200px);
+    max-height: calc(100vh - 140px);
     border-radius: 16px;
     background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(15, 23, 42, 0.6));
     border: 1px solid rgba(255, 255, 255, 0.06);

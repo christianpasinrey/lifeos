@@ -39,11 +39,10 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="form-label">Prioridad</label>
-                            <select v-model="form.priority" class="form-input">
-                                <option value="low">Baja</option>
-                                <option value="medium">Media</option>
-                                <option value="high">Alta</option>
-                            </select>
+                            <CustomSelect
+                                v-model="form.priority"
+                                :options="priorityOptions"
+                            />
                         </div>
                         <div>
                             <label class="form-label">Fecha límite</label>
@@ -72,6 +71,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useCreateTask, useUpdateTask, useDeleteTask } from '@/composables/useTasks'
+import CustomSelect from '@/components/ui/CustomSelect.vue'
+
+const priorityOptions = [
+    { value: 'low', label: 'Baja' },
+    { value: 'medium', label: 'Media' },
+    { value: 'high', label: 'Alta' },
+]
 
 const props = defineProps({
     boardId: { type: Number, required: true },

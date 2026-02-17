@@ -363,11 +363,15 @@
 /* Slide from right (chat panel) */
 .slide-right-enter-active,
 .slide-right-leave-active {
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
 }
 .slide-right-enter-from,
 .slide-right-leave-to {
     opacity: 0;
+    width: 0 !important;
     transform: translateX(24px);
 }
 

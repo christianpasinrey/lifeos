@@ -11,10 +11,6 @@
                     <PencilIcon class="w-4 h-4" />
                 </button>
             </div>
-            <button class="btn-add" @click="showCreateColumn = true">
-                <PlusIcon class="w-4 h-4" />
-                Columna
-            </button>
         </div>
 
         <!-- Loading -->
@@ -22,23 +18,59 @@
             <div class="animate-spin w-8 h-8 border-2 border-primary-400 border-t-transparent rounded-full" />
         </div>
 
-        <!-- Kanban -->
-        <div v-else class="kanban-scroll glass-scroll">
-            <div class="kanban-track">
-                <KanbanColumn
-                    v-for="column in columns"
-                    :key="column.id"
-                    :column="column"
-                    :board-id="boardId"
-                    :drag="drag"
-                    @edit-column="editColumn"
-                    @add-task="addTask"
-                    @edit-task="editTask"
-                    @drop-task="handleDropTask"
-                    @drop-column="handleDropColumn"
-                />
+        <!-- Toolbar + Kanban -->
+        <template v-else>
+            <div class="kanban-toolbar">
+                <!-- Stats -->
+                <div class="flex items-center gap-2">
+                    <div class="toolbar-stat">
+                        <ViewColumnsIcon class="w-3.5 h-3.5" />
+                        <span class="stat-value">{{ columns.length }}</span> columnas
+                    </div>
+                    <div class="toolbar-stat">
+                        <ClipboardDocumentListIcon class="w-3.5 h-3.5" />
+                        <span class="stat-value">{{ totalTasks }}</span> tareas
+                    </div>
+                    <div v-if="highPriorityCount" class="toolbar-stat" style="color: var(--color-danger-400); border-color: rgba(244, 63, 94, 0.15);">
+                        <ExclamationTriangleIcon class="w-3.5 h-3.5" />
+                        <span class="stat-value" style="color: var(--color-danger-300);">{{ highPriorityCount }}</span> urgentes
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex items-center gap-2">
+                    <button
+                        v-if="auth.hasModule('ai_coach')"
+                        class="btn-add"
+                        @click="showGenerator = true"
+                    >
+                        <SparklesIcon class="w-4 h-4" />
+                        Generar con IA
+                    </button>
+                    <button class="btn-add" @click="showCreateColumn = true">
+                        <PlusIcon class="w-4 h-4" />
+                        Columna
+                    </button>
+                </div>
             </div>
-        </div>
+
+            <div class="kanban-scroll glass-scroll">
+                <div class="kanban-track">
+                    <KanbanColumn
+                        v-for="column in columns"
+                        :key="column.id"
+                        :column="column"
+                        :board-id="boardId"
+                        :drag="drag"
+                        @edit-column="editColumn"
+                        @add-task="addTask"
+                        @edit-task="editTask"
+                        @drop-task="handleDropTask"
+                        @drop-column="handleDropColumn"
+                    />
+                </div>
+            </div>
+        </template>
 
         <!-- Modals -->
         <BoardModal
@@ -75,6 +107,13 @@
             @close="editingTask = null"
             @saved="editingTask = null"
         />
+        <TaskGeneratorModal
+            v-if="showGenerator"
+            :board-id="boardId"
+            :columns="columns"
+            @close="showGenerator = false"
+            @saved="showGenerator = false"
+        />
     </div>
 </template>
 
@@ -87,7 +126,17 @@ import KanbanColumn from '@/components/tasks/KanbanColumn.vue'
 import BoardModal from '@/components/tasks/BoardModal.vue'
 import ColumnModal from '@/components/tasks/ColumnModal.vue'
 import TaskModal from '@/components/tasks/TaskModal.vue'
-import { ArrowLeftIcon, PlusIcon, PencilIcon } from '@heroicons/vue/24/outline'
+import TaskGeneratorModal from '@/components/tasks/TaskGeneratorModal.vue'
+import {
+    ArrowLeftIcon,
+    PlusIcon,
+    PencilIcon,
+    SparklesIcon,
+    ViewColumnsIcon,
+    ClipboardDocumentListIcon,
+    ExclamationTriangleIcon,
+} from '@heroicons/vue/24/outline'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const boardId = computed(() => Number(route.params.id))
@@ -95,7 +144,11 @@ const boardId = computed(() => Number(route.params.id))
 const { data, isLoading } = useBoard(boardId)
 const board = computed(() => data.value?.data ?? null)
 const columns = computed(() => board.value?.columns ?? [])
+const allTasks = computed(() => columns.value.flatMap(c => c.tasks ?? []))
+const totalTasks = computed(() => allTasks.value.length)
+const highPriorityCount = computed(() => allTasks.value.filter(t => t.priority === 'high').length)
 
+const auth = useAuthStore()
 const drag = useDrag()
 const moveTask = useMoveTask()
 const reorderCols = useReorderColumns()
@@ -105,6 +158,7 @@ const showCreateColumn = ref(false)
 const editingColumn = ref(null)
 const creatingTaskColumnId = ref(null)
 const editingTask = ref(null)
+const showGenerator = ref(false)
 
 function editColumn(col) {
     editingColumn.value = col
