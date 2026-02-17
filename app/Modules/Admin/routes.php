@@ -1,24 +1,22 @@
 <?php
 
-use App\Modules\Admin\Controllers\AdminAuthController;
-use App\Modules\Admin\Controllers\AdminDashboardController;
-use App\Modules\Admin\Controllers\AdminUserController;
+use App\Modules\Admin\Controllers\AdminApiController;
 use App\Modules\Admin\Middleware\RequireAdmin;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('web')->prefix('admin')->group(function () {
-    // Auth (public)
-    Route::get('/login', [AdminAuthController::class, 'showLogin'])->name('admin.login');
-    Route::post('/login', [AdminAuthController::class, 'login']);
-
-    // Protected
-    Route::middleware(['auth', RequireAdmin::class])->group(function () {
-        Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
-        Route::get('/', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
-        Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users');
-        Route::get('/users/{user}/modules', [AdminUserController::class, 'modules'])->name('admin.users.modules');
-        Route::post('/users/{user}/toggle-module', [AdminUserController::class, 'toggleModule'])->name('admin.users.toggle-module');
-        Route::get('/users/{user}/plan', [AdminUserController::class, 'plan'])->name('admin.users.plan');
-        Route::post('/users/{user}/plan', [AdminUserController::class, 'updatePlan'])->name('admin.users.update-plan');
+// API routes for admin SPA
+Route::middleware(['api', 'auth:sanctum', RequireAdmin::class])
+    ->prefix('api/admin')
+    ->group(function () {
+        Route::get('/stats', [AdminApiController::class, 'stats']);
+        Route::get('/users', [AdminApiController::class, 'users']);
+        Route::get('/users/{user}', [AdminApiController::class, 'user']);
+        Route::post('/users/{user}/toggle-module', [AdminApiController::class, 'toggleModule']);
+        Route::put('/users/{user}/plan', [AdminApiController::class, 'updatePlan']);
+        Route::get('/modules', [AdminApiController::class, 'modules']);
     });
-});
+
+// SPA catch-all — serves the Vue app for all /admin/* routes
+Route::middleware('web')
+    ->get('/admin/{any?}', fn () => view('app'))
+    ->where('any', '.*');

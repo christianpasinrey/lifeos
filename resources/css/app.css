@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@source "../../app/Modules/Admin/Views/**/*.blade.php";
 @import "./glass.css";
 @import "./base.css";
 @import "./typography.css";
@@ -18,7 +17,6 @@
 
 /* Layouts */
 @import "./layouts/app-layout.css";
-@import "./layouts/admin-layout.css";
 
 /* Pages */
 @import "./pages/login.css";

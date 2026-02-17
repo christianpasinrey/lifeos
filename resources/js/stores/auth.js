@@ -7,6 +7,7 @@ export const useAuthStore = defineStore('auth', () => {
     const checked = ref(false)
 
     const isAuthenticated = computed(() => !!user.value)
+    const isAdmin = computed(() => !!user.value?.is_admin)
     const modules = computed(() => user.value?.modules ?? {})
 
     function hasModule(slug) {
@@ -49,5 +50,5 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = null
     }
 
-    return { user, checked, isAuthenticated, modules, hasModule, getModuleLimit, hasFeature, fetchUser, login, logout }
+    return { user, checked, isAuthenticated, isAdmin, modules, hasModule, getModuleLimit, hasFeature, fetchUser, login, logout }
 })

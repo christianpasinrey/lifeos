@@ -1,26 +1,20 @@
 <template>
     <div class="space-y-2">
         <div v-for="(selected, index) in modelValue" :key="index" class="flex items-center gap-2">
-            <select
-                :value="selected.tax_id"
-                class="form-input flex-1 text-sm"
-                @change="updateTax(index, $event.target.value)"
-            >
-                <option value="">Seleccionar impuesto...</option>
-                <option v-for="tax in taxes" :key="tax.id" :value="tax.id">
-                    {{ tax.name }} ({{ tax.type === 'applicable' ? '+' : '-' }})
-                </option>
-            </select>
-            <select
-                :value="selected.tax_rate_id"
-                class="form-input flex-1 text-sm"
-                @change="updateRate(index, $event.target.value)"
-            >
-                <option value="">Tasa...</option>
-                <option v-for="rate in getRatesForTax(selected.tax_id)" :key="rate.id" :value="rate.id">
-                    {{ rate.name }} ({{ rate.rate }}%)
-                </option>
-            </select>
+            <CustomSelect
+                :modelValue="selected.tax_id"
+                @update:modelValue="updateTax(index, $event)"
+                :options="taxOptions"
+                placeholder="Seleccionar impuesto..."
+                class="flex-1 text-sm"
+            />
+            <CustomSelect
+                :modelValue="selected.tax_rate_id"
+                @update:modelValue="updateRate(index, $event)"
+                :options="getRateOptions(selected.tax_id)"
+                placeholder="Tasa..."
+                class="flex-1 text-sm"
+            />
             <button
                 type="button"
                 class="text-danger-400 hover:text-danger-300 text-sm px-1"
@@ -38,6 +32,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useFinanceTaxes } from '@/composables/useFinanceTaxes'
+import CustomSelect from '@/components/ui/CustomSelect.vue'
 
 const props = defineProps({
     modelValue: { type: Array, default: () => [] },
@@ -48,9 +43,23 @@ const emit = defineEmits(['update:modelValue'])
 const { data: taxesData } = useFinanceTaxes()
 const taxes = computed(() => taxesData.value?.data ?? [])
 
+const taxOptions = computed(() =>
+    taxes.value.map(t => ({
+        value: t.id,
+        label: `${t.name} (${t.type === 'applicable' ? '+' : '-'})`,
+    }))
+)
+
 function getRatesForTax(taxId) {
     const tax = taxes.value.find(t => t.id === Number(taxId))
     return tax?.rates ?? []
+}
+
+function getRateOptions(taxId) {
+    return getRatesForTax(taxId).map(r => ({
+        value: r.id,
+        label: `${r.name} (${r.rate}%)`,
+    }))
 }
 
 function addTax() {

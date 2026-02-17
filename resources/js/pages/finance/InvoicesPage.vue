@@ -68,7 +68,7 @@
         <Teleport to="body">
             <div v-if="showForm" class="modal-overlay" @mousedown.self="showForm = false">
                 <div class="modal-backdrop" />
-                <div class="modal-content liquid-glass liquid-glass-panel max-w-2xl max-h-[90vh] overflow-y-auto">
+                <div class="modal-content liquid-glass liquid-glass-panel max-w-2xl">
                     <h2 class="section-title mb-5">
                         {{ editing ? 'Editar factura' : 'Nueva factura' }}
                     </h2>

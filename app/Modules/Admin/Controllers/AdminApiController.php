@@ -8,18 +8,35 @@ use App\Modules\Admin\ModuleRegistry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class AdminUserController extends Controller
+class AdminApiController extends Controller
 {
-    public function index()
+    public function stats()
+    {
+        return response()->json([
+            'total_users' => User::count(),
+            'admin_users' => User::where('is_admin', true)->count(),
+            'total_modules_active' => DB::table('user_modules')->where('is_active', true)->count(),
+            'premium_users' => DB::table('user_modules')->where('plan', 'premium')->distinct('user_id')->count('user_id'),
+        ]);
+    }
+
+    public function users()
     {
         $users = User::withCount(['modules as active_modules_count' => function ($q) {
             $q->where('is_active', true);
         }])->orderBy('name')->get();
 
-        return view('admin::users.index', compact('users'));
+        return response()->json($users->map(fn ($u) => [
+            'id' => $u->id,
+            'name' => $u->name,
+            'email' => $u->email,
+            'is_admin' => $u->is_admin,
+            'active_modules_count' => $u->active_modules_count,
+            'created_at' => $u->created_at->toDateString(),
+        ]));
     }
 
-    public function modules(User $user)
+    public function user(User $user)
     {
         $availableModules = ModuleRegistry::all();
 
@@ -30,10 +47,24 @@ class AdminUserController extends Controller
                 'name' => $info['name'],
                 'description' => $info['description'],
                 'is_active' => $userModule ? $userModule->is_active : false,
+                'plan' => $userModule->plan ?? 'free',
+                'limits' => $userModule->limits ?? $info['free_limits'],
+                'free_limits' => $info['free_limits'],
+                'free_features' => $info['free_features'] ?? [],
+                'features' => $userModule ? $userModule->resolvedFeatures() : ($info['free_features'] ?? []),
             ];
-        });
+        })->values();
 
-        return view('admin::users.modules', compact('user', 'modules'));
+        return response()->json([
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'is_admin' => $user->is_admin,
+                'created_at' => $user->created_at->toDateString(),
+            ],
+            'modules' => $modules,
+        ]);
     }
 
     public function toggleModule(Request $request, User $user)
@@ -52,6 +83,7 @@ class AdminUserController extends Controller
             DB::table('user_modules')
                 ->where('id', $existing->id)
                 ->update(['is_active' => !$existing->is_active, 'updated_at' => now()]);
+            $isActive = !$existing->is_active;
         } else {
             $freeLimits = ModuleRegistry::freeLimits($module);
             DB::table('user_modules')->insert([
@@ -63,36 +95,10 @@ class AdminUserController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+            $isActive = true;
         }
 
-        return back()->with('success', 'Módulo actualizado.');
-    }
-
-    public function plan(User $user)
-    {
-        $availableModules = ModuleRegistry::all();
-
-        $modules = $user->modules()
-            ->where('is_active', true)
-            ->get()
-            ->map(function ($userModule) use ($availableModules) {
-                $info = $availableModules[$userModule->module] ?? null;
-                if (!$info) return null;
-
-                return [
-                    'slug' => $userModule->module,
-                    'name' => $info['name'],
-                    'plan' => $userModule->plan,
-                    'limits' => $userModule->limits ?? $info['free_limits'],
-                    'free_limits' => $info['free_limits'],
-                    'free_features' => $info['free_features'] ?? [],
-                    'features' => $userModule->resolvedFeatures(),
-                    'custom_features' => $userModule->features,
-                ];
-            })
-            ->filter();
-
-        return view('admin::users.plan', compact('user', 'modules'));
+        return response()->json(['success' => true, 'is_active' => $isActive]);
     }
 
     public function updatePlan(Request $request, User $user)
@@ -113,11 +119,9 @@ class AdminUserController extends Controller
 
             if ($plan === 'free') {
                 $limits = ModuleRegistry::freeLimits($slug);
-                // Free plan: no custom features (use defaults from registry)
                 $features = null;
             } elseif ($plan === 'custom') {
                 $limits = array_map('intval', $data['limits'] ?? []);
-                // Custom plan: save feature overrides
                 $freeFeatures = ModuleRegistry::freeFeatures($slug);
                 if (!empty($freeFeatures) && isset($data['features'])) {
                     $features = [];
@@ -126,7 +130,6 @@ class AdminUserController extends Controller
                     }
                 }
             }
-            // premium: limits = null, features = null (all enabled via isPremium)
 
             $user->modules()
                 ->where('module', $slug)
@@ -137,6 +140,11 @@ class AdminUserController extends Controller
                 ]);
         }
 
-        return back()->with('success', 'Planes actualizados correctamente.');
+        return response()->json(['success' => true]);
+    }
+
+    public function modules()
+    {
+        return response()->json(ModuleRegistry::all());
     }
 }

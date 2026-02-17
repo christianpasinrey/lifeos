@@ -9,6 +9,35 @@ const routes = [
         meta: { guest: true },
     },
     {
+        path: '/admin/login',
+        name: 'admin-login',
+        component: () => import('@/pages/admin/AdminLoginPage.vue'),
+        meta: { guest: true },
+    },
+    {
+        path: '/admin',
+        component: () => import('@/layouts/AdminLayout.vue'),
+        meta: { auth: true, admin: true },
+        children: [
+            {
+                path: '',
+                name: 'admin-dashboard',
+                component: () => import('@/pages/admin/AdminDashboardPage.vue'),
+            },
+            {
+                path: 'users',
+                name: 'admin-users',
+                component: () => import('@/pages/admin/AdminUsersPage.vue'),
+            },
+            {
+                path: 'users/:id',
+                name: 'admin-user-detail',
+                component: () => import('@/pages/admin/AdminUserDetailPage.vue'),
+                props: true,
+            },
+        ],
+    },
+    {
         path: '/',
         component: () => import('@/layouts/AppLayout.vue'),
         meta: { auth: true },
@@ -125,14 +154,25 @@ router.beforeEach(async (to) => {
         await auth.fetchUser()
     }
 
+    // Auth required
     if (to.meta.auth && !auth.isAuthenticated) {
+        if (to.meta.admin) {
+            return { name: 'admin-login' }
+        }
         return { name: 'login' }
     }
 
+    // Guest-only pages
     if (to.meta.guest && auth.isAuthenticated) {
         return { name: 'dashboard' }
     }
 
+    // Admin required
+    if (to.meta.admin && !auth.isAdmin) {
+        return { name: 'dashboard' }
+    }
+
+    // Module required
     if (to.meta.module && !auth.hasModule(to.meta.module)) {
         return { name: 'dashboard' }
     }
