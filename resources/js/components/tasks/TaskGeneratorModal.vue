@@ -191,7 +191,7 @@ async function handleSuggest() {
     suggesting.value = true
     try {
         const res = await suggestMutation.mutateAsync(prompt.value)
-        suggestions.value = (res.tasks ?? []).map(t => ({ ...t, selected: true }))
+        suggestions.value = (res.data ?? []).map(t => ({ ...t, selected: true }))
         step.value = 'review'
     } catch (e) {
         error.value = e.response?.data?.message ?? 'Error al generar tareas. Inténtalo de nuevo.'
