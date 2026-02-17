@@ -46,8 +46,12 @@
 }
 
 @utility chat-aside {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    bottom: 1rem;
     width: 24rem;
-    flex-shrink: 0;
     display: flex;
     flex-direction: column;
+    z-index: 30;
 }

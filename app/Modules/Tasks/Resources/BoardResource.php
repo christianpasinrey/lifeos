@@ -14,6 +14,8 @@ class BoardResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'sort_order' => $this->sort_order,
+            'columns_count' => $this->whenCounted('columns'),
+            'tasks_count' => $this->whenCounted('tasks'),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'columns' => $this->whenLoaded('columns', fn () =>

@@ -17,6 +17,7 @@ class BoardController extends Controller
     {
         $boards = $request->user()
             ->boards()
+            ->withCount(['columns', 'tasks'])
             ->orderBy('sort_order')
             ->get();
 

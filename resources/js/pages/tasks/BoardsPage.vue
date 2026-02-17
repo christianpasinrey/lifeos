@@ -28,12 +28,26 @@
                 :to="{ name: 'board', params: { id: board.id } }"
                 class="board-card liquid-glass liquid-glass-card"
             >
-                <h3 class="text-lg font-semibold text-surface-100">{{ board.name }}</h3>
-                <p v-if="board.description" class="text-sm text-surface-400 mt-1 line-clamp-2">
-                    {{ board.description }}
-                </p>
-                <div class="flex items-center gap-3 mt-4 text-xs text-surface-500">
-                    <span>{{ formatDate(board.created_at) }}</span>
+                <div>
+                    <h3 class="text-lg font-semibold text-surface-100">{{ board.name }}</h3>
+                    <p v-if="board.description" class="text-sm text-surface-400 mt-2 line-clamp-2">
+                        {{ board.description }}
+                    </p>
+                </div>
+
+                <div class="board-card-stats">
+                    <span class="board-card-stat">
+                        <ViewColumnsIcon class="w-3.5 h-3.5" />
+                        {{ board.columns_count ?? 0 }}
+                    </span>
+                    <span class="board-card-stat">
+                        <ClipboardDocumentListIcon class="w-3.5 h-3.5" />
+                        {{ board.tasks_count ?? 0 }} tareas
+                    </span>
+                    <span class="board-card-stat ml-auto">
+                        <CalendarIcon class="w-3.5 h-3.5" />
+                        {{ formatDate(board.created_at) }}
+                    </span>
                 </div>
             </router-link>
         </div>
@@ -51,7 +65,12 @@
 import { ref, computed } from 'vue'
 import { useBoards } from '@/composables/useTasks'
 import BoardModal from '@/components/tasks/BoardModal.vue'
-import { PlusIcon, ClipboardDocumentListIcon } from '@heroicons/vue/24/outline'
+import {
+    PlusIcon,
+    ClipboardDocumentListIcon,
+    ViewColumnsIcon,
+    CalendarIcon,
+} from '@heroicons/vue/24/outline'
 
 const showCreate = ref(false)
 const { data, isLoading } = useBoards()

@@ -74,17 +74,19 @@
             <main class="main-content glass-scroll">
                 <router-view />
             </main>
-
-            <!-- Chat panel -->
-            <Transition name="slide-right">
-                <aside
-                    v-if="showChat && auth.hasModule('ai_coach')"
-                    class="chat-aside liquid-glass liquid-glass-panel"
-                >
-                    <ChatPanel @close="showChat = false" />
-                </aside>
-            </Transition>
         </div>
+
+        <!-- Chat panel (fixed overlay) -->
+        <Transition name="slide-right">
+            <aside
+                v-if="showChat && auth.hasModule('ai_coach')"
+                class="chat-aside"
+            >
+                <div class="liquid-glass liquid-glass-panel h-full flex flex-col rounded-[20px]">
+                    <ChatPanel @close="showChat = false" />
+                </div>
+            </aside>
+        </Transition>
     </div>
 </template>
 
