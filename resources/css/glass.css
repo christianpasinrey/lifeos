@@ -10,7 +10,7 @@
 
 /* --- Design tokens --- */
 :root {
-    --glass-backdrop: blur(12px) saturate(140%);
+    --glass-backdrop: blur(6px) saturate(110%);
     --glass-bg: rgba(255, 255, 255, 0.08);
     --glass-radius: 24px;
     --glass-shadow: 0 6px 24px rgba(0, 0, 0, 0.10);
@@ -74,7 +74,7 @@
 
 /* Dock — heavier for floating UI */
 .liquid-glass-dock {
-    --glass-backdrop: blur(16px) saturate(140%);
+    --glass-backdrop: blur(8px) saturate(110%);
     --glass-radius: 22px;
     --glass-bg: rgba(255, 255, 255, 0.10);
     --glass-shadow:
@@ -84,7 +84,7 @@
 
 /* Side panel — readable, clear frosting */
 .liquid-glass-panel {
-    --glass-backdrop: blur(16px) saturate(140%);
+    --glass-backdrop: blur(8px) saturate(110%);
     --glass-radius: 20px;
     --glass-bg: rgba(255, 255, 255, 0.08);
     --glass-shadow:
@@ -94,7 +94,7 @@
 
 /* Logo chip — compact */
 .liquid-glass-chip {
-    --glass-backdrop: blur(12px) saturate(140%);
+    --glass-backdrop: blur(6px) saturate(110%);
     --glass-radius: 14px;
     --glass-bg: rgba(255, 255, 255, 0.06);
     --glass-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
@@ -102,7 +102,7 @@
 
 /* Sidebar — floating vertical nav */
 .liquid-glass-sidebar {
-    --glass-backdrop: blur(16px) saturate(140%);
+    --glass-backdrop: blur(8px) saturate(110%);
     --glass-radius: 20px;
     --glass-bg: rgba(255, 255, 255, 0.08);
     --glass-shadow:
@@ -112,7 +112,7 @@
 
 /* Content card — subtle */
 .liquid-glass-card {
-    --glass-backdrop: blur(12px) saturate(140%);
+    --glass-backdrop: blur(6px) saturate(110%);
     --glass-radius: 16px;
     --glass-bg: rgba(255, 255, 255, 0.06);
     --glass-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);

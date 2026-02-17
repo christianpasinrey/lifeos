@@ -483,8 +483,9 @@ function resetRichPreview() {
 async function loadExcelPreview(file) {
     richPreviewLoading.value = true
     try {
-        const ExcelJS = await import('exceljs')
-        const response = await fetch(previewUrl(file))
+        const mod = await import('exceljs')
+        const ExcelJS = mod.default || mod
+        const response = await fetch(previewUrl(file), { credentials: 'include' })
         const buffer = await response.arrayBuffer()
 
         const workbook = new ExcelJS.Workbook()
@@ -496,13 +497,14 @@ async function loadExcelPreview(file) {
             worksheet.eachRow({ includeEmpty: false }, (row) => {
                 rows.push(row.values.slice(1).map(v => {
                     if (v === null || v === undefined) return ''
-                    if (typeof v === 'object' && v.result !== undefined) return v.result
-                    if (typeof v === 'object' && v.text) return v.text
+                    if (typeof v === 'object' && v.result !== undefined) return String(v.result)
+                    if (typeof v === 'object' && v.text) return String(v.text)
+                    if (typeof v === 'object' && v instanceof Date) return v.toLocaleDateString('es-ES')
+                    if (typeof v === 'object') return JSON.stringify(v)
                     return String(v)
                 }))
             })
             if (rows.length) {
-                // Normalize column count
                 const maxCols = Math.max(...rows.map(r => r.length))
                 rows.forEach(r => { while (r.length < maxCols) r.push('') })
                 sheets.push({ name: worksheet.name, rows })
@@ -510,7 +512,8 @@ async function loadExcelPreview(file) {
         })
 
         excelSheets.value = sheets
-    } catch {
+    } catch (e) {
+        console.error('Excel preview error:', e)
         excelSheets.value = []
     }
     richPreviewLoading.value = false
@@ -520,11 +523,12 @@ async function loadWordPreview(file) {
     richPreviewLoading.value = true
     try {
         const mammoth = await import('mammoth')
-        const response = await fetch(previewUrl(file))
+        const response = await fetch(previewUrl(file), { credentials: 'include' })
         const buffer = await response.arrayBuffer()
         const result = await mammoth.convertToHtml({ arrayBuffer: buffer })
         wordHtml.value = result.value
-    } catch {
+    } catch (e) {
+        console.error('Word preview error:', e)
         wordHtml.value = ''
     }
     richPreviewLoading.value = false
@@ -533,7 +537,7 @@ async function loadWordPreview(file) {
 async function loadTextPreview(file) {
     richPreviewLoading.value = true
     try {
-        const response = await fetch(previewUrl(file))
+        const response = await fetch(previewUrl(file), { credentials: 'include' })
         textContent.value = await response.text()
     } catch {
         textContent.value = 'No se pudo cargar el archivo.'

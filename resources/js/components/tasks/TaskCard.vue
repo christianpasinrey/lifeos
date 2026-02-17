@@ -1,6 +1,6 @@
 <template>
     <div
-        class="task-card"
+        class="task-card liquid-glass liquid-glass-card"
         :class="{
             'is-dragging': drag.dragging.value?.type === 'task' && drag.dragging.value?.id === task.id,
             'task-card-dragover': drag.dragOverId.value === `task-${task.id}`,
