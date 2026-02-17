@@ -108,6 +108,7 @@ return [
         'openai' => [
             'driver' => 'openai',
             'key' => env('OPENAI_API_KEY'),
+            'model' => env('CHATGPT_MODEL', 'gpt-4o-mini'),
         ],
 
         'openrouter' => [
