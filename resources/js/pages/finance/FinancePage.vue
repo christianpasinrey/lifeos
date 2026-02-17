@@ -132,6 +132,19 @@
                                     </span>
                                 </p>
                                 <p v-if="tx.notes" class="text-xs text-surface-500 mt-1">{{ tx.notes }}</p>
+                                <!-- Attachments -->
+                                <div v-if="auth.hasModule('storage') && tx.media?.length" class="flex flex-wrap gap-2 mt-2">
+                                    <span
+                                        v-for="m in tx.media"
+                                        :key="m.id"
+                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.06] border border-white/10 text-xs text-surface-300"
+                                    >
+                                        <PaperClipIcon class="w-3.5 h-3.5 text-primary-400" />
+                                        <a :href="`/api/storage/transactions/${tx.id}/media/${m.id}/download`" class="hover:text-white transition truncate max-w-[120px]">{{ m.file_name }}</a>
+                                        <span class="text-surface-500">{{ formatFileSize(m.size) }}</span>
+                                        <button @click="removeAttachment(tx, m)" class="text-danger-400 hover:text-danger-300 ml-1">&times;</button>
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         <div class="flex flex-col items-start gap-2 text-right md:items-end">
@@ -142,6 +155,10 @@
                                 {{ tx.type === 'income' ? '+' : '-' }}{{ formatCurrency(tx.amount) }}
                             </p>
                             <div class="flex gap-2">
+                                <label v-if="auth.hasModule('storage')" class="text-xs font-medium text-primary-300 hover:text-primary-200 transition cursor-pointer">
+                                    <PaperClipIcon class="w-3.5 h-3.5 inline" />
+                                    <input type="file" class="hidden" @change="attachFile(tx, $event)" />
+                                </label>
                                 <button class="text-xs font-medium text-surface-400 hover:text-white transition" @click="openTransactionForm(tx)">Editar</button>
                                 <button class="text-xs font-medium text-danger-400 hover:text-danger-500 transition" @click="deleteTx(tx)">Eliminar</button>
                             </div>
@@ -278,6 +295,7 @@ import {
     ArrowUpCircleIcon,
     WalletIcon,
     PlusIcon,
+    PaperClipIcon,
 } from '@heroicons/vue/24/outline'
 import CustomSelect from '@/components/ui/CustomSelect.vue'
 import {
@@ -291,6 +309,7 @@ import {
     useUpdateCategory,
     useDeleteCategory,
 } from '@/composables/useFinance'
+import { useUploadTransactionMedia, useDeleteTransactionMedia } from '@/composables/useStorage'
 
 const auth = useAuthStore()
 
@@ -382,6 +401,27 @@ const deleteTransactionMutation = useDeleteTransaction()
 const createCategory = useCreateCategory()
 const updateCategory = useUpdateCategory()
 const deleteCategoryMutation = useDeleteCategory()
+
+const uploadMedia = useUploadTransactionMedia()
+const deleteMedia = useDeleteTransactionMedia()
+
+function attachFile(tx, event) {
+    const file = event.target.files?.[0]
+    if (!file) return
+    uploadMedia.mutate({ transactionId: tx.id, file })
+    event.target.value = ''
+}
+
+function removeAttachment(tx, media) {
+    if (!confirm('¿Eliminar este archivo adjunto?')) return
+    deleteMedia.mutate({ transactionId: tx.id, mediaId: media.id })
+}
+
+function formatFileSize(bytes) {
+    if (bytes < 1024) return bytes + ' B'
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB'
+    return (bytes / 1048576).toFixed(1) + ' MB'
+}
 
 const showTransactionForm = ref(false)
 const editingTransaction = ref(null)

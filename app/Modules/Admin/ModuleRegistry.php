@@ -33,6 +33,11 @@ class ModuleRegistry
                 'max_categories' => 6,
             ],
         ],
+        'storage' => [
+            'name' => 'Almacenamiento',
+            'description' => 'Adjunta archivos a transacciones y gestiona tu Drive personal',
+            'free_limits' => ['max_files' => 20],
+        ],
     ];
 
     public static function all(): array

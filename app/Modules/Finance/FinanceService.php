@@ -15,7 +15,7 @@ class FinanceService
         $end = $endDate ? Carbon::parse($endDate) : now()->endOfMonth();
 
         $transactions = $user->transactions()
-            ->with('category')
+            ->with('category', 'media')
             ->whereBetween('date', [$start, $end])
             ->get();
 
@@ -47,7 +47,7 @@ class FinanceService
 
     public function getTransactions(User $user, ?string $type = null, ?int $categoryId = null, ?string $startDate = null, ?string $endDate = null)
     {
-        $query = $user->transactions()->with('category')->orderBy('date', 'desc');
+        $query = $user->transactions()->with('category', 'media')->orderBy('date', 'desc');
 
         if ($type) {
             $query->where('type', $type);
@@ -79,7 +79,7 @@ class FinanceService
     public function updateTransaction(Transaction $transaction, array $data): Transaction
     {
         $transaction->update($data);
-        return $transaction->fresh('category');
+        return $transaction->fresh('category', 'media');
     }
 
     public function deleteTransaction(Transaction $transaction): void

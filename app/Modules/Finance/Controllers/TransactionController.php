@@ -45,14 +45,14 @@ class TransactionController extends Controller
 
         $transaction = $this->service->createTransaction($request->user(), $validated);
 
-        return response()->json(['data' => $transaction->load('category')], 201);
+        return response()->json(['data' => $transaction->load('category', 'media')], 201);
     }
 
     public function show(Request $request, Transaction $transaction)
     {
         abort_unless($transaction->user_id === $request->user()->id, 403);
 
-        return response()->json(['data' => $transaction->load('category')]);
+        return response()->json(['data' => $transaction->load('category', 'media')]);
     }
 
     public function update(Request $request, Transaction $transaction)

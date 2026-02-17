@@ -50,6 +50,12 @@ const routes = [
                 component: () => import('@/pages/finance/FinancePage.vue'),
                 meta: { module: 'finance' },
             },
+            {
+                path: 'drive',
+                name: 'drive',
+                component: () => import('@/pages/storage/DrivePage.vue'),
+                meta: { module: 'storage' },
+            },
         ],
     },
 ]
