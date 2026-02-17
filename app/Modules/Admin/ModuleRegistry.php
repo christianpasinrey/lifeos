@@ -20,6 +20,11 @@ class ModuleRegistry
             'description' => 'Asistente IA con acceso a datos del usuario',
             'free_limits' => ['max_messages_per_day' => 10],
         ],
+        'tasks' => [
+            'name' => 'Tareas',
+            'description' => 'Tableros Kanban para gestión de tareas',
+            'free_limits' => ['max_boards' => 3, 'max_columns_per_board' => 5],
+        ],
     ];
 
     public static function all(): array

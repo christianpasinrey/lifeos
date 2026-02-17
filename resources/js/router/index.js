@@ -31,6 +31,19 @@ const routes = [
                 props: true,
                 meta: { module: 'habits' },
             },
+            {
+                path: 'boards',
+                name: 'boards',
+                component: () => import('@/pages/tasks/BoardsPage.vue'),
+                meta: { module: 'tasks' },
+            },
+            {
+                path: 'boards/:id',
+                name: 'board',
+                component: () => import('@/pages/tasks/BoardPage.vue'),
+                props: true,
+                meta: { module: 'tasks' },
+            },
         ],
     },
 ]

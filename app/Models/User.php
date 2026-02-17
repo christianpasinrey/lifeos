@@ -55,6 +55,11 @@ class User extends Authenticatable
         return $this->hasMany(\App\Modules\Habits\Models\Habit::class);
     }
 
+    public function boards(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Tasks\Models\Board::class);
+    }
+
     public function modules()
     {
         return $this->hasMany(\App\Modules\Admin\Models\UserModule::class);

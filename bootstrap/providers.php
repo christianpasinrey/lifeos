@@ -6,4 +6,5 @@ return [
     App\Modules\CustomEntities\CustomEntityServiceProvider::class,
     App\Modules\Ai\AiServiceProvider::class,
     App\Modules\Admin\AdminServiceProvider::class,
+    App\Modules\Tasks\TaskServiceProvider::class,
 ];

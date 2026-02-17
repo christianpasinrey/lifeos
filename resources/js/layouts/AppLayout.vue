@@ -96,6 +96,7 @@ import ChatPanel from '@/components/ai/ChatPanel.vue'
 import {
     HomeIcon,
     SparklesIcon,
+    ClipboardDocumentListIcon,
     ChatBubbleLeftRightIcon,
     ArrowRightStartOnRectangleIcon,
 } from '@heroicons/vue/24/outline'
@@ -108,6 +109,7 @@ const showChat = ref(false)
 const navItems = [
     { to: '/', label: 'Dashboard', icon: HomeIcon },
     { to: '/habits', label: 'Hábitos', icon: SparklesIcon, module: 'habits' },
+    { to: '/boards', label: 'Tareas', icon: ClipboardDocumentListIcon, module: 'tasks' },
 ]
 
 const visibleNavItems = computed(() =>
