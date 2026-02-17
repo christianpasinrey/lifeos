@@ -22,7 +22,10 @@
                 <div class="calendar-day-time">
                     <span class="text-xs text-surface-500">{{ String(hour).padStart(2, '0') }}:00</span>
                 </div>
-                <div class="calendar-day-slot">
+                <div
+                    class="calendar-day-slot"
+                    @click="$emit('day-click', dateStr + 'T' + String(hour).padStart(2, '0') + ':00')"
+                >
                     <!-- Events at this hour -->
                     <div
                         v-for="event in getEventsAtHour(hour)"
@@ -61,7 +64,7 @@ const props = defineProps({
     currentDate: { type: Date, required: true },
 })
 
-defineEmits(['event-click'])
+defineEmits(['event-click', 'day-click'])
 
 const hours = Array.from({ length: 24 }, (_, i) => i)
 

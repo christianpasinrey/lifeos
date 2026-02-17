@@ -48,6 +48,7 @@
                         v-for="day in weekDays"
                         :key="day.dateStr + '-' + hour"
                         class="calendar-week-cell"
+                        @click="$emit('day-click', day.dateStr + 'T' + String(hour).padStart(2, '0') + ':00')"
                     />
                 </div>
 
@@ -75,7 +76,7 @@ const props = defineProps({
     currentDate: { type: Date, required: true },
 })
 
-defineEmits(['event-click'])
+defineEmits(['event-click', 'day-click'])
 
 const dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 const hours = Array.from({ length: 24 }, (_, i) => i)

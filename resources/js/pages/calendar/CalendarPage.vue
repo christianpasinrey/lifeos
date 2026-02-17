@@ -67,12 +67,14 @@
                 v-if="currentView === 'week'"
                 :events="filteredEvents"
                 :current-date="currentDate"
+                @day-click="handleDayClick"
                 @event-click="handleEventClick"
             />
             <DayView
                 v-if="currentView === 'day'"
                 :events="filteredEvents"
                 :current-date="currentDate"
+                @day-click="handleDayClick"
                 @event-click="handleEventClick"
             />
         </template>
