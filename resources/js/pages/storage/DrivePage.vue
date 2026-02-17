@@ -357,6 +357,122 @@
                                 Descargar archivo
                             </a>
                         </div>
+
+                        <!-- AI Analysis section -->
+                        <div v-if="canAnalyze(previewFile)" class="mt-6 pt-6 border-t border-white/10">
+                            <div class="flex items-center gap-2 mb-4">
+                                <SparklesIcon class="w-5 h-5 text-primary-400" />
+                                <h4 class="text-sm font-semibold text-white">Analizar con IA</h4>
+                            </div>
+
+                            <!-- Quick actions -->
+                            <div class="flex flex-wrap gap-2 mb-3">
+                                <button
+                                    v-if="auth.hasModule('tasks')"
+                                    class="ai-chip"
+                                    :disabled="analyzeMutation.isPending.value"
+                                    @click="runAnalysis(previewFile, 'Analiza este archivo y crea tareas accionables en el tablero de tareas. Extrae todas las acciones concretas que encuentres.')"
+                                >
+                                    <ClipboardDocumentListIcon class="w-3.5 h-3.5" />
+                                    Extraer tareas
+                                </button>
+                                <button
+                                    v-if="auth.hasModule('habits')"
+                                    class="ai-chip"
+                                    :disabled="analyzeMutation.isPending.value"
+                                    @click="runAnalysis(previewFile, 'Analiza este archivo y sugiere hábitos que el usuario podría crear basándose en su contenido. Crea los que tengan más sentido.')"
+                                >
+                                    <SparklesIcon class="w-3.5 h-3.5" />
+                                    Sugerir habitos
+                                </button>
+                                <button
+                                    v-if="auth.hasModule('finance')"
+                                    class="ai-chip"
+                                    :disabled="analyzeMutation.isPending.value"
+                                    @click="runAnalysis(
+                                        previewFile,
+                                        `Analiza este archivo y extrae todas las transacciones financieras (ingresos y gastos) que encuentres.
+Para cada transacción indica: tipo (income/expense), importe, descripción breve, fecha, y categoría sugerida.
+Al final de tu respuesta, incluye un bloque JSON con este formato exacto (sin bloques de código markdown):
+TRANSACTIONS_JSON_START
+[{\"type\":\"expense\",\"amount\":10.00,\"description\":\"Ejemplo\",\"date\":\"2026-01-01\",\"category_name\":\"Servicios\",\"category_type\":\"expense\",\"category_color\":\"#f59e0b\"}]
+TRANSACTIONS_JSON_END`,
+                                        { type: 'create_transactions', label: 'Confirmar y crear transacciones' }
+                                    )"
+                                >
+                                    <BanknotesIcon class="w-3.5 h-3.5" />
+                                    Extraer transacciones
+                                </button>
+                                <button
+                                    class="ai-chip"
+                                    :disabled="analyzeMutation.isPending.value"
+                                    @click="runAnalysis(previewFile, 'Resume el contenido de este archivo de forma concisa. Destaca los puntos clave.')"
+                                >
+                                    <DocumentTextIcon class="w-3.5 h-3.5" />
+                                    Resumir
+                                </button>
+                            </div>
+
+                            <!-- Custom prompt -->
+                            <form @submit.prevent="submitCustomPrompt(previewFile)" class="flex gap-2">
+                                <input
+                                    v-model="aiPrompt"
+                                    type="text"
+                                    placeholder="Pregunta algo sobre este archivo..."
+                                    class="form-input flex-1 text-sm"
+                                    :disabled="analyzeMutation.isPending.value"
+                                />
+                                <button
+                                    type="submit"
+                                    class="px-4 py-2 rounded-xl bg-primary-600/80 hover:bg-primary-500/80 disabled:opacity-50 text-white text-sm font-medium transition"
+                                    :disabled="!aiPrompt.trim() || analyzeMutation.isPending.value"
+                                >
+                                    Enviar
+                                </button>
+                            </form>
+
+                            <!-- Loading -->
+                            <div v-if="analyzeMutation.isPending.value" class="mt-4 flex items-center gap-3">
+                                <div class="w-4 h-4 border-2 border-primary-400 border-t-transparent rounded-full animate-spin" />
+                                <span class="text-sm text-surface-400">Analizando archivo...</span>
+                            </div>
+
+                            <!-- Response -->
+                            <div v-if="aiResponse" class="mt-4 p-4 rounded-xl border border-primary-500/20 bg-primary-500/5">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <SparklesIcon class="w-4 h-4 text-primary-400" />
+                                    <span class="text-xs font-medium text-primary-300">Coach IA</span>
+                                </div>
+                                <div class="text-sm text-surface-200 whitespace-pre-wrap leading-relaxed" v-html="formatAiResponse(aiResponse)" />
+
+                                <!-- Confirm action button -->
+                                <div v-if="lastAnalysisAction" class="mt-4 pt-3 border-t border-primary-500/10 flex items-center gap-3">
+                                    <button
+                                        class="btn-primary text-sm"
+                                        :disabled="confirmActionPending"
+                                        @click="confirmAnalysisAction"
+                                    >
+                                        {{ confirmActionPending ? 'Procesando...' : lastAnalysisAction.label }}
+                                    </button>
+                                    <button
+                                        class="btn-secondary text-sm"
+                                        @click="lastAnalysisAction = null"
+                                    >
+                                        Descartar
+                                    </button>
+                                </div>
+
+                                <!-- Confirm action success -->
+                                <div v-if="confirmActionResult" class="mt-3 p-3 rounded-lg border border-accent-500/20 bg-accent-500/5 text-sm text-accent-300">
+                                    {{ confirmActionResult }}
+                                </div>
+                            </div>
+
+                            <!-- Error -->
+                            <div v-if="aiError" class="mt-4 p-3 rounded-xl border border-danger-500/20 bg-danger-500/5">
+                                <p class="text-sm text-danger-400">{{ aiError }}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -366,6 +482,7 @@
 
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue'
+import { useAuthStore } from '@/stores/auth'
 import {
     Squares2X2Icon,
     ListBulletIcon,
@@ -379,13 +496,20 @@ import {
     CircleStackIcon,
     ArrowUpTrayIcon,
     MagnifyingGlassIcon,
+    SparklesIcon,
+    ClipboardDocumentListIcon,
+    BanknotesIcon,
 } from '@heroicons/vue/24/outline'
 import {
     useDriveFiles,
     useDriveStats,
     useUploadDriveFile,
     useDeleteDriveFile,
+    useAnalyzeFile,
 } from '@/composables/useStorage'
+import api from '@/composables/useApi'
+
+const auth = useAuthStore()
 
 // ── State ──
 const viewMode = ref('grid')
@@ -400,6 +524,15 @@ const excelSheets = ref([])
 const activeSheet = ref(0)
 const wordHtml = ref('')
 const textContent = ref('')
+
+// AI analysis state
+const aiPrompt = ref('')
+const aiResponse = ref('')
+const aiError = ref('')
+const analyzeMutation = useAnalyzeFile()
+const lastAnalysisAction = ref(null)
+const confirmActionPending = ref(false)
+const confirmActionResult = ref('')
 
 const categoryTabs = [
     { value: 'all', label: 'Todos' },
@@ -479,6 +612,151 @@ function resetRichPreview() {
     activeSheet.value = 0
     wordHtml.value = ''
     textContent.value = ''
+    aiPrompt.value = ''
+    aiResponse.value = ''
+    aiError.value = ''
+    lastAnalysisAction.value = null
+    confirmActionPending.value = false
+    confirmActionResult.value = ''
+}
+
+// Max 500KB for AI analysis
+const MAX_ANALYZE_SIZE = 512000
+
+function canAnalyze(file) {
+    if (!file || file.size > MAX_ANALYZE_SIZE) return false
+    const mime = file.mime_type
+    return isText(mime) || isCode(file.file_name) || isExcel(mime) || isWord(mime) || isPdf(mime) || mime === 'text/csv'
+}
+
+function getExtractedContent() {
+    if (textContent.value) return textContent.value
+    if (wordHtml.value) return wordHtml.value.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+    if (excelSheets.value.length) {
+        return excelSheets.value.map(sheet => {
+            const header = `[Hoja: ${sheet.name}]`
+            const rows = sheet.rows.map(r => r.join('\t')).join('\n')
+            return header + '\n' + rows
+        }).join('\n\n')
+    }
+    return null
+}
+
+async function runAnalysis(file, prompt, action = null) {
+    aiResponse.value = ''
+    aiError.value = ''
+    lastAnalysisAction.value = null
+    confirmActionResult.value = ''
+
+    try {
+        const result = await analyzeMutation.mutateAsync({
+            mediaId: file.id,
+            prompt,
+            content: getExtractedContent(),
+        })
+        aiResponse.value = result.text
+
+        if (action) {
+            lastAnalysisAction.value = action
+        }
+    } catch (e) {
+        aiError.value = e.response?.data?.message ?? 'Error al analizar el archivo.'
+    }
+}
+
+function submitCustomPrompt(file) {
+    const prompt = aiPrompt.value.trim()
+    if (!prompt) return
+    runAnalysis(file, prompt)
+}
+
+async function confirmAnalysisAction() {
+    if (!lastAnalysisAction.value) return
+
+    const action = lastAnalysisAction.value
+
+    if (action.type === 'create_transactions') {
+        await createTransactionsFromAnalysis()
+    }
+}
+
+async function createTransactionsFromAnalysis() {
+    confirmActionPending.value = true
+    confirmActionResult.value = ''
+
+    try {
+        // Extract JSON from AI response
+        const match = aiResponse.value.match(/TRANSACTIONS_JSON_START\s*([\s\S]*?)\s*TRANSACTIONS_JSON_END/)
+        let transactions = null
+
+        if (match) {
+            transactions = JSON.parse(match[1].trim())
+        }
+
+        if (!transactions || !Array.isArray(transactions) || transactions.length === 0) {
+            aiError.value = 'No se pudieron extraer las transacciones del análisis. Intenta de nuevo.'
+            return
+        }
+
+        // Get existing categories to map names to IDs
+        const catResponse = await api.get('/finance/categories')
+        const existingCategories = catResponse.data?.data ?? []
+        const catMap = {}
+        existingCategories.forEach(c => { catMap[c.name.toLowerCase()] = c.id })
+
+        let created = 0
+        let newCats = 0
+
+        for (const tx of transactions) {
+            let categoryId = null
+
+            // Try to match existing category by name
+            if (tx.category_name) {
+                const key = tx.category_name.toLowerCase()
+                if (catMap[key]) {
+                    categoryId = catMap[key]
+                } else {
+                    // Create new category
+                    const newCat = await api.post('/finance/categories', {
+                        name: tx.category_name,
+                        color: tx.category_color || '#6366f1',
+                        type: tx.category_type || 'both',
+                    })
+                    categoryId = newCat.data?.data?.id
+                    if (categoryId) {
+                        catMap[key] = categoryId
+                        newCats++
+                    }
+                }
+            }
+
+            await api.post('/finance/transactions', {
+                type: tx.type || 'expense',
+                amount: Math.abs(Number(tx.amount)),
+                description: tx.description,
+                notes: tx.notes || null,
+                category_id: categoryId,
+                date: tx.date || null,
+            })
+            created++
+        }
+
+        confirmActionResult.value = `Se crearon ${created} transacciones` + (newCats > 0 ? ` y ${newCats} categorías nuevas.` : '.')
+        lastAnalysisAction.value = null
+    } catch (e) {
+        aiError.value = e.response?.data?.message ?? 'Error al crear las transacciones.'
+    } finally {
+        confirmActionPending.value = false
+    }
+}
+
+function formatAiResponse(text) {
+    if (!text) return ''
+    return text
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/\n/g, '<br>')
 }
 
 async function loadExcelPreview(file) {

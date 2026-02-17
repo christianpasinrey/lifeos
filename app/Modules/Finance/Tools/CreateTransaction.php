@@ -44,12 +44,12 @@ class CreateTransaction implements Tool
         $service = app(FinanceService::class);
 
         $data = [
-            'type' => $request->string('type'),
-            'amount' => $request->number('amount'),
-            'description' => $request->string('description'),
-            'notes' => $request->string('notes'),
-            'category_id' => $request->integer('category_id'),
-            'date' => $request->string('date'),
+            'type' => $request['type'],
+            'amount' => (float) $request['amount'],
+            'description' => $request['description'],
+            'notes' => $request['notes'] ?? null,
+            'category_id' => !empty($request['category_id']) ? (int) $request['category_id'] : null,
+            'date' => $request['date'] ?? null,
         ];
 
         $transaction = $service->createTransaction($this->user, $data);

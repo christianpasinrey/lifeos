@@ -38,10 +38,10 @@ class GetTransactions implements Tool
 
         $transactions = $service->getTransactions(
             $this->user,
-            $request->string('type'),
-            $request->integer('category_id'),
-            $request->string('start_date'),
-            $request->string('end_date')
+            $request['type'] ?? null,
+            isset($request['category_id']) ? (int) $request['category_id'] : null,
+            $request['start_date'] ?? null,
+            $request['end_date'] ?? null
         );
 
         if ($transactions->isEmpty()) {

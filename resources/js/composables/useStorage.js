@@ -68,6 +68,13 @@ export function useUploadTransactionMedia() {
     })
 }
 
+export function useAnalyzeFile() {
+    return useMutation({
+        mutationFn: ({ mediaId, prompt, content }) =>
+            api.post(`/storage/files/${mediaId}/analyze`, { prompt, content }).then(r => r.data),
+    })
+}
+
 export function useDeleteTransactionMedia() {
     const qc = useQueryClient()
 

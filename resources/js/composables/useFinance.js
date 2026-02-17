@@ -139,3 +139,24 @@ export function useDeleteCategory() {
         },
     })
 }
+
+export function useAutoCategorize() {
+    return useMutation({
+        mutationFn: (transactionIds) =>
+            api.post('/finance/transactions/auto-categorize', {
+                transaction_ids: transactionIds ?? [],
+            }).then(r => r.data),
+    })
+}
+
+export function useApplyCategories() {
+    const qc = useQueryClient()
+
+    return useMutation({
+        mutationFn: (assignments) =>
+            api.post('/finance/transactions/apply-categories', { assignments }).then(r => r.data),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['finance'] })
+        },
+    })
+}

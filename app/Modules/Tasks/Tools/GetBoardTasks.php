@@ -29,7 +29,7 @@ class GetBoardTasks implements Tool
 
     public function handle(Request $request): Stringable|string
     {
-        $boardId = $request->integer('board_id');
+        $boardId = (int) $request['board_id'];
 
         $board = Board::where('id', $boardId)
             ->where('user_id', $this->user->id)

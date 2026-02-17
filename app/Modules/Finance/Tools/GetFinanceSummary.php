@@ -34,8 +34,8 @@ class GetFinanceSummary implements Tool
 
         $summary = $service->getSummary(
             $this->user,
-            $request->string('start_date'),
-            $request->string('end_date')
+            $request['start_date'] ?? null,
+            $request['end_date'] ?? null
         );
 
         $output = "📊 **Resumen Financiero** ({$summary['period']['start']} - {$summary['period']['end']})\n\n";

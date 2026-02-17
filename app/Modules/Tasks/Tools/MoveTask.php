@@ -34,8 +34,8 @@ class MoveTask implements Tool
 
     public function handle(Request $request): Stringable|string
     {
-        $taskId = $request->integer('task_id');
-        $targetColumnId = $request->integer('target_column_id');
+        $taskId = (int) $request['task_id'];
+        $targetColumnId = (int) $request['target_column_id'];
 
         // Verify task exists and belongs to user
         $task = Task::where('id', $taskId)

@@ -39,7 +39,7 @@ class CreateTask implements Tool
 
     public function handle(Request $request): Stringable|string
     {
-        $columnId = $request->integer('column_id');
+        $columnId = (int) $request['column_id'];
 
         // Verify column exists and belongs to user's board
         $column = Column::whereHas('board', function ($query) {
@@ -51,13 +51,13 @@ class CreateTask implements Tool
         }
 
         $data = [
-            'title' => $request->string('title'),
-            'description' => $request->string('description'),
-            'priority' => $request->string('priority', 'medium'),
+            'title' => $request['title'],
+            'description' => $request['description'] ?? null,
+            'priority' => $request['priority'] ?? 'medium',
         ];
 
-        if ($request->has('due_date')) {
-            $data['due_date'] = $request->string('due_date');
+        if (isset($request['due_date'])) {
+            $data['due_date'] = $request['due_date'];
         }
 
         $taskService = app(TaskService::class);

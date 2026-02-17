@@ -12,6 +12,7 @@ Route::middleware(['api', 'auth:sanctum', 'module:storage'])->prefix('api/storag
     Route::delete('files/{media}', [DriveController::class, 'destroy']);
     Route::get('files/{media}/download', [DriveController::class, 'download']);
     Route::get('files/{media}/preview', [DriveController::class, 'preview']);
+    Route::post('files/{media}/analyze', [DriveController::class, 'analyze']);
 
     // Transaction attachments
     Route::post('transactions/{transaction}/media', [MediaController::class, 'store']);
