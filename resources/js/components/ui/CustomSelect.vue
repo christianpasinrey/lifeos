@@ -23,7 +23,7 @@
         >
             <ul
                 v-if="open"
-                class="absolute z-50 mt-1 w-full py-1 rounded-lg border border-white/10
+                class="absolute right-0 z-50 mt-1 min-w-full w-max py-1 rounded-lg border border-white/10
                        bg-slate-900/90 backdrop-blur-xl shadow-xl overflow-auto max-h-52"
             >
                 <li
