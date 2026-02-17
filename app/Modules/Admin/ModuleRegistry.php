@@ -25,6 +25,14 @@ class ModuleRegistry
             'description' => 'Tableros Kanban para gestión de tareas',
             'free_limits' => ['max_boards' => 3, 'max_columns_per_board' => 5],
         ],
+        'finance' => [
+            'name' => 'Finanzas',
+            'description' => 'Control de ingresos y gastos personales con análisis básico',
+            'free_limits' => [
+                'max_transactions_per_month' => 100,
+                'max_categories' => 6,
+            ],
+        ],
     ];
 
     public static function all(): array

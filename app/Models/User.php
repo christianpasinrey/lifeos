@@ -60,6 +60,16 @@ class User extends Authenticatable
         return $this->hasMany(\App\Modules\Tasks\Models\Board::class);
     }
 
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Finance\Models\Transaction::class);
+    }
+
+    public function categories(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Finance\Models\Category::class, 'user_id');
+    }
+
     public function modules()
     {
         return $this->hasMany(\App\Modules\Admin\Models\UserModule::class);

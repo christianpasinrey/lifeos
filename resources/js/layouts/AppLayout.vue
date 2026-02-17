@@ -91,7 +91,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import ChatPanel from '@/components/ai/ChatPanel.vue'
@@ -99,6 +99,7 @@ import {
     HomeIcon,
     SparklesIcon,
     ClipboardDocumentListIcon,
+    BanknotesIcon,
     ChatBubbleLeftRightIcon,
     ArrowRightStartOnRectangleIcon,
 } from '@heroicons/vue/24/outline'
@@ -112,6 +113,7 @@ const navItems = [
     { to: '/', label: 'Dashboard', icon: HomeIcon },
     { to: '/habits', label: 'Hábitos', icon: SparklesIcon, module: 'habits' },
     { to: '/boards', label: 'Tareas', icon: ClipboardDocumentListIcon, module: 'tasks' },
+    { to: '/finance', label: 'Finanzas', icon: BanknotesIcon, module: 'finance' },
 ]
 
 const visibleNavItems = computed(() =>
@@ -127,4 +129,11 @@ async function handleLogout() {
     await auth.logout()
     router.push({ name: 'login' })
 }
+
+function openCoachPanel() {
+    showChat.value = true
+}
+
+onMounted(() => window.addEventListener('open-coach-chat', openCoachPanel))
+onUnmounted(() => window.removeEventListener('open-coach-chat', openCoachPanel))
 </script>

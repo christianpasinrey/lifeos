@@ -7,4 +7,5 @@ return [
     App\Modules\Ai\AiServiceProvider::class,
     App\Modules\Admin\AdminServiceProvider::class,
     App\Modules\Tasks\TaskServiceProvider::class,
+    App\Modules\Finance\FinanceServiceProvider::class,
 ];

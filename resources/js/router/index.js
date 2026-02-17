@@ -44,6 +44,12 @@ const routes = [
                 props: true,
                 meta: { module: 'tasks' },
             },
+            {
+                path: 'finance',
+                name: 'finance',
+                component: () => import('@/pages/finance/FinancePage.vue'),
+                meta: { module: 'finance' },
+            },
         ],
     },
 ]
