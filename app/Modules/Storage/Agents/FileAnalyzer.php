@@ -2,8 +2,8 @@
 
 namespace App\Modules\Storage\Agents;
 
+use App\Events\FileAnalysisContextRequested;
 use App\Models\User;
-use App\Modules\Ai\AiCoachRegistry;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Promptable;
 use Stringable;
@@ -47,14 +47,13 @@ class FileAnalyzer implements Agent
         - El usuario decidirá si quiere proceder o no
         PROMPT;
 
-        // Inject finance categories if module is active
-        if ($this->user->hasModule('finance')) {
-            $categories = $this->user->categories()->get(['id', 'name', 'type', 'color']);
-            if ($categories->isNotEmpty()) {
-                $catList = $categories->map(fn ($c) => "- [{$c->id}] {$c->name} ({$c->type})")->join("\n");
-                $base .= "\n\nCategorías financieras del usuario:\n{$catList}\n";
-                $base .= "Cuando propongas transacciones, sugiere la categoría más adecuada de esta lista. Si ninguna encaja, propón crear una nueva.";
-            }
+        // Collect context from other modules via event
+        $event = new FileAnalysisContextRequested($this->user);
+        event($event);
+
+        $extraContext = $event->getContext();
+        if ($extraContext) {
+            $base .= "\n\n" . $extraContext;
         }
 
         return $base;
