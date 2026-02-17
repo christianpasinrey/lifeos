@@ -1,7 +1,6 @@
 <?php
 
 use App\Modules\Finance\Controllers\AccountController;
-use App\Modules\Finance\Controllers\BankConnectionController;
 use App\Modules\Finance\Controllers\BudgetController;
 use App\Modules\Finance\Controllers\CategoryController;
 use App\Modules\Finance\Controllers\InvoiceController;
@@ -68,18 +67,6 @@ Route::middleware(['api', 'auth:sanctum', 'module:finance'])->prefix('api/financ
     Route::post('invoices/{invoice}/unlink-payment/{transaction}', [InvoiceController::class, 'unlinkPayment']);
     Route::post('invoices/{invoice}/status', [InvoiceController::class, 'updateStatus']);
 
-    // Banking
-    Route::get('banking/institutions', [BankConnectionController::class, 'institutions']);
-    Route::post('banking/connections', [BankConnectionController::class, 'store']);
-    Route::get('banking/connections', [BankConnectionController::class, 'index']);
-    Route::get('banking/connections/{connection}', [BankConnectionController::class, 'show']);
-    Route::delete('banking/connections/{connection}', [BankConnectionController::class, 'destroy']);
-    Route::post('banking/connections/{connection}/sync', [BankConnectionController::class, 'sync']);
-    Route::post('banking/connections/{connection}/reconnect', [BankConnectionController::class, 'reconnect']);
-
     // Categories
     Route::apiResource('categories', CategoryController::class)->except(['show']);
 });
-
-// Banking callback — web route (user is redirected back from bank, uses session auth)
-Route::middleware(['web', 'auth'])->get('finance/banking/callback', [BankConnectionController::class, 'callback']);

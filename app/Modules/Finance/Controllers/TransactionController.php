@@ -243,14 +243,10 @@ class TransactionController extends Controller
         ]);
 
         $file = $request->file('file');
-        $path = $file->storeAs(
-            'temp/imports',
-            uniqid('import_') . '.' . $file->getClientOriginalExtension()
-        );
+        $filename = uniqid('import_') . '.' . $file->getClientOriginalExtension();
+        $path = 'temp/imports/' . $filename;
 
-        if (!$path) {
-            return response()->json(['message' => 'No se pudo guardar el archivo.'], 500);
-        }
+        \Illuminate\Support\Facades\Storage::put($path, file_get_contents($file->getPathname()));
 
         $fullPath = \Illuminate\Support\Facades\Storage::path($path);
         $preview = $this->importService->preview($fullPath);
@@ -280,10 +276,13 @@ class TransactionController extends Controller
         }
 
         if ($request->hasFile('file')) {
-            $path = $request->file('file')->store('temp/imports');
-            $filePath = storage_path("app/{$path}");
+            $file = $request->file('file');
+            $filename = uniqid('import_') . '.' . $file->getClientOriginalExtension();
+            $path = 'temp/imports/' . $filename;
+            \Illuminate\Support\Facades\Storage::put($path, file_get_contents($file->getPathname()));
+            $filePath = \Illuminate\Support\Facades\Storage::path($path);
         } else {
-            $filePath = storage_path("app/{$request->input('temp_path')}");
+            $filePath = \Illuminate\Support\Facades\Storage::path($request->input('temp_path'));
         }
 
         if (!file_exists($filePath)) {

@@ -4,10 +4,7 @@ namespace App\Modules\Finance;
 
 use App\Modules\Ai\AiCoachRegistry;
 use App\Modules\Finance\Commands\GenerateRecurringTransactions;
-use App\Modules\Finance\Commands\SyncBanks;
 use App\Modules\Finance\Services\AccountService;
-use App\Modules\Finance\Services\Banking\BankSyncService;
-use App\Modules\Finance\Services\Banking\GoCardlessBankingService;
 use App\Modules\Finance\Services\BudgetService;
 use App\Modules\Finance\Services\CategoryService;
 use App\Modules\Finance\Services\FinanceSummaryService;
@@ -32,8 +29,6 @@ class FinanceServiceProvider extends ServiceProvider
         $this->app->singleton(RecurringService::class);
         $this->app->singleton(ImportService::class);
         $this->app->singleton(InvoiceService::class);
-        $this->app->singleton(GoCardlessBankingService::class);
-        $this->app->singleton(BankSyncService::class);
         $this->app->singleton(FinanceService::class);
     }
 
@@ -43,7 +38,6 @@ class FinanceServiceProvider extends ServiceProvider
 
         $this->commands([
             GenerateRecurringTransactions::class,
-            SyncBanks::class,
         ]);
 
         $this->app->booted(function () {
@@ -51,7 +45,6 @@ class FinanceServiceProvider extends ServiceProvider
 
             $schedule = app(Schedule::class);
             $schedule->command('finance:generate-recurring')->daily();
-            $schedule->command('finance:sync-banks')->everySixHours();
         });
     }
 }
