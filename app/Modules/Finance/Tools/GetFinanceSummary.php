@@ -31,7 +31,7 @@ class GetFinanceSummary implements Tool
     public function handle(Request $request): Stringable|string
     {
         $service = app(FinanceService::class);
-        
+
         $summary = $service->getSummary(
             $this->user,
             $request->string('start_date'),
@@ -42,7 +42,7 @@ class GetFinanceSummary implements Tool
         $output .= "💰 **Ingresos totales:** €" . number_format($summary['income'], 2) . "\n";
         $output .= "💸 **Gastos totales:** €" . number_format($summary['expenses'], 2) . "\n";
         $output .= "📈 **Balance:** €" . number_format($summary['balance'], 2);
-        
+
         if ($summary['balance'] >= 0) {
             $output .= " ✅ (superávit)\n";
         } else {

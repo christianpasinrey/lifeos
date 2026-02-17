@@ -35,7 +35,7 @@ class GetTransactions implements Tool
     public function handle(Request $request): Stringable|string
     {
         $service = app(FinanceService::class);
-        
+
         $transactions = $service->getTransactions(
             $this->user,
             $request->string('type'),
@@ -55,11 +55,11 @@ class GetTransactions implements Tool
             $category = $transaction->category ? " [{$transaction->category->name}]" : '';
             $output .= "{$icon} {$transaction->date->format('Y-m-d')} - {$transaction->description}{$category}\n";
             $output .= "   €" . number_format($transaction->amount, 2) . "\n";
-            
+
             if ($transaction->notes) {
                 $output .= "   Notas: {$transaction->notes}\n";
             }
-            
+
             $output .= "\n";
         }
 

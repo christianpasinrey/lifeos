@@ -57,7 +57,7 @@ class CreateTransaction implements Tool
         $icon = $transaction->type === 'income' ? '💰' : '💸';
         $category = $transaction->category ? " en categoría '{$transaction->category->name}'" : '';
 
-        return "{$icon} Transacción registrada: {$transaction->description}{$category} - €" . 
+        return "{$icon} Transacción registrada: {$transaction->description}{$category} - €" .
                number_format($transaction->amount, 2) . " el {$transaction->date->format('Y-m-d')}";
     }
 }
