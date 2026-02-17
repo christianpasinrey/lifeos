@@ -404,6 +404,7 @@ const textContent = ref('')
 const categoryTabs = [
     { value: 'all', label: 'Todos' },
     { value: 'images', label: 'Imagenes' },
+    { value: 'pdf', label: 'PDF' },
     { value: 'documents', label: 'Documentos' },
     { value: 'spreadsheets', label: 'Hojas de calculo' },
     { value: 'videos', label: 'Videos' },

@@ -75,7 +75,8 @@ class StorageService
             'images' => ['image/%'],
             'videos' => ['video/%'],
             'audio' => ['audio/%'],
-            'documents' => ['application/pdf', '%word%', '%opendocument.text%'],
+            'pdf' => ['application/pdf'],
+            'documents' => ['%word%', '%opendocument.text%'],
             'spreadsheets' => ['%sheet%', '%excel%', '%csv%'],
             'text' => ['text/%'],
             'other' => null, // handled below
