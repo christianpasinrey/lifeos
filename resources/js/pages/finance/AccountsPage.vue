@@ -82,7 +82,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-lg font-semibold text-white">Conexiones bancarias</h3>
-                    <p class="text-sm text-surface-500">Sincroniza tus cuentas ING automáticamente</p>
+                    <p class="text-sm text-surface-500">Sincroniza tus cuentas bancarias automáticamente</p>
                 </div>
                 <button class="btn-add text-sm" @click="showBankForm = true">
                     <PlusIcon class="w-4 h-4" />
@@ -99,26 +99,35 @@
                     :key="conn.id"
                     class="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.02] p-4"
                 >
-                    <div>
-                        <p class="text-sm font-medium text-white">ING</p>
-                        <p class="text-xs text-surface-500">
-                            {{ conn.status === 'active' ? 'Conectado' : conn.status === 'pending' ? 'Pendiente' : conn.status }}
-                            <template v-if="conn.last_synced_at"> • Último sync: {{ conn.last_synced_at }}</template>
-                            • {{ conn.accounts_count }} cuenta(s)
-                        </p>
+                    <div class="flex items-center gap-3">
+                        <img
+                            v-if="conn.institution_logo"
+                            :src="conn.institution_logo"
+                            :alt="conn.institution_name"
+                            class="w-8 h-8 rounded object-contain bg-white/10 p-0.5"
+                        />
+                        <div>
+                            <p class="text-sm font-medium text-white">{{ conn.institution_name || 'Banco' }}</p>
+                            <p class="text-xs text-surface-500">
+                                {{ statusLabel(conn.status) }}
+                                <template v-if="conn.last_synced_at"> • Sync: {{ conn.last_synced_at }}</template>
+                                • {{ conn.accounts_count }} cuenta(s)
+                            </p>
+                        </div>
                     </div>
                     <div class="flex gap-2">
-                        <button
-                            v-if="conn.status === 'pending'"
-                            class="text-xs text-primary-300 hover:text-primary-200 transition"
-                            @click="authorizeConnection(conn)"
-                        >Autorizar</button>
                         <button
                             v-if="conn.status === 'active'"
                             class="text-xs text-primary-300 hover:text-primary-200 transition"
                             :disabled="syncBank.isPending.value"
                             @click="syncConnection(conn)"
                         >{{ syncBank.isPending.value ? 'Sincronizando...' : 'Sincronizar' }}</button>
+                        <button
+                            v-if="conn.status === 'expired' || conn.status === 'suspended'"
+                            class="text-xs text-primary-300 hover:text-primary-200 transition"
+                            :disabled="reconnectBank.isPending.value"
+                            @click="reconnectConnection(conn)"
+                        >Reconectar</button>
                         <button
                             class="text-xs text-danger-400 hover:text-danger-500 transition"
                             @click="deleteConnection(conn)"
@@ -128,39 +137,52 @@
             </div>
         </div>
 
-        <!-- Bank connection form modal -->
+        <!-- Bank institution picker modal -->
         <Teleport to="body">
             <div v-if="showBankForm" class="modal-overlay" @mousedown.self="showBankForm = false">
                 <div class="modal-backdrop" />
                 <div class="modal-content liquid-glass liquid-glass-panel max-w-lg">
-                    <h2 class="section-title mb-5">Conectar ING</h2>
-                    <form class="form-group" @submit.prevent="submitBankConnection">
-                        <div>
-                            <label class="form-label">Client ID</label>
-                            <input v-model="bankForm.client_id" type="text" class="form-input" required />
-                        </div>
-                        <div>
-                            <label class="form-label">Certificado TLS (PEM)</label>
-                            <textarea v-model="bankForm.tls_certificate" rows="3" class="form-input font-mono text-xs" required placeholder="-----BEGIN CERTIFICATE-----"></textarea>
-                        </div>
-                        <div>
-                            <label class="form-label">Clave TLS (PEM)</label>
-                            <textarea v-model="bankForm.tls_key" rows="3" class="form-input font-mono text-xs" required placeholder="-----BEGIN PRIVATE KEY-----"></textarea>
-                        </div>
-                        <div>
-                            <label class="form-label">Certificado firma (PEM)</label>
-                            <textarea v-model="bankForm.signing_certificate" rows="3" class="form-input font-mono text-xs" required placeholder="-----BEGIN CERTIFICATE-----"></textarea>
-                        </div>
-                        <div>
-                            <label class="form-label">Clave firma (PEM)</label>
-                            <textarea v-model="bankForm.signing_key" rows="3" class="form-input font-mono text-xs" required placeholder="-----BEGIN PRIVATE KEY-----"></textarea>
-                        </div>
-                        <p v-if="bankError" class="form-error">{{ bankError }}</p>
-                        <div class="flex justify-end gap-3 mt-2">
-                            <button type="button" class="btn-secondary" @click="showBankForm = false">Cancelar</button>
-                            <button class="btn-primary" type="submit" :disabled="createBank.isPending.value">Conectar</button>
-                        </div>
-                    </form>
+                    <h2 class="section-title mb-5">Conectar banco</h2>
+
+                    <input
+                        v-model="institutionSearch"
+                        type="text"
+                        class="form-input mb-4"
+                        placeholder="Buscar banco..."
+                    />
+
+                    <div v-if="institutionsLoading" class="text-center py-6 text-surface-500">
+                        Cargando bancos disponibles...
+                    </div>
+
+                    <div v-else-if="filteredInstitutions.length === 0" class="text-center py-6 text-surface-500 text-sm">
+                        No se encontraron bancos
+                    </div>
+
+                    <div v-else class="grid grid-cols-2 gap-3 max-h-80 overflow-y-auto pr-1">
+                        <button
+                            v-for="inst in filteredInstitutions"
+                            :key="inst.id"
+                            class="flex items-center gap-3 p-3 rounded-xl border border-white/5
+                                   bg-white/[0.02] hover:bg-white/[0.06] transition text-left"
+                            :disabled="createBank.isPending.value"
+                            @click="connectInstitution(inst)"
+                        >
+                            <img
+                                v-if="inst.logo"
+                                :src="inst.logo"
+                                :alt="inst.name"
+                                class="w-8 h-8 rounded object-contain bg-white/10 p-0.5 shrink-0"
+                            />
+                            <span class="text-sm text-white font-medium truncate">{{ inst.name }}</span>
+                        </button>
+                    </div>
+
+                    <p v-if="bankError" class="form-error mt-3">{{ bankError }}</p>
+
+                    <div class="flex justify-end mt-4">
+                        <button class="btn-secondary" @click="showBankForm = false">Cancelar</button>
+                    </div>
                 </div>
             </div>
         </Teleport>
@@ -227,11 +249,12 @@ import {
     useCreateTransfer,
 } from '@/composables/useFinanceAccounts'
 import {
+    useInstitutions,
     useBankConnections,
     useCreateBankConnection,
     useDeleteBankConnection,
-    useAuthorizeBankConnection,
     useSyncBankConnection,
+    useReconnectBankConnection,
 } from '@/composables/useFinanceBanking'
 
 const { data: accountsData, isLoading } = useFinanceAccounts(false)
@@ -272,6 +295,9 @@ const typeOptions = [
 
 const typeLabels = { bank: 'Banco', cash: 'Efectivo', credit_card: 'Tarjeta', savings: 'Ahorro', investment: 'Inversión', other: 'Otro' }
 function typeLabel(type) { return typeLabels[type] || type }
+
+const statusLabels = { pending: 'Pendiente', active: 'Conectado', expired: 'Expirado', revoked: 'Revocado', suspended: 'Suspendido' }
+function statusLabel(status) { return statusLabels[status] || status }
 
 const mutationPending = computed(() =>
     createAccount.isPending.value || updateAccount.isPending.value
@@ -339,43 +365,32 @@ async function submitTransfer() {
 const { data: bankData } = useBankConnections()
 const bankConnections = computed(() => bankData.value?.data ?? [])
 
+const { data: institutionsData, isLoading: institutionsLoading } = useInstitutions()
+const institutions = computed(() => institutionsData.value?.data ?? [])
+
 const createBank = useCreateBankConnection()
 const deleteBank = useDeleteBankConnection()
-const authorizeBank = useAuthorizeBankConnection()
 const syncBank = useSyncBankConnection()
+const reconnectBank = useReconnectBankConnection()
 
 const showBankForm = ref(false)
 const bankError = ref('')
-const bankForm = reactive({
-    client_id: '',
-    tls_certificate: '',
-    tls_key: '',
-    signing_certificate: '',
-    signing_key: '',
+const institutionSearch = ref('')
+
+const filteredInstitutions = computed(() => {
+    const q = institutionSearch.value.toLowerCase()
+    if (!q) return institutions.value
+    return institutions.value.filter(i => i.name.toLowerCase().includes(q))
 })
 
-async function submitBankConnection() {
+async function connectInstitution(inst) {
     bankError.value = ''
     try {
-        await createBank.mutateAsync({ ...bankForm })
-        showBankForm.value = false
-        bankForm.client_id = ''
-        bankForm.tls_certificate = ''
-        bankForm.tls_key = ''
-        bankForm.signing_certificate = ''
-        bankForm.signing_key = ''
+        const result = await createBank.mutateAsync({ institution_id: inst.id })
+        const link = result.data?.link
+        if (link) window.location.href = link
     } catch (e) {
         bankError.value = e.response?.data?.message ?? 'Error al conectar'
-    }
-}
-
-async function authorizeConnection(conn) {
-    try {
-        const result = await authorizeBank.mutateAsync(conn.id)
-        const url = result.data?.authorization_url
-        if (url) window.location.href = url
-    } catch (e) {
-        alert(e.response?.data?.message ?? 'Error al obtener URL de autorización')
     }
 }
 
@@ -385,6 +400,16 @@ async function syncConnection(conn) {
         alert(`Sincronizado: ${result.data?.accounts_synced ?? 0} cuentas, ${result.data?.transactions_synced ?? 0} transacciones`)
     } catch (e) {
         alert(e.response?.data?.error ?? e.response?.data?.message ?? 'Error al sincronizar')
+    }
+}
+
+async function reconnectConnection(conn) {
+    try {
+        const result = await reconnectBank.mutateAsync(conn.id)
+        const link = result.data?.link
+        if (link) window.location.href = link
+    } catch (e) {
+        alert(e.response?.data?.message ?? 'Error al reconectar')
     }
 }
 

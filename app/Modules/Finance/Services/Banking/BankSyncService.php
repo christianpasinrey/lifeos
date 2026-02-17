@@ -5,57 +5,77 @@ namespace App\Modules\Finance\Services\Banking;
 use App\Modules\Finance\Models\Account;
 use App\Modules\Finance\Models\BankConnection;
 use App\Modules\Finance\Models\Transaction;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class BankSyncService
 {
     public function __construct(
-        private IngBankingService $ingService,
+        private GoCardlessBankingService $gcService,
     ) {}
 
     /**
-     * Sync accounts from ING to local finance_accounts.
+     * Sync accounts from GoCardless requisition to local finance_accounts.
      */
     public function syncAccounts(BankConnection $connection): int
     {
-        $ingAccounts = $this->ingService->fetchAccounts($connection);
+        $requisition = $this->gcService->getRequisition($connection->requisition_id);
+
+        // Check if requisition is still linked
+        $status = $this->gcService->mapRequisitionStatus($requisition['status'] ?? '');
+        if ($status !== 'active') {
+            $connection->update(['status' => $status]);
+            return 0;
+        }
+
+        $accountIds = $requisition['accounts'] ?? [];
         $count = 0;
 
-        foreach ($ingAccounts as $ingAccount) {
-            $externalId = $ingAccount['resourceId'] ?? $ingAccount['id'] ?? null;
-            if (!$externalId) continue;
+        foreach ($accountIds as $gcAccountId) {
+            try {
+                $details = $this->gcService->getAccountDetails($gcAccountId);
+                $balances = $this->gcService->getAccountBalances($gcAccountId);
 
-            $account = Account::firstOrNew([
-                'bank_connection_id' => $connection->id,
-                'external_account_id' => $externalId,
-            ]);
+                $account = Account::firstOrNew([
+                    'bank_connection_id' => $connection->id,
+                    'external_account_id' => $gcAccountId,
+                ]);
 
-            $account->fill([
-                'user_id' => $connection->user_id,
-                'name' => $ingAccount['name'] ?? $ingAccount['iban'] ?? 'ING Account',
-                'type' => 'bank',
-                'currency' => $ingAccount['currency'] ?? 'EUR',
-                'is_active' => true,
-            ]);
+                $account->fill([
+                    'user_id' => $connection->user_id,
+                    'name' => $details['ownerName'] ?? $details['iban'] ?? $connection->institution_name ?? 'Bank Account',
+                    'type' => 'bank',
+                    'currency' => $details['currency'] ?? 'EUR',
+                    'is_active' => true,
+                ]);
 
-            // Update balance from ING
-            $balances = $this->ingService->fetchBalances($connection, $externalId);
-            foreach ($balances as $balance) {
-                if (($balance['balanceType'] ?? '') === 'expected') {
-                    $account->current_balance = $balance['balanceAmount']['amount'] ?? 0;
+                // Pick best available balance
+                foreach ($balances as $balance) {
+                    $type = $balance['balanceType'] ?? '';
+                    if (in_array($type, ['interimAvailable', 'expected', 'closingBooked'])) {
+                        $account->current_balance = (float) ($balance['balanceAmount']['amount'] ?? 0);
+                        break;
+                    }
                 }
-            }
 
-            $account->save();
-            $count++;
+                // Fallback: use first balance if none of the preferred types matched
+                if (!$account->exists && !empty($balances[0])) {
+                    $account->current_balance = (float) ($balances[0]['balanceAmount']['amount'] ?? 0);
+                }
+
+                $account->save();
+                $count++;
+            } catch (\Exception $e) {
+                Log::warning("GoCardless: failed to sync account {$gcAccountId}", [
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         return $count;
     }
 
     /**
-     * Sync transactions from ING for a specific account.
+     * Sync transactions for a specific account.
      */
     public function syncTransactions(BankConnection $connection, Account $account, ?string $dateFrom = null, ?string $dateTo = null): int
     {
@@ -65,46 +85,51 @@ class BankSyncService
 
         $dateFrom = $dateFrom ?? now()->subDays(30)->format('Y-m-d');
 
-        $ingTransactions = $this->ingService->fetchTransactions(
-            $connection,
+        $transactions = $this->gcService->fetchTransactions(
             $account->external_account_id,
             $dateFrom,
             $dateTo
         );
 
-        $booked = $ingTransactions['booked'] ?? $ingTransactions;
+        $booked = $transactions['booked'] ?? $transactions;
         $count = 0;
 
-        foreach ($booked as $ingTx) {
-            $externalId = $ingTx['transactionId'] ?? $ingTx['entryReference'] ?? null;
+        foreach ($booked as $tx) {
+            $externalId = $tx['transactionId']
+                ?? $tx['internalTransactionId']
+                ?? $tx['entryReference']
+                ?? null;
 
             // Skip if already imported
             if ($externalId && Transaction::where('external_id', $externalId)->exists()) {
                 continue;
             }
 
-            $amount = abs((float) ($ingTx['transactionAmount']['amount'] ?? 0));
-            $isCredit = ($ingTx['transactionAmount']['amount'] ?? 0) >= 0;
+            $rawAmount = (float) ($tx['transactionAmount']['amount'] ?? 0);
+            $amount = abs($rawAmount);
+            $isCredit = $rawAmount >= 0;
 
             Transaction::create([
                 'user_id' => $connection->user_id,
                 'account_id' => $account->id,
                 'type' => $isCredit ? 'income' : 'expense',
                 'amount' => $amount,
-                'description' => $ingTx['remittanceInformationUnstructured']
-                    ?? $ingTx['creditorName']
-                    ?? $ingTx['debtorName']
-                    ?? 'ING Transaction',
-                'date' => $ingTx['bookingDate'] ?? $ingTx['valueDate'] ?? now()->toDateString(),
+                'description' => $tx['remittanceInformationUnstructured']
+                    ?? $tx['remittanceInformationStructured']
+                    ?? $tx['creditorName']
+                    ?? $tx['debtorName']
+                    ?? 'Bank Transaction',
+                'date' => $tx['bookingDate'] ?? $tx['valueDate'] ?? now()->toDateString(),
                 'external_id' => $externalId,
-                'notes' => $ingTx['additionalInformation'] ?? null,
+                'notes' => $tx['additionalInformation'] ?? null,
             ]);
 
             $count++;
         }
 
-        // Recalculate account balance after sync
-        $account->recalculateBalance();
+        if ($count > 0) {
+            $account->recalculateBalance();
+        }
 
         return $count;
     }
@@ -117,14 +142,13 @@ class BankSyncService
         $accountCount = $this->syncAccounts($connection);
         $txCount = 0;
 
-        $accounts = $connection->accounts;
-        foreach ($accounts as $account) {
+        foreach ($connection->accounts()->get() as $account) {
             $txCount += $this->syncTransactions($connection, $account);
         }
 
         $connection->update(['last_synced_at' => now()]);
 
-        Log::info("Bank sync completed", [
+        Log::info('Bank sync completed', [
             'connection_id' => $connection->id,
             'accounts' => $accountCount,
             'transactions' => $txCount,
@@ -137,7 +161,7 @@ class BankSyncService
     }
 
     /**
-     * Sync all active connections.
+     * Sync all active connections. Check requisition status first.
      */
     public function syncAllActive(): int
     {
@@ -146,6 +170,13 @@ class BankSyncService
 
         foreach ($connections as $connection) {
             try {
+                // Check consent expiry
+                if ($connection->isConsentExpired()) {
+                    $connection->update(['status' => 'expired']);
+                    Log::info("Bank connection {$connection->id} consent expired");
+                    continue;
+                }
+
                 $result = $this->fullSync($connection);
                 $totalTx += $result['transactions_synced'];
             } catch (\Exception $e) {

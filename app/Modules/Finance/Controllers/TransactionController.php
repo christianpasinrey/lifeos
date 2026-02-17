@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Modules\Finance\Agents\TransactionCategorizer;
 use App\Modules\Finance\FinanceService;
 use App\Modules\Finance\Models\Transaction;
+use App\Modules\Finance\Services\ImportService;
 use App\Modules\Finance\Services\TransactionService;
 use Illuminate\Http\Request;
 
@@ -14,6 +15,7 @@ class TransactionController extends Controller
     public function __construct(
         private FinanceService $service,
         private TransactionService $transactionService,
+        private ImportService $importService,
     ) {}
 
     public function index(Request $request)
@@ -232,6 +234,63 @@ class TransactionController extends Controller
         }
 
         return response()->json(['data' => $proposals]);
+    }
+
+    public function importPreview(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,xls,xlsx,txt|max:5120',
+        ]);
+
+        $path = $request->file('file')->store('temp/imports');
+
+        $preview = $this->importService->preview(storage_path("app/{$path}"));
+
+        return response()->json([
+            'data' => $preview,
+            'temp_path' => $path,
+        ]);
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required_without:temp_path|file|mimes:csv,xls,xlsx,txt|max:5120',
+            'temp_path' => 'required_without:file|string',
+            'account_id' => 'nullable|exists:finance_accounts,id',
+        ]);
+
+        $user = $request->user();
+
+        if (!empty($request->input('account_id'))) {
+            abort_unless(
+                $user->financeAccounts()->where('id', $request->input('account_id'))->exists(),
+                403,
+                'La cuenta no pertenece al usuario.'
+            );
+        }
+
+        if ($request->hasFile('file')) {
+            $path = $request->file('file')->store('temp/imports');
+            $filePath = storage_path("app/{$path}");
+        } else {
+            $filePath = storage_path("app/{$request->input('temp_path')}");
+        }
+
+        if (!file_exists($filePath)) {
+            return response()->json(['error' => 'Archivo no encontrado.'], 404);
+        }
+
+        $result = $this->importService->importFile(
+            $user,
+            $filePath,
+            $request->input('account_id') ? (int) $request->input('account_id') : null,
+        );
+
+        // Clean up temp file
+        @unlink($filePath);
+
+        return response()->json(['data' => $result]);
     }
 
     public function applyCategories(Request $request)

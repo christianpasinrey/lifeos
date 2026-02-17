@@ -7,10 +7,11 @@ use App\Modules\Finance\Commands\GenerateRecurringTransactions;
 use App\Modules\Finance\Commands\SyncBanks;
 use App\Modules\Finance\Services\AccountService;
 use App\Modules\Finance\Services\Banking\BankSyncService;
-use App\Modules\Finance\Services\Banking\IngBankingService;
+use App\Modules\Finance\Services\Banking\GoCardlessBankingService;
 use App\Modules\Finance\Services\BudgetService;
 use App\Modules\Finance\Services\CategoryService;
 use App\Modules\Finance\Services\FinanceSummaryService;
+use App\Modules\Finance\Services\ImportService;
 use App\Modules\Finance\Services\InvoiceService;
 use App\Modules\Finance\Services\RecurringService;
 use App\Modules\Finance\Services\TaxService;
@@ -29,8 +30,9 @@ class FinanceServiceProvider extends ServiceProvider
         $this->app->singleton(FinanceSummaryService::class);
         $this->app->singleton(BudgetService::class);
         $this->app->singleton(RecurringService::class);
+        $this->app->singleton(ImportService::class);
         $this->app->singleton(InvoiceService::class);
-        $this->app->singleton(IngBankingService::class);
+        $this->app->singleton(GoCardlessBankingService::class);
         $this->app->singleton(BankSyncService::class);
         $this->app->singleton(FinanceService::class);
     }

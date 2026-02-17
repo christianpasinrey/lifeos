@@ -34,6 +34,8 @@ class CreateTransaction implements Tool
                 ->description('Notas adicionales sobre la transacción (opcional)'),
             'category_id' => $schema->integer()
                 ->description('ID de la categoría de la transacción (opcional)'),
+            'account_id' => $schema->integer()
+                ->description('ID de la cuenta financiera (opcional)'),
             'date' => $schema->string()
                 ->description('Fecha de la transacción en formato YYYY-MM-DD (opcional, por defecto: hoy)'),
         ];
@@ -49,6 +51,7 @@ class CreateTransaction implements Tool
             'description' => $request['description'],
             'notes' => $request['notes'] ?? null,
             'category_id' => !empty($request['category_id']) ? (int) $request['category_id'] : null,
+            'account_id' => !empty($request['account_id']) ? (int) $request['account_id'] : null,
             'date' => $request['date'] ?? null,
         ];
 

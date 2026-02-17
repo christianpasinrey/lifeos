@@ -165,3 +165,34 @@ export function useApplyCategories() {
         },
     })
 }
+
+export function useImportPreview() {
+    return useMutation({
+        mutationFn: (file) => {
+            const formData = new FormData()
+            formData.append('file', file)
+            return api.post('/finance/transactions/import-preview', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            }).then(r => r.data)
+        },
+    })
+}
+
+export function useImportTransactions() {
+    const qc = useQueryClient()
+
+    return useMutation({
+        mutationFn: ({ file, tempPath, accountId }) => {
+            const formData = new FormData()
+            if (file) formData.append('file', file)
+            if (tempPath) formData.append('temp_path', tempPath)
+            if (accountId) formData.append('account_id', accountId)
+            return api.post('/finance/transactions/import', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            }).then(r => r.data)
+        },
+        onSuccess: () => {
+            invalidateFinanceData(qc)
+        },
+    })
+}

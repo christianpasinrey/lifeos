@@ -42,10 +42,14 @@ class ModuleRegistry
         ],
         'finance' => [
             'name' => 'Finanzas',
-            'description' => 'Control de ingresos y gastos personales con análisis básico',
+            'description' => 'ERP financiero personal con facturas, impuestos y presupuestos',
             'free_limits' => [
                 'max_transactions_per_month' => 100,
-                'max_categories' => 6,
+                'max_categories' => 10,
+                'max_accounts' => 3,
+                'max_invoices_per_month' => 10,
+                'max_recurring' => 5,
+                'max_budgets' => 5,
             ],
         ],
         'storage' => [

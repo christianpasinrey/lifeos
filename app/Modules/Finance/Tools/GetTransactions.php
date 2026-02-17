@@ -25,6 +25,8 @@ class GetTransactions implements Tool
                 ->description('Tipo de transacción: "income" para ingresos, "expense" para gastos (opcional)'),
             'category_id' => $schema->integer()
                 ->description('ID de la categoría para filtrar (opcional)'),
+            'account_id' => $schema->integer()
+                ->description('ID de la cuenta financiera para filtrar (opcional)'),
             'start_date' => $schema->string()
                 ->description('Fecha de inicio en formato YYYY-MM-DD (opcional)'),
             'end_date' => $schema->string()

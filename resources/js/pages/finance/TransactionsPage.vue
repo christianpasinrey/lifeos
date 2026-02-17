@@ -6,6 +6,10 @@
                     <PlusIcon class="w-4 h-4" />
                     Nuevo registro
                 </button>
+                <button class="btn-secondary" @click="showImportModal = true">
+                    <ArrowUpTrayIcon class="w-4 h-4" />
+                    Importar
+                </button>
                 <button
                     v-if="auth.hasModule('ai_coach')"
                     class="ai-chip"
@@ -220,6 +224,138 @@
                 </div>
             </div>
         </Teleport>
+
+        <!-- Import modal -->
+        <Teleport to="body">
+            <div v-if="showImportModal" class="modal-overlay" @mousedown.self="closeImportModal">
+                <div class="modal-backdrop" />
+                <div class="modal-content liquid-glass liquid-glass-panel max-w-3xl">
+                    <div class="flex items-center justify-between mb-5">
+                        <div>
+                            <h2 class="section-title">Importar transacciones</h2>
+                            <p class="text-sm text-surface-400 mt-1">Sube un archivo XLS, XLSX o CSV de tu banco</p>
+                        </div>
+                        <button class="btn-close" @click="closeImportModal">
+                            <XMarkIcon class="w-5 h-5" />
+                        </button>
+                    </div>
+
+                    <!-- Step 1: File upload -->
+                    <div v-if="importStep === 'upload'" class="space-y-4">
+                        <div
+                            class="border-2 border-dashed border-white/10 rounded-2xl p-8 text-center cursor-pointer hover:border-primary-400/40 transition"
+                            @click="$refs.importFileInput.click()"
+                            @dragover.prevent
+                            @drop.prevent="handleImportDrop"
+                        >
+                            <ArrowUpTrayIcon class="w-10 h-10 mx-auto text-surface-500 mb-3" />
+                            <p class="text-sm text-surface-300">
+                                Arrastra un archivo aquí o <span class="text-primary-400">haz clic para seleccionar</span>
+                            </p>
+                            <p class="text-xs text-surface-500 mt-2">Formatos: XLS, XLSX, CSV (máx. 5 MB)</p>
+                            <input
+                                ref="importFileInput"
+                                type="file"
+                                accept=".xls,.xlsx,.csv,.txt"
+                                class="hidden"
+                                @change="handleImportFile"
+                            />
+                        </div>
+
+                        <div>
+                            <label class="form-label">Cuenta destino (opcional)</label>
+                            <AccountSelector v-model="importAccountId" :includeAll="true" />
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Preview -->
+                    <div v-else-if="importStep === 'preview'" class="space-y-4">
+                        <div class="flex items-center gap-3 text-sm">
+                            <span class="px-2.5 py-1 rounded-lg bg-primary-500/20 text-primary-300 font-medium">
+                                {{ importFormatLabel }}
+                            </span>
+                            <span class="text-surface-400">{{ importPreviewData.total }} filas detectadas</span>
+                        </div>
+
+                        <div class="overflow-x-auto max-h-[50vh] rounded-xl border border-white/5">
+                            <table class="w-full text-sm">
+                                <thead class="bg-white/[0.03] sticky top-0">
+                                    <tr>
+                                        <th
+                                            v-for="header in importPreviewData.headers"
+                                            :key="header"
+                                            class="px-3 py-2 text-left text-xs font-medium text-surface-400 whitespace-nowrap"
+                                        >
+                                            {{ header }}
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr
+                                        v-for="(row, i) in importPreviewData.rows"
+                                        :key="i"
+                                        class="border-t border-white/5"
+                                    >
+                                        <td
+                                            v-for="header in importPreviewData.headers"
+                                            :key="header"
+                                            class="px-3 py-2 text-surface-300 whitespace-nowrap"
+                                        >
+                                            {{ row[header] ?? '' }}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-4 border-t border-white/5">
+                            <button class="btn-secondary" @click="importStep = 'upload'; importPreviewData = null">
+                                Cambiar archivo
+                            </button>
+                            <button
+                                class="btn-primary"
+                                :disabled="importTransactions.isPending.value"
+                                @click="confirmImport"
+                            >
+                                {{ importTransactions.isPending.value ? 'Importando...' : `Importar ${importPreviewData.total} transacciones` }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Result -->
+                    <div v-else-if="importStep === 'result'" class="space-y-4">
+                        <div class="rounded-2xl border border-white/5 bg-white/[0.02] p-6 text-center space-y-3">
+                            <CheckCircleIcon class="w-12 h-12 mx-auto text-accent-400" />
+                            <p class="text-lg font-medium text-white">Importación completada</p>
+                            <div class="flex justify-center gap-6 text-sm">
+                                <div>
+                                    <p class="text-2xl font-bold text-accent-400">{{ importResult.imported }}</p>
+                                    <p class="text-surface-400">importadas</p>
+                                </div>
+                                <div>
+                                    <p class="text-2xl font-bold text-surface-400">{{ importResult.skipped }}</p>
+                                    <p class="text-surface-400">omitidas</p>
+                                </div>
+                            </div>
+                            <div v-if="importResult.errors?.length" class="mt-4 text-left">
+                                <p class="text-xs font-medium text-danger-400 mb-1">Errores:</p>
+                                <ul class="text-xs text-surface-500 space-y-0.5 max-h-32 overflow-y-auto">
+                                    <li v-for="(err, i) in importResult.errors" :key="i">{{ err }}</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="flex justify-end">
+                            <button class="btn-primary" @click="closeImportModal">Cerrar</button>
+                        </div>
+                    </div>
+
+                    <!-- Loading state -->
+                    <div v-if="importPreview.isPending.value" class="text-center py-8 text-surface-500">
+                        Analizando archivo...
+                    </div>
+                </div>
+            </div>
+        </Teleport>
     </div>
 </template>
 
@@ -229,8 +365,10 @@ import { useAuthStore } from '@/stores/auth'
 import {
     ArrowDownCircleIcon,
     ArrowUpCircleIcon,
+    ArrowUpTrayIcon,
     ArrowsRightLeftIcon,
     ArrowRightIcon,
+    CheckCircleIcon,
     PlusIcon,
     PaperClipIcon,
     SparklesIcon,
@@ -245,6 +383,8 @@ import {
     useDeleteTransaction,
     useAutoCategorize,
     useApplyCategories,
+    useImportPreview,
+    useImportTransactions,
 } from '@/composables/useFinance'
 import { useUploadTransactionMedia, useDeleteTransactionMedia } from '@/composables/useStorage'
 
@@ -390,6 +530,72 @@ async function confirmCategorize() {
         closeCategorizeModal()
     } catch (error) {
         alert(error.response?.data?.message ?? 'Error al aplicar categorías.')
+    }
+}
+
+// --- Import ---
+const importPreview = useImportPreview()
+const importTransactions = useImportTransactions()
+const showImportModal = ref(false)
+const importStep = ref('upload')
+const importAccountId = ref('')
+const importPreviewData = ref(null)
+const importTempPath = ref(null)
+const importFile = ref(null)
+const importResult = ref(null)
+
+const formatLabels = {
+    ing_es: 'ING España',
+    ing_nl: 'ING Países Bajos',
+    generic_es: 'Formato español genérico',
+    generic: 'Formato genérico',
+    unknown: 'Formato desconocido',
+}
+const importFormatLabel = computed(() => formatLabels[importPreviewData.value?.format] ?? importPreviewData.value?.format)
+
+function closeImportModal() {
+    showImportModal.value = false
+    importStep.value = 'upload'
+    importPreviewData.value = null
+    importTempPath.value = null
+    importFile.value = null
+    importResult.value = null
+    importAccountId.value = ''
+}
+
+function handleImportDrop(e) {
+    const file = e.dataTransfer.files?.[0]
+    if (file) previewFile(file)
+}
+
+function handleImportFile(e) {
+    const file = e.target.files?.[0]
+    if (file) previewFile(file)
+    e.target.value = ''
+}
+
+async function previewFile(file) {
+    importFile.value = file
+    try {
+        const result = await importPreview.mutateAsync(file)
+        importPreviewData.value = result.data
+        importTempPath.value = result.temp_path
+        importStep.value = 'preview'
+    } catch (error) {
+        alert(error.response?.data?.message ?? 'Error al analizar el archivo.')
+    }
+}
+
+async function confirmImport() {
+    try {
+        const result = await importTransactions.mutateAsync({
+            tempPath: importTempPath.value,
+            accountId: importAccountId.value || null,
+        })
+        importResult.value = result.data
+        importStep.value = 'result'
+    } catch (error) {
+        alert(error.response?.data?.message ?? 'Error al importar.')
     }
 }
 </script>

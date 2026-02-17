@@ -1,6 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import api from './useApi'
 
+export function useInstitutions() {
+    return useQuery({
+        queryKey: ['finance', 'banking', 'institutions'],
+        queryFn: () => api.get('/finance/banking/institutions').then(r => r.data),
+        staleTime: 24 * 60 * 60 * 1000, // 24h cache
+    })
+}
+
 export function useBankConnections() {
     return useQuery({
         queryKey: ['finance', 'banking', 'connections'],
@@ -32,12 +40,6 @@ export function useDeleteBankConnection() {
     })
 }
 
-export function useAuthorizeBankConnection() {
-    return useMutation({
-        mutationFn: (id) => api.get(`/finance/banking/connections/${id}/authorize`).then(r => r.data),
-    })
-}
-
 export function useSyncBankConnection() {
     const qc = useQueryClient()
     return useMutation({
@@ -47,5 +49,13 @@ export function useSyncBankConnection() {
             qc.invalidateQueries({ queryKey: ['finance', 'accounts'] })
             qc.invalidateQueries({ queryKey: ['finance', 'transactions'] })
         },
+    })
+}
+
+export function useReconnectBankConnection() {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (id) => api.post(`/finance/banking/connections/${id}/reconnect`).then(r => r.data),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['finance', 'banking'] }),
     })
 }
