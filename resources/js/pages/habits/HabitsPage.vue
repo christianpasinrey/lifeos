@@ -8,28 +8,6 @@
                 </p>
             </div>
             <div class="flex items-center gap-3">
-                <!-- View switcher -->
-                <div v-if="hasWeeklyView" class="flex rounded-lg border border-white/[0.08] overflow-hidden">
-                    <router-link
-                        :to="{ name: 'habits' }"
-                        class="px-3 py-1.5 text-xs font-medium bg-primary-500/10 text-primary-400"
-                    >
-                        Hoy
-                    </router-link>
-                    <router-link
-                        :to="{ name: 'habits-week' }"
-                        class="px-3 py-1.5 text-xs font-medium text-surface-400 hover:text-surface-200 transition-colors"
-                    >
-                        Semana
-                    </router-link>
-                    <router-link
-                        v-if="hasCalendarView"
-                        :to="{ name: 'habits-calendar' }"
-                        class="px-3 py-1.5 text-xs font-medium text-surface-400 hover:text-surface-200 transition-colors"
-                    >
-                        Mes
-                    </router-link>
-                </div>
                 <button
                     @click="showModal = true; editingHabit = null"
                     class="btn-add"

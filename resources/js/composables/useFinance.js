@@ -178,6 +178,24 @@ export function useImportPreview() {
     })
 }
 
+export function useAnalyzeFinances() {
+    return useMutation({
+        mutationFn: ({ startDate, endDate }) =>
+            api.post('/finance/analyze', { start_date: startDate, end_date: endDate }).then(r => r.data),
+    })
+}
+
+export function useApplyFinanceActions() {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: (actions) => api.post('/finance/apply-actions', { actions }).then(r => r.data),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['habits'] })
+            qc.invalidateQueries({ queryKey: ['tasks'] })
+        },
+    })
+}
+
 export function useImportTransactions() {
     const qc = useQueryClient()
 

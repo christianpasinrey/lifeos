@@ -15,7 +15,7 @@
                 <button
                     v-if="auth.hasModule('ai_coach')"
                     class="px-4 py-2 rounded-xl text-sm font-medium bg-primary-500/20 text-primary-100 hover:bg-primary-500/30 transition"
-                    @click="openCoach"
+                    @click="showAnalysis = true"
                 >
                     Analizar con IA
                 </button>
@@ -105,14 +105,21 @@
                 </li>
             </ul>
         </div>
+        <FinanceAnalysisModal
+            v-if="showAnalysis"
+            :initial-start-date="range.startDate"
+            :initial-end-date="range.endDate"
+            @close="showAnalysis = false"
+        />
     </div>
 </template>
 
 <script setup>
-import { computed, reactive } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { ArrowUpCircleIcon, ArrowDownCircleIcon, ArrowsRightLeftIcon } from '@heroicons/vue/24/outline'
 import SummaryCards from './components/SummaryCards.vue'
+import FinanceAnalysisModal from '@/components/finance/FinanceAnalysisModal.vue'
 import { useFinanceSummary, useFinanceTransactions } from '@/composables/useFinance'
 import { useFinanceAccounts } from '@/composables/useFinanceAccounts'
 
@@ -184,7 +191,5 @@ function formatDate(date) {
     return new Date(date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })
 }
 
-function openCoach() {
-    window.dispatchEvent(new CustomEvent('open-coach-chat'))
-}
+const showAnalysis = ref(false)
 </script>

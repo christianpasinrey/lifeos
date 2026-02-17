@@ -1,6 +1,7 @@
 <?php
 
 use App\Modules\Finance\Controllers\AccountController;
+use App\Modules\Finance\Controllers\FinanceAnalysisController;
 use App\Modules\Finance\Controllers\BudgetController;
 use App\Modules\Finance\Controllers\CategoryController;
 use App\Modules\Finance\Controllers\InvoiceController;
@@ -66,6 +67,10 @@ Route::middleware(['api', 'auth:sanctum', 'module:finance'])->prefix('api/financ
     Route::post('invoices/{invoice}/link-payment', [InvoiceController::class, 'linkPayment']);
     Route::post('invoices/{invoice}/unlink-payment/{transaction}', [InvoiceController::class, 'unlinkPayment']);
     Route::post('invoices/{invoice}/status', [InvoiceController::class, 'updateStatus']);
+
+    // AI Analysis
+    Route::post('analyze', [FinanceAnalysisController::class, 'analyze']);
+    Route::post('apply-actions', [FinanceAnalysisController::class, 'applyActions']);
 
     // Categories
     Route::apiResource('categories', CategoryController::class)->except(['show']);
