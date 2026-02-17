@@ -6,20 +6,27 @@ use App\Http\Controllers\Controller;
 use App\Modules\Finance\Agents\TransactionCategorizer;
 use App\Modules\Finance\FinanceService;
 use App\Modules\Finance\Models\Transaction;
+use App\Modules\Finance\Services\TransactionService;
 use Illuminate\Http\Request;
 
 class TransactionController extends Controller
 {
-    public function __construct(private FinanceService $service) {}
+    public function __construct(
+        private FinanceService $service,
+        private TransactionService $transactionService,
+    ) {}
 
     public function index(Request $request)
     {
-        $transactions = $this->service->getTransactions(
+        $transactions = $this->transactionService->getTransactions(
             $request->user(),
-            $request->get('type'),
-            $request->get('category_id'),
-            $request->get('start_date'),
-            $request->get('end_date')
+            array_filter([
+                'type' => $request->get('type'),
+                'category_id' => $request->get('category_id'),
+                'account_id' => $request->get('account_id'),
+                'start_date' => $request->get('start_date'),
+                'end_date' => $request->get('end_date'),
+            ])
         );
 
         return response()->json(['data' => $transactions]);
@@ -28,32 +35,57 @@ class TransactionController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'type' => 'required|in:income,expense',
-            'amount' => 'required|numeric|min:0.01',
+            'type' => 'required|in:income,expense,transfer',
+            'amount' => 'required_without:lines|numeric|min:0.01',
             'description' => 'required|string|max:255',
             'notes' => 'nullable|string',
             'category_id' => 'nullable|exists:finance_categories,id',
+            'account_id' => 'nullable|exists:finance_accounts,id',
             'date' => 'nullable|date',
+            // Line items (optional)
+            'lines' => 'nullable|array|min:1',
+            'lines.*.concept' => 'required_with:lines|string|max:255',
+            'lines.*.quantity' => 'nullable|numeric|min:0.0001',
+            'lines.*.unit_price' => 'required_with:lines|numeric',
+            'lines.*.sort_order' => 'nullable|integer',
+            'lines.*.taxes' => 'nullable|array',
+            'lines.*.taxes.*.tax_id' => 'required|exists:finance_taxes,id',
+            'lines.*.taxes.*.tax_rate_id' => 'required|exists:finance_tax_rates,id',
         ]);
+
+        $user = $request->user();
 
         if (!empty($validated['category_id'])) {
             abort_unless(
-                $request->user()->categories()->where('id', $validated['category_id'])->exists(),
+                $user->categories()->where('id', $validated['category_id'])->exists(),
                 403,
                 'La categoría seleccionada no pertenece al usuario.'
             );
         }
 
-        $transaction = $this->service->createTransaction($request->user(), $validated);
+        if (!empty($validated['account_id'])) {
+            abort_unless(
+                $user->financeAccounts()->where('id', $validated['account_id'])->exists(),
+                403,
+                'La cuenta seleccionada no pertenece al usuario.'
+            );
+        }
 
-        return response()->json(['data' => $transaction->load('category', 'media')], 201);
+        $lines = $validated['lines'] ?? null;
+        unset($validated['lines']);
+
+        $transaction = $this->transactionService->createTransaction($user, $validated, $lines);
+
+        return response()->json(['data' => $transaction], 201);
     }
 
     public function show(Request $request, Transaction $transaction)
     {
         abort_unless($transaction->user_id === $request->user()->id, 403);
 
-        return response()->json(['data' => $transaction->load('category', 'media')]);
+        return response()->json([
+            'data' => $transaction->load('category', 'media', 'account', 'lines.taxes'),
+        ]);
     }
 
     public function update(Request $request, Transaction $transaction)
@@ -61,23 +93,46 @@ class TransactionController extends Controller
         abort_unless($transaction->user_id === $request->user()->id, 403);
 
         $validated = $request->validate([
-            'type' => 'sometimes|in:income,expense',
+            'type' => 'sometimes|in:income,expense,transfer',
             'amount' => 'sometimes|numeric|min:0.01',
             'description' => 'sometimes|string|max:255',
             'notes' => 'nullable|string',
             'category_id' => 'nullable|exists:finance_categories,id',
+            'account_id' => 'nullable|exists:finance_accounts,id',
             'date' => 'sometimes|date',
+            // Line items (optional — if provided, replaces all lines)
+            'lines' => 'nullable|array',
+            'lines.*.concept' => 'required_with:lines|string|max:255',
+            'lines.*.quantity' => 'nullable|numeric|min:0.0001',
+            'lines.*.unit_price' => 'required_with:lines|numeric',
+            'lines.*.sort_order' => 'nullable|integer',
+            'lines.*.taxes' => 'nullable|array',
+            'lines.*.taxes.*.tax_id' => 'required|exists:finance_taxes,id',
+            'lines.*.taxes.*.tax_rate_id' => 'required|exists:finance_tax_rates,id',
         ]);
+
+        $user = $request->user();
 
         if (!empty($validated['category_id'])) {
             abort_unless(
-                $request->user()->categories()->where('id', $validated['category_id'])->exists(),
+                $user->categories()->where('id', $validated['category_id'])->exists(),
                 403,
                 'La categoría seleccionada no pertenece al usuario.'
             );
         }
 
-        $updated = $this->service->updateTransaction($transaction, $validated);
+        if (!empty($validated['account_id'])) {
+            abort_unless(
+                $user->financeAccounts()->where('id', $validated['account_id'])->exists(),
+                403,
+                'La cuenta seleccionada no pertenece al usuario.'
+            );
+        }
+
+        $lines = array_key_exists('lines', $validated) ? $validated['lines'] : null;
+        unset($validated['lines']);
+
+        $updated = $this->transactionService->updateTransaction($transaction, $validated, $lines);
 
         return response()->json(['data' => $updated]);
     }
@@ -86,7 +141,7 @@ class TransactionController extends Controller
     {
         abort_unless($transaction->user_id === $request->user()->id, 403);
 
-        $this->service->deleteTransaction($transaction);
+        $this->transactionService->deleteTransaction($transaction);
 
         return response()->json(['message' => 'Transacción eliminada']);
     }
@@ -149,7 +204,6 @@ class TransactionController extends Controller
         $proposals = json_decode($response->text, true);
 
         if (!is_array($proposals)) {
-            // Try extracting JSON from markdown code block
             if (preg_match('/\[[\s\S]*\]/', $response->text, $matches)) {
                 $proposals = json_decode($matches[0], true);
             }
@@ -159,7 +213,6 @@ class TransactionController extends Controller
             return response()->json(['error' => 'No se pudo interpretar la respuesta del modelo.'], 422);
         }
 
-        // Enrich proposals with transaction info for frontend display
         $txById = $transactions->keyBy('id');
         $catById = $categories->keyBy('id');
 
@@ -207,11 +260,9 @@ class TransactionController extends Controller
 
             $categoryId = $assignment['category_id'] ?? null;
 
-            // Create new category if needed
             if (!$categoryId && !empty($assignment['new_category'])) {
                 $catName = $assignment['new_category']['name'];
 
-                // Reuse if already created in this batch
                 if (isset($createdCategories[$catName])) {
                     $categoryId = $createdCategories[$catName];
                 } else {

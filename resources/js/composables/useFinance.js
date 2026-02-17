@@ -27,6 +27,10 @@ function serializeFilters(filters) {
         params.category_id = raw.categoryId
     }
 
+    if (raw.accountId) {
+        params.account_id = raw.accountId
+    }
+
     return params
 }
 
@@ -71,6 +75,7 @@ export function useFinanceCategories(type) {
 function invalidateFinanceData(qc) {
     qc.invalidateQueries({ queryKey: ['finance', 'summary'] })
     qc.invalidateQueries({ queryKey: ['finance', 'transactions'] })
+    qc.invalidateQueries({ queryKey: ['finance', 'accounts'] })
 }
 
 export function useCreateTransaction() {

@@ -72,6 +72,11 @@ class User extends Authenticatable implements HasMedia
         return $this->hasMany(\App\Modules\Finance\Models\Category::class, 'user_id');
     }
 
+    public function financeAccounts(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Finance\Models\Account::class);
+    }
+
     public function modules()
     {
         return $this->hasMany(\App\Modules\Admin\Models\UserModule::class);

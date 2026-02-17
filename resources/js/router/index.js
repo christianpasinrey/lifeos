@@ -58,9 +58,50 @@ const routes = [
             },
             {
                 path: 'finance',
-                name: 'finance',
-                component: () => import('@/pages/finance/FinancePage.vue'),
+                component: () => import('@/pages/finance/FinanceLayout.vue'),
                 meta: { module: 'finance' },
+                children: [
+                    {
+                        path: '',
+                        name: 'finance',
+                        component: () => import('@/pages/finance/FinanceDashboard.vue'),
+                    },
+                    {
+                        path: 'transactions',
+                        name: 'finance-transactions',
+                        component: () => import('@/pages/finance/TransactionsPage.vue'),
+                    },
+                    {
+                        path: 'accounts',
+                        name: 'finance-accounts',
+                        component: () => import('@/pages/finance/AccountsPage.vue'),
+                    },
+                    {
+                        path: 'categories',
+                        name: 'finance-categories',
+                        component: () => import('@/pages/finance/CategoriesPage.vue'),
+                    },
+                    {
+                        path: 'taxes',
+                        name: 'finance-taxes',
+                        component: () => import('@/pages/finance/TaxesPage.vue'),
+                    },
+                    {
+                        path: 'invoices',
+                        name: 'finance-invoices',
+                        component: () => import('@/pages/finance/InvoicesPage.vue'),
+                    },
+                    {
+                        path: 'recurring',
+                        name: 'finance-recurring',
+                        component: () => import('@/pages/finance/RecurringPage.vue'),
+                    },
+                    {
+                        path: 'budgets',
+                        name: 'finance-budgets',
+                        component: () => import('@/pages/finance/BudgetsPage.vue'),
+                    },
+                ],
             },
             {
                 path: 'drive',
