@@ -16,14 +16,27 @@ class MediaController extends Controller
     {
         abort_unless($transaction->user_id === $request->user()->id, 403);
 
+        $user = $request->user();
+        $maxSizeKb = $user->getModuleLimit('storage', 'max_file_size_kb') ?? 10240;
+
         $request->validate([
-            'file' => 'required|file|max:10240',
+            'file' => "required|file|max:{$maxSizeKb}",
         ]);
 
-        $limit = $request->user()->getModuleLimit('storage', 'max_files');
-        if ($limit !== null) {
-            $current = $this->service->getMediaCount($request->user());
-            abort_if($current >= $limit, 422, "Has alcanzado el límite de {$limit} archivos.");
+        // Check file count limit
+        $fileLimit = $user->getModuleLimit('storage', 'max_files');
+        if ($fileLimit !== null) {
+            $current = $this->service->getTotalFileCount($user);
+            abort_if($current >= $fileLimit, 422, "Has alcanzado el límite de {$fileLimit} archivos.");
+        }
+
+        // Check storage limit
+        $storageLimitMb = $user->getModuleLimit('storage', 'max_storage_mb');
+        if ($storageLimitMb !== null) {
+            $currentBytes = $this->service->getTotalStorageBytes($user);
+            $fileBytes = $request->file('file')->getSize();
+            $limitBytes = $storageLimitMb * 1024 * 1024;
+            abort_if(($currentBytes + $fileBytes) > $limitBytes, 422, "Has alcanzado el límite de {$storageLimitMb} MB de almacenamiento.");
         }
 
         $media = $transaction

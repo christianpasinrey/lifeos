@@ -1,27 +1,19 @@
 /* ============================================
-   LIQUID GLASS — iOS-Inspired Glassmorphism
+   LIQUID GLASS — Apple-Inspired Effect
 
-   Simulates real glass refraction with:
-   - Backdrop blur for frosted distortion
-   - Gradient border simulating light refraction
-   - Specular highlights from top light source
-   - Inset edge lighting for depth
+   Real glass refraction via SVG displacement filter:
+   - ::before  → backdrop blur + SVG distortion (refraction)
+   - ::after   → inset edge shine (reflection)
+
+   Based on liquid-glass-example.html (CodePen)
    ============================================ */
 
 /* --- Design tokens --- */
 :root {
-    --glass-blur: 60px;
-    --glass-saturate: 160%;
-    --glass-bg: rgba(255, 255, 255, 0.15);
+    --glass-backdrop: blur(12px) saturate(140%);
+    --glass-bg: rgba(255, 255, 255, 0.08);
     --glass-radius: 24px;
-    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-    --glass-border-w: 1.5px;
-    /* Refraction edge colors (light from top-left) */
-    --glass-edge-top: rgba(255, 255, 255, 0.5);
-    --glass-edge-right: rgba(255, 255, 255, 0.15);
-    --glass-edge-bottom: rgba(255, 255, 255, 0.08);
-    --glass-edge-left: rgba(255, 255, 255, 0.25);
-    /* Text readability */
+    --glass-shadow: 0 6px 24px rgba(0, 0, 0, 0.10);
     --glass-text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
@@ -30,86 +22,48 @@
    ========================================== */
 .liquid-glass {
     position: relative;
-    background: var(--glass-bg);
-    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    background-color: var(--glass-bg);
     border-radius: var(--glass-radius);
     border: none;
-    box-shadow:
-        var(--glass-shadow),
-        /* Edge light — top bright, bottom dim (simulates refraction) */
-        inset 0 1px 0 0 var(--glass-edge-top),
-        inset 0 -1px 0 0 var(--glass-edge-bottom),
-        inset 1px 0 0 0 var(--glass-edge-left),
-        inset -1px 0 0 0 var(--glass-edge-right);
+    box-shadow: var(--glass-shadow);
     isolation: isolate;
 }
 
-/* Content above pseudo-elements + text readability */
+/* Content above pseudo-elements */
 .liquid-glass > * {
     position: relative;
     z-index: 2;
 }
 
-/* Text shadow for readability on translucent glass */
+/* Text shadow for readability */
 .liquid-glass,
 .liquid-glass * {
     text-shadow: var(--glass-text-shadow);
 }
 
-/* Gradient border — light travels around the edge
-   Brighter at top-left (light source), fading toward bottom-right.
-   Uses mask technique to show gradient only as a border ring. */
+/* Glass refraction — backdrop blur + SVG displacement distortion
+   Exactly like the CodePen: ::before carries both backdrop-filter
+   and the SVG filter to distort what's behind the glass. */
 .liquid-glass::before {
     content: '';
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    padding: var(--glass-border-w);
-    background: linear-gradient(
-        160deg,
-        var(--glass-edge-top) 0%,
-        rgba(255, 255, 255, 0.2) 25%,
-        var(--glass-edge-right) 50%,
-        var(--glass-edge-bottom) 75%,
-        rgba(255, 255, 255, 0.15) 100%
-    );
-    -webkit-mask:
-        linear-gradient(#fff 0 0) content-box,
-        linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-    z-index: 1;
+    -webkit-backdrop-filter: var(--glass-backdrop);
+    backdrop-filter: var(--glass-backdrop);
+    filter: url(#glass-distortion);
+    z-index: -1;
 }
 
-/* Specular highlight — top caustic from light source
-   Simulates light pooling at the top edge of the glass,
-   like real refraction in the WebGL shader. */
+/* Edge reflection — inset shine like the CodePen example */
 .liquid-glass::after {
     content: '';
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background:
-        /* Primary caustic — top-left light pool */
-        radial-gradient(
-            ellipse 70% 20% at 30% 0%,
-            rgba(255, 255, 255, 0.15) 0%,
-            transparent 70%
-        ),
-        /* Secondary reflection — bottom-right bounce */
-        radial-gradient(
-            ellipse 40% 15% at 80% 100%,
-            rgba(255, 255, 255, 0.05) 0%,
-            transparent 60%
-        ),
-        /* Top rim light — linear edge glow */
-        linear-gradient(
-            180deg,
-            rgba(255, 255, 255, 0.08) 0%,
-            transparent 20%
-        );
+    box-shadow:
+        inset 2px 2px 1px 0 rgba(255, 255, 255, 0.50),
+        inset -1px -1px 1px 1px rgba(255, 255, 255, 0.50);
     pointer-events: none;
     z-index: 1;
 }
@@ -120,10 +74,9 @@
 
 /* Dock — heavier for floating UI */
 .liquid-glass-dock {
-    --glass-blur: 80px;
+    --glass-backdrop: blur(16px) saturate(140%);
     --glass-radius: 22px;
-    --glass-bg: rgba(255, 255, 255, 0.18);
-    --glass-border-w: 2px;
+    --glass-bg: rgba(255, 255, 255, 0.10);
     --glass-shadow:
         0 12px 44px rgba(0, 0, 0, 0.12),
         0 4px 12px rgba(0, 0, 0, 0.06);
@@ -131,10 +84,9 @@
 
 /* Side panel — readable, clear frosting */
 .liquid-glass-panel {
-    --glass-blur: 80px;
+    --glass-backdrop: blur(16px) saturate(140%);
     --glass-radius: 20px;
-    --glass-bg: rgba(255, 255, 255, 0.16);
-    --glass-border-w: 2px;
+    --glass-bg: rgba(255, 255, 255, 0.08);
     --glass-shadow:
         0 16px 48px rgba(0, 0, 0, 0.1),
         0 4px 16px rgba(0, 0, 0, 0.05);
@@ -142,18 +94,17 @@
 
 /* Logo chip — compact */
 .liquid-glass-chip {
-    --glass-blur: 50px;
+    --glass-backdrop: blur(12px) saturate(140%);
     --glass-radius: 14px;
-    --glass-bg: rgba(255, 255, 255, 0.12);
+    --glass-bg: rgba(255, 255, 255, 0.06);
     --glass-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
 }
 
 /* Sidebar — floating vertical nav */
 .liquid-glass-sidebar {
-    --glass-blur: 80px;
+    --glass-backdrop: blur(16px) saturate(140%);
     --glass-radius: 20px;
-    --glass-bg: rgba(255, 255, 255, 0.15);
-    --glass-border-w: 2px;
+    --glass-bg: rgba(255, 255, 255, 0.08);
     --glass-shadow:
         0 12px 40px rgba(0, 0, 0, 0.1),
         0 4px 12px rgba(0, 0, 0, 0.05);
@@ -161,15 +112,10 @@
 
 /* Content card — subtle */
 .liquid-glass-card {
-    --glass-blur: 50px;
+    --glass-backdrop: blur(12px) saturate(140%);
     --glass-radius: 16px;
-    --glass-bg: rgba(255, 255, 255, 0.12);
-    --glass-border-w: 1.5px;
+    --glass-bg: rgba(255, 255, 255, 0.06);
     --glass-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-    --glass-edge-top: rgba(255, 255, 255, 0.4);
-    --glass-edge-right: rgba(255, 255, 255, 0.1);
-    --glass-edge-bottom: rgba(255, 255, 255, 0.05);
-    --glass-edge-left: rgba(255, 255, 255, 0.18);
 }
 
 /* ==========================================
@@ -397,5 +343,8 @@
 @supports not (backdrop-filter: blur(1px)) {
     .liquid-glass {
         background: rgba(15, 23, 42, 0.85);
+    }
+    .liquid-glass::before {
+        display: none;
     }
 }

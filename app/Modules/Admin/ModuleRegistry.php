@@ -35,8 +35,12 @@ class ModuleRegistry
         ],
         'storage' => [
             'name' => 'Almacenamiento',
-            'description' => 'Adjunta archivos a transacciones y gestiona tu Drive personal',
-            'free_limits' => ['max_files' => 20],
+            'description' => 'Drive personal con previews y adjuntos en transacciones',
+            'free_limits' => [
+                'max_files' => 50,
+                'max_file_size_kb' => 10240,
+                'max_storage_mb' => 100,
+            ],
         ],
     ];
 

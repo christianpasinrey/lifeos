@@ -11,6 +11,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 class Transaction extends Model implements HasMedia
 {
     use InteractsWithMedia;
+
     protected $table = 'transactions';
 
     protected $fillable = [
