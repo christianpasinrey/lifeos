@@ -4,7 +4,7 @@
         <button
             type="button"
             class="form-input flex items-center justify-between gap-2 text-left cursor-pointer"
-            @click="open = !open"
+            @click="toggle"
         >
             <span :class="modelValue ? 'text-surface-100' : 'text-surface-500'">
                 {{ selectedLabel || placeholder }}
@@ -12,38 +12,41 @@
             <ChevronUpDownIcon class="w-4 h-4 text-surface-400 shrink-0" />
         </button>
 
-        <!-- Dropdown -->
-        <Transition
-            enter-active-class="transition duration-150 ease-out"
-            enter-from-class="opacity-0 -translate-y-1"
-            enter-to-class="opacity-100 translate-y-0"
-            leave-active-class="transition duration-100 ease-in"
-            leave-from-class="opacity-100 translate-y-0"
-            leave-to-class="opacity-0 -translate-y-1"
-        >
-            <ul
-                v-if="open"
-                class="absolute right-0 z-50 mt-1 min-w-full w-max py-1 rounded-lg border border-white/10
-                       bg-slate-900/90 backdrop-blur-xl shadow-xl overflow-auto max-h-52"
+        <!-- Dropdown (teleported to body to escape overflow containers) -->
+        <Teleport to="body">
+            <Transition
+                enter-active-class="transition duration-150 ease-out"
+                enter-from-class="opacity-0 -translate-y-1"
+                enter-to-class="opacity-100 translate-y-0"
+                leave-active-class="transition duration-100 ease-in"
+                leave-from-class="opacity-100 translate-y-0"
+                leave-to-class="opacity-0 -translate-y-1"
             >
-                <li
-                    v-for="opt in options"
-                    :key="opt.value"
-                    class="px-3 py-2 text-sm cursor-pointer transition-colors"
-                    :class="opt.value === modelValue
-                        ? 'bg-primary-500/20 text-primary-300'
-                        : 'text-surface-300 hover:bg-white/5'"
-                    @click="select(opt.value)"
+                <ul
+                    v-if="open"
+                    :style="dropdownStyle"
+                    class="fixed z-[100] w-max py-1 rounded-lg border border-white/10
+                           bg-slate-900/90 backdrop-blur-xl shadow-xl overflow-auto max-h-52"
                 >
-                    {{ opt.label }}
-                </li>
-            </ul>
-        </Transition>
+                    <li
+                        v-for="opt in options"
+                        :key="opt.value"
+                        class="px-3 py-2 text-sm cursor-pointer transition-colors"
+                        :class="opt.value === modelValue
+                            ? 'bg-primary-500/20 text-primary-300'
+                            : 'text-surface-300 hover:bg-white/5'"
+                        @click="select(opt.value)"
+                    >
+                        {{ opt.label }}
+                    </li>
+                </ul>
+            </Transition>
+        </Teleport>
     </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { ChevronUpDownIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
@@ -56,11 +59,38 @@ const emit = defineEmits(['update:modelValue'])
 
 const open = ref(false)
 const wrapper = ref(null)
+const dropdownStyle = ref({})
 
 const selectedLabel = computed(() => {
     const found = props.options.find(o => o.value === props.modelValue)
     return found?.label ?? ''
 })
+
+function updatePosition() {
+    if (!wrapper.value) return
+    const rect = wrapper.value.getBoundingClientRect()
+    const spaceBelow = window.innerHeight - rect.bottom
+    const flipUp = spaceBelow < 220 && rect.top > spaceBelow
+
+    dropdownStyle.value = flipUp
+        ? {
+            bottom: `${window.innerHeight - rect.top + 4}px`,
+            left: `${rect.left}px`,
+            minWidth: `${rect.width}px`,
+        }
+        : {
+            top: `${rect.bottom + 4}px`,
+            left: `${rect.left}px`,
+            minWidth: `${rect.width}px`,
+        }
+}
+
+function toggle() {
+    open.value = !open.value
+    if (open.value) {
+        nextTick(updatePosition)
+    }
+}
 
 function select(value) {
     emit('update:modelValue', value)
@@ -73,6 +103,18 @@ function onClickOutside(e) {
     }
 }
 
-onMounted(() => document.addEventListener('mousedown', onClickOutside))
-onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
+function onScroll() {
+    if (open.value) {
+        updatePosition()
+    }
+}
+
+onMounted(() => {
+    document.addEventListener('mousedown', onClickOutside)
+    window.addEventListener('scroll', onScroll, true)
+})
+onBeforeUnmount(() => {
+    document.removeEventListener('mousedown', onClickOutside)
+    window.removeEventListener('scroll', onScroll, true)
+})
 </script>

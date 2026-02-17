@@ -1,4 +1,7 @@
 @utility btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     padding: 0.625rem 1rem;
     background-color: oklch(from var(--color-primary-600) l c h / 0.8);
     color: white;
@@ -18,6 +21,9 @@
 }
 
 @utility btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     padding: 0.625rem 1rem;
     border: 1px solid rgba(255, 255, 255, 0.08);
     color: var(--color-surface-300);

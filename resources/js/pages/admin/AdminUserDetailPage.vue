@@ -83,14 +83,12 @@
                     >
                         <div class="flex items-center justify-between mb-4">
                             <h3 class="text-sm font-semibold text-surface-200">{{ mod.name }}</h3>
-                            <select
-                                v-model="planEdits[mod.slug].plan"
-                                class="form-input form-input-sm w-auto"
-                            >
-                                <option value="free">Free</option>
-                                <option value="premium">Premium</option>
-                                <option value="custom">Custom</option>
-                            </select>
+                            <CustomSelect
+                                :modelValue="planEdits[mod.slug].plan"
+                                @update:modelValue="planEdits[mod.slug].plan = $event"
+                                :options="planOptions"
+                                class="w-32 text-sm"
+                            />
                         </div>
 
                         <!-- Premium: no limits/features needed -->
@@ -158,7 +156,14 @@
 <script setup>
 import { computed, watch, reactive } from 'vue'
 import { useAdminUser, useToggleAdminModule, useUpdateAdminPlan } from '@/composables/useAdmin'
+import CustomSelect from '@/components/ui/CustomSelect.vue'
 import { ArrowLeftIcon } from '@heroicons/vue/24/outline'
+
+const planOptions = [
+    { value: 'free', label: 'Free' },
+    { value: 'premium', label: 'Premium' },
+    { value: 'custom', label: 'Custom' },
+]
 
 const props = defineProps({
     id: [String, Number],

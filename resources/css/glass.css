@@ -55,15 +55,25 @@
     z-index: -1;
 }
 
-/* Edge reflection — inset shine like the CodePen example */
+/* Edge reflection — asymmetric light like real glass:
+   top = bright highlight, left = subtle catch,
+   bottom/right = dark edge for depth */
 .liquid-glass::after {
     content: '';
     position: absolute;
     inset: 0;
     border-radius: inherit;
     box-shadow:
-        inset 2px 2px 1px 0 rgba(255, 255, 255, 0.50),
-        inset -1px -1px 1px 1px rgba(255, 255, 255, 0.50);
+        /* Top edge — primary light catch */
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.12),
+        /* Left edge — secondary light catch */
+        inset 1px 0 0 0 rgba(255, 255, 255, 0.06),
+        /* Bottom edge — shadow side */
+        inset 0 -1px 0 0 rgba(0, 0, 0, 0.20),
+        /* Right edge — shadow side */
+        inset -1px 0 0 0 rgba(0, 0, 0, 0.12),
+        /* Soft diffused inner glow at top */
+        inset 0 1px 4px 0 rgba(255, 255, 255, 0.04);
     pointer-events: none;
     z-index: 1;
 }

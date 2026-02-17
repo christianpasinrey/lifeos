@@ -2,67 +2,69 @@
     <Teleport to="body">
         <div v-if="show" class="modal-overlay" @mousedown.self="$emit('close')">
             <div class="modal-backdrop" />
-            <div class="modal-content liquid-glass liquid-glass-panel max-w-2xl">
-                <h2 class="section-title mb-5">
+            <div class="modal-content liquid-glass liquid-glass-panel max-w-2xl flex flex-col overflow-hidden">
+                <h2 class="section-title mb-5 shrink-0">
                     {{ editing ? 'Editar registro' : 'Nuevo registro' }}
                 </h2>
-                <form class="form-group" @submit.prevent="submit">
-                    <div class="grid gap-4 sm:grid-cols-2">
+                <form class="form-group flex flex-col min-h-0 flex-1" @submit.prevent="submit">
+                    <div class="flex-1 overflow-y-auto space-y-4 pr-1 glass-scroll">
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <label class="form-label">Tipo</label>
+                                <CustomSelect v-model="form.type" :options="typeOptions" />
+                            </div>
+                            <div>
+                                <label class="form-label">Cuenta</label>
+                                <AccountSelector v-model="form.account_id" :includeAll="false" placeholder="Sin cuenta" />
+                            </div>
+                        </div>
+
+                        <!-- Simple mode: amount only -->
+                        <div v-if="!lineMode">
+                            <label class="form-label">Cantidad (EUR)</label>
+                            <input v-model="form.amount" type="number" step="0.01" min="0" class="form-input" required />
+                        </div>
+
                         <div>
-                            <label class="form-label">Tipo</label>
-                            <CustomSelect v-model="form.type" :options="typeOptions" />
+                            <label class="form-label">Descripción</label>
+                            <input v-model="form.description" type="text" class="form-input" required />
                         </div>
                         <div>
-                            <label class="form-label">Cuenta</label>
-                            <AccountSelector v-model="form.account_id" :includeAll="false" placeholder="Sin cuenta" />
+                            <label class="form-label">Notas</label>
+                            <textarea v-model="form.notes" rows="2" class="form-input" placeholder="Opcional"></textarea>
                         </div>
-                    </div>
-
-                    <!-- Simple mode: amount only -->
-                    <div v-if="!lineMode">
-                        <label class="form-label">Cantidad (EUR)</label>
-                        <input v-model="form.amount" type="number" step="0.01" min="0" class="form-input" required />
-                    </div>
-
-                    <div>
-                        <label class="form-label">Descripción</label>
-                        <input v-model="form.description" type="text" class="form-input" required />
-                    </div>
-                    <div>
-                        <label class="form-label">Notas</label>
-                        <textarea v-model="form.notes" rows="2" class="form-input" placeholder="Opcional"></textarea>
-                    </div>
-                    <div class="grid gap-4 sm:grid-cols-2">
-                        <div>
-                            <label class="form-label">Categoría</label>
-                            <CustomSelect v-model="form.category_id" :options="categoryOptions" placeholder="Sin categoría" />
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <label class="form-label">Categoría</label>
+                                <CustomSelect v-model="form.category_id" :options="categoryOptions" placeholder="Sin categoría" />
+                            </div>
+                            <div>
+                                <label class="form-label">Fecha</label>
+                                <input v-model="form.date" type="date" class="form-input" required />
+                            </div>
                         </div>
-                        <div>
-                            <label class="form-label">Fecha</label>
-                            <input v-model="form.date" type="date" class="form-input" required />
+
+                        <!-- Toggle line mode -->
+                        <div class="flex items-center gap-3 pt-2 border-t border-white/5">
+                            <button
+                                type="button"
+                                class="text-sm font-medium transition"
+                                :class="lineMode ? 'text-primary-300 hover:text-primary-200' : 'text-surface-400 hover:text-surface-300'"
+                                @click="lineMode = !lineMode"
+                            >
+                                {{ lineMode ? 'Modo simple (solo importe)' : 'Modo detallado (líneas + impuestos)' }}
+                            </button>
                         </div>
+
+                        <!-- Line items -->
+                        <TransactionLineEditor
+                            v-if="lineMode"
+                            v-model="form.lines"
+                        />
                     </div>
 
-                    <!-- Toggle line mode -->
-                    <div class="flex items-center gap-3 pt-2 border-t border-white/5">
-                        <button
-                            type="button"
-                            class="text-sm font-medium transition"
-                            :class="lineMode ? 'text-primary-300 hover:text-primary-200' : 'text-surface-400 hover:text-surface-300'"
-                            @click="lineMode = !lineMode"
-                        >
-                            {{ lineMode ? 'Modo simple (solo importe)' : 'Modo detallado (líneas + impuestos)' }}
-                        </button>
-                    </div>
-
-                    <!-- Line items -->
-                    <TransactionLineEditor
-                        v-if="lineMode"
-                        v-model="form.lines"
-                    />
-
-                    <p v-if="error" class="form-error">{{ error }}</p>
-                    <div class="flex justify-end gap-3 mt-2">
+                    <p v-if="error" class="form-error mt-2">{{ error }}</p>
+                    <div class="flex justify-end gap-3 pt-4 mt-4 border-t border-white/5 shrink-0">
                         <button type="button" class="btn-secondary" @click="$emit('close')">Cancelar</button>
                         <button class="btn-primary" type="submit" :disabled="pending">
                             Guardar
