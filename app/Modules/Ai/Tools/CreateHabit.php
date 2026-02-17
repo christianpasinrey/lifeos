@@ -25,22 +25,17 @@ class CreateHabit implements Tool
                 ->description('Nombre del hábito')
                 ->required(),
             'type' => $schema->string()
-                ->description('Tipo: "boolean" para sí/no, "numeric" para valor numérico')
-                ->enum(['boolean', 'numeric'])
-                ->default('boolean'),
+                ->description('Tipo: "boolean" para sí/no, "numeric" para valor numérico (por defecto: "boolean")'),
             'unit' => $schema->string()
                 ->description('Unidad de medida para hábitos numéricos (pasos, litros, min, km, kg, horas)'),
             'target_value' => $schema->number()
                 ->description('Valor objetivo diario para hábitos numéricos'),
             'frequency' => $schema->string()
-                ->description('Frecuencia: "daily", "weekly", "custom"')
-                ->enum(['daily', 'weekly', 'custom'])
-                ->default('daily'),
+                ->description('Frecuencia: "daily", "weekly" o "custom" (por defecto: "daily")'),
             'target_days' => $schema->string()
                 ->description('Días objetivo separados por coma (mon,tue,wed,thu,fri,sat,sun). Solo para weekly/custom.'),
             'color' => $schema->string()
-                ->description('Color hex del hábito')
-                ->default('#6366f1'),
+                ->description('Color hex del hábito (opcional, por defecto: #6366f1)'),
         ];
     }
 

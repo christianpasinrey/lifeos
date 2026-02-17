@@ -8,7 +8,7 @@ class AiServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->app->singleton(AiCoachRegistry::class);
     }
 
     public function boot(): void

@@ -3,7 +3,7 @@
 namespace App\Modules\Ai\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Modules\Ai\Agents\HabitCoach;
+use App\Modules\Ai\Agents\AiCoach;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -49,9 +49,9 @@ class AiChatController extends Controller
         return $agent->stream($request->input('message'));
     }
 
-    private function resolveAgent(Request $request): HabitCoach
+    private function resolveAgent(Request $request): AiCoach
     {
-        $agent = new HabitCoach($request->user());
+        $agent = new AiCoach($request->user());
         $conversationId = $request->input('conversation_id');
 
         if ($conversationId) {
