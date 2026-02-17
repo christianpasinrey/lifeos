@@ -8,12 +8,6 @@
     overflow: hidden;
 }
 
-@utility layout-wallpaper {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-}
-
 @utility sidebar {
     width: 16rem;
     flex-shrink: 0;

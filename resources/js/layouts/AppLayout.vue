@@ -1,16 +1,5 @@
 <template>
-    <div class="relative min-h-screen">
-        <!-- Wallpaper -->
-        <div class="layout-wallpaper">
-            <img
-                src="/wallpaper.png"
-                alt=""
-                class="w-full h-full object-cover select-none"
-                draggable="false"
-            />
-            <div class="absolute inset-0 wallpaper-overlay" />
-        </div>
-
+    <div class="layout-root">
         <!-- Layout shell -->
         <div class="layout-shell">
             <!-- Floating Sidebar -->

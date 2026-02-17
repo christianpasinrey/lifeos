@@ -1,6 +1,12 @@
 @utility body-base {
     background-color: #030712;
+    background-image: url('/wallpaper.png?v=2');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
     color: #f3f4f6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }

@@ -1,12 +1,6 @@
 <template>
     <div class="relative login-container">
-        <!-- Wallpaper -->
-        <div class="layout-wallpaper">
-            <img src="/wallpaper.png" alt="" class="w-full h-full object-cover select-none" draggable="false" />
-            <div class="absolute inset-0 wallpaper-overlay" />
-        </div>
-
-        <div class="relative z-10 login-box">
+        <div class="login-box">
             <!-- Logo -->
             <div class="login-logo">
                 <h1 class="text-3xl font-bold text-white tracking-tight">
