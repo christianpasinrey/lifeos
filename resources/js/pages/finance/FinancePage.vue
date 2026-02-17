@@ -65,35 +65,26 @@
         </div>
 
         <!-- Filters -->
-        <div class="liquid-glass liquid-glass-card p-5">
+        <div class="liquid-glass liquid-glass-card p-5 relative z-10">
             <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
                     <div>
-                        <label class="filter-label">Desde</label>
-                        <input v-model="range.startDate" type="date" class="filter-input" />
+                        <label class="form-label">Desde</label>
+                        <input v-model="range.startDate" type="date" class="form-input" />
                     </div>
                     <div>
-                        <label class="filter-label">Hasta</label>
-                        <input v-model="range.endDate" type="date" class="filter-input" />
+                        <label class="form-label">Hasta</label>
+                        <input v-model="range.endDate" type="date" class="form-input" />
                     </div>
                 </div>
                 <div class="flex flex-col gap-3 sm:flex-row">
                     <div>
-                        <label class="filter-label">Tipo</label>
-                        <select v-model="typeFilter" class="filter-input">
-                            <option value="all">Ingresos y gastos</option>
-                            <option value="income">Solo ingresos</option>
-                            <option value="expense">Solo gastos</option>
-                        </select>
+                        <label class="form-label">Tipo</label>
+                        <CustomSelect v-model="typeFilter" :options="typeFilterOptions" />
                     </div>
                     <div>
-                        <label class="filter-label">Categoría</label>
-                        <select v-model="categoryFilter" class="filter-input">
-                            <option value="all">Todas</option>
-                            <option v-for="cat in categories" :key="cat.id" :value="String(cat.id)">
-                                {{ cat.name }}
-                            </option>
-                        </select>
+                        <label class="form-label">Categoría</label>
+                        <CustomSelect v-model="categoryFilter" :options="categoryFilterOptions" />
                     </div>
                 </div>
             </div>
@@ -151,8 +142,8 @@
                                 {{ tx.type === 'income' ? '+' : '-' }}{{ formatCurrency(tx.amount) }}
                             </p>
                             <div class="flex gap-2">
-                                <button class="link-muted" @click="openTransactionForm(tx)">Editar</button>
-                                <button class="link-danger" @click="deleteTx(tx)">Eliminar</button>
+                                <button class="text-xs font-medium text-surface-400 hover:text-white transition" @click="openTransactionForm(tx)">Editar</button>
+                                <button class="text-xs font-medium text-danger-400 hover:text-danger-500 transition" @click="deleteTx(tx)">Eliminar</button>
                             </div>
                         </div>
                     </li>
@@ -183,121 +174,99 @@
                             </div>
                         </div>
                         <div class="flex gap-2">
-                            <button class="link-muted" @click="startEditCategory(cat)">Editar</button>
-                            <button class="link-danger" @click="deleteCategory(cat)">Eliminar</button>
+                            <button class="text-xs font-medium text-surface-400 hover:text-white transition" @click="startEditCategory(cat)">Editar</button>
+                            <button class="text-xs font-medium text-danger-400 hover:text-danger-500 transition" @click="deleteCategory(cat)">Eliminar</button>
                         </div>
                     </li>
                 </ul>
 
-                <Transition name="fade">
-                    <form
-                        v-if="showCategoryPanel"
-                        class="rounded-2xl border border-white/10 bg-white/[0.03] p-4 space-y-3"
-                        @submit.prevent="submitCategory"
-                    >
-                        <p class="text-sm font-semibold text-white">
-                            {{ editingCategory ? 'Editar categoría' : 'Nueva categoría' }}
-                        </p>
-                        <div class="grid gap-3">
-                            <div>
-                                <label class="filter-label">Nombre</label>
-                                <input v-model="categoryForm.name" type="text" class="filter-input" required />
-                            </div>
-                            <div class="flex gap-3">
-                                <div class="flex-1">
-                                    <label class="filter-label">Tipo</label>
-                                    <select v-model="categoryForm.type" class="filter-input">
-                                        <option value="both">Ingresos y gastos</option>
-                                        <option value="income">Solo ingresos</option>
-                                        <option value="expense">Solo gastos</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="filter-label">Color</label>
-                                    <input v-model="categoryForm.color" type="color" class="filter-input h-12" />
-                                </div>
-                            </div>
-                        </div>
-                        <p v-if="categoryError" class="text-sm text-danger-400">{{ categoryError }}</p>
-                        <div class="flex gap-3">
-                            <button
-                                class="btn-add flex-1 justify-center"
-                                type="submit"
-                                :disabled="categoryMutationPending"
-                            >
-                                Guardar
-                            </button>
-                            <button type="button" class="link-muted" @click="resetCategoryForm">Cancelar</button>
-                        </div>
-                    </form>
-                </Transition>
             </section>
         </div>
 
-        <!-- Transaction sheet -->
-        <Transition name="fade">
-            <div
-                v-if="showTransactionForm"
-                class="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4"
-            >
-                <div class="max-w-lg w-full rounded-3xl liquid-glass liquid-glass-panel p-6 relative">
-                    <button class="absolute top-4 right-4 text-surface-500 hover:text-white" @click="closeTransactionForm">
-                        ✕
-                    </button>
-                    <p class="text-sm uppercase tracking-[0.2em] text-primary-200/70">
-                        {{ editingTransaction ? 'Editar registro' : 'Nuevo registro' }}
-                    </p>
-                    <h3 class="text-2xl font-semibold text-white mt-1">
-                        {{ editingTransaction ? editingTransaction.description : 'Registro financiero' }}
-                    </h3>
-                    <form class="mt-6 space-y-4" @submit.prevent="submitTransaction">
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <div>
-                                <label class="filter-label">Tipo</label>
-                                <select v-model="transactionForm.type" class="filter-input" required>
-                                    <option value="income">Ingreso</option>
-                                    <option value="expense">Gasto</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="filter-label">Cantidad (€)</label>
-                                <input v-model="transactionForm.amount" type="number" step="0.01" min="0" class="filter-input" required />
-                            </div>
+        <!-- Category modal -->
+        <Teleport to="body">
+            <div v-if="showCategoryPanel" class="modal-overlay" @mousedown.self="toggleCategoryForm">
+                <div class="modal-backdrop" />
+                <div class="modal-content liquid-glass liquid-glass-panel max-w-md">
+                    <h2 class="section-title mb-5">
+                        {{ editingCategory ? 'Editar categoría' : 'Nueva categoría' }}
+                    </h2>
+                    <form class="form-group" @submit.prevent="submitCategory">
+                        <div>
+                            <label class="form-label">Nombre</label>
+                            <input v-model="categoryForm.name" type="text" class="form-input" required />
                         </div>
                         <div>
-                            <label class="filter-label">Descripción</label>
-                            <input v-model="transactionForm.description" type="text" class="filter-input" required />
+                            <label class="form-label">Tipo</label>
+                            <CustomSelect v-model="categoryForm.type" :options="categoryTypeOptions" />
                         </div>
                         <div>
-                            <label class="filter-label">Notas</label>
-                            <textarea v-model="transactionForm.notes" rows="2" class="filter-input" placeholder="Opcional"></textarea>
-                        </div>
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <div>
-                                <label class="filter-label">Categoría</label>
-                                <select v-model="transactionForm.category_id" class="filter-input">
-                                    <option value="">Sin categoría</option>
-                                    <option v-for="cat in categories" :key="cat.id" :value="String(cat.id)">
-                                        {{ cat.name }}
-                                    </option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="filter-label">Fecha</label>
-                                <input v-model="transactionForm.date" type="date" class="filter-input" required />
+                            <label class="form-label">Color</label>
+                            <div class="flex items-center gap-3">
+                                <input v-model="categoryForm.color" type="color" class="w-10 h-10 rounded-lg border border-white/10 bg-transparent cursor-pointer" />
+                                <span class="text-sm text-surface-400">{{ categoryForm.color }}</span>
                             </div>
                         </div>
-                        <p v-if="transactionError" class="text-sm text-danger-400">{{ transactionError }}</p>
-                        <div class="flex gap-3">
-                            <button class="btn-add flex-1 justify-center" type="submit" :disabled="transactionMutationPending">
+                        <p v-if="categoryError" class="form-error">{{ categoryError }}</p>
+                        <div class="flex justify-end gap-3 mt-2">
+                            <button type="button" class="btn-secondary" @click="toggleCategoryForm">Cancelar</button>
+                            <button class="btn-primary" type="submit" :disabled="categoryMutationPending">
                                 Guardar
                             </button>
-                            <button type="button" class="link-muted" @click="closeTransactionForm">Cancelar</button>
                         </div>
                     </form>
                 </div>
             </div>
-        </Transition>
+        </Teleport>
+
+        <!-- Transaction modal -->
+        <Teleport to="body">
+            <div v-if="showTransactionForm" class="modal-overlay" @mousedown.self="closeTransactionForm">
+                <div class="modal-backdrop" />
+                <div class="modal-content liquid-glass liquid-glass-panel max-w-lg">
+                    <h2 class="section-title mb-5">
+                        {{ editingTransaction ? 'Editar registro' : 'Nuevo registro' }}
+                    </h2>
+                    <form class="form-group" @submit.prevent="submitTransaction">
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <label class="form-label">Tipo</label>
+                                <CustomSelect v-model="transactionForm.type" :options="transactionTypeOptions" />
+                            </div>
+                            <div>
+                                <label class="form-label">Cantidad (€)</label>
+                                <input v-model="transactionForm.amount" type="number" step="0.01" min="0" class="form-input" required />
+                            </div>
+                        </div>
+                        <div>
+                            <label class="form-label">Descripción</label>
+                            <input v-model="transactionForm.description" type="text" class="form-input" required />
+                        </div>
+                        <div>
+                            <label class="form-label">Notas</label>
+                            <textarea v-model="transactionForm.notes" rows="2" class="form-input" placeholder="Opcional"></textarea>
+                        </div>
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <label class="form-label">Categoría</label>
+                                <CustomSelect v-model="transactionForm.category_id" :options="transactionCategoryOptions" placeholder="Sin categoría" />
+                            </div>
+                            <div>
+                                <label class="form-label">Fecha</label>
+                                <input v-model="transactionForm.date" type="date" class="form-input" required />
+                            </div>
+                        </div>
+                        <p v-if="transactionError" class="form-error">{{ transactionError }}</p>
+                        <div class="flex justify-end gap-3 mt-2">
+                            <button type="button" class="btn-secondary" @click="closeTransactionForm">Cancelar</button>
+                            <button class="btn-primary" type="submit" :disabled="transactionMutationPending">
+                                Guardar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </Teleport>
     </div>
 </template>
 
@@ -310,6 +279,7 @@ import {
     WalletIcon,
     PlusIcon,
 } from '@heroicons/vue/24/outline'
+import CustomSelect from '@/components/ui/CustomSelect.vue'
 import {
     useFinanceSummary,
     useFinanceTransactions,
@@ -371,6 +341,33 @@ const summary = computed(() => summaryData.value?.data ?? {
 
 const transactions = computed(() => transactionsData.value?.data ?? [])
 const categories = computed(() => categoriesData.value?.data ?? [])
+
+const typeFilterOptions = [
+    { value: 'all', label: 'Ingresos y gastos' },
+    { value: 'income', label: 'Solo ingresos' },
+    { value: 'expense', label: 'Solo gastos' },
+]
+
+const categoryFilterOptions = computed(() => [
+    { value: 'all', label: 'Todas' },
+    ...categories.value.map(cat => ({ value: String(cat.id), label: cat.name })),
+])
+
+const transactionTypeOptions = [
+    { value: 'income', label: 'Ingreso' },
+    { value: 'expense', label: 'Gasto' },
+]
+
+const categoryTypeOptions = [
+    { value: 'both', label: 'Ingresos y gastos' },
+    { value: 'income', label: 'Solo ingresos' },
+    { value: 'expense', label: 'Solo gastos' },
+]
+
+const transactionCategoryOptions = computed(() => [
+    { value: '', label: 'Sin categoría' },
+    ...categories.value.map(cat => ({ value: String(cat.id), label: cat.name })),
+])
 
 const expenseRatioText = computed(() => {
     if (!summary.value.income) return 'Aún no hay ingresos registrados'
@@ -550,31 +547,3 @@ function openCoach() {
     window.dispatchEvent(new CustomEvent('open-coach-chat'))
 }
 </script>
-
-<style scoped>
-.filter-label {
-    @apply text-xs uppercase tracking-[0.2em] text-surface-500 block mb-2;
-}
-
-.filter-input {
-    @apply w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-400/60;
-}
-
-.link-muted {
-    @apply text-xs font-medium text-surface-400 hover:text-white transition;
-}
-
-.link-danger {
-    @apply text-xs font-medium text-danger-400 hover:text-danger-500 transition;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-    transition: opacity 0.2s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-    opacity: 0;
-}
-</style>
