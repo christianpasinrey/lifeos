@@ -389,16 +389,7 @@
                                     v-if="auth.hasModule('finance')"
                                     class="ai-chip"
                                     :disabled="analyzeMutation.isPending.value"
-                                    @click="runAnalysis(
-                                        previewFile,
-                                        `Analiza este archivo y extrae todas las transacciones financieras (ingresos y gastos) que encuentres.
-Para cada transacción indica: tipo (income/expense), importe, descripción breve, fecha, y categoría sugerida.
-Al final de tu respuesta, incluye un bloque JSON con este formato exacto (sin bloques de código markdown):
-TRANSACTIONS_JSON_START
-[{\"type\":\"expense\",\"amount\":10.00,\"description\":\"Ejemplo\",\"date\":\"2026-01-01\",\"category_name\":\"Servicios\",\"category_type\":\"expense\",\"category_color\":\"#f59e0b\"}]
-TRANSACTIONS_JSON_END`,
-                                        { type: 'create_transactions', label: 'Confirmar y crear transacciones' }
-                                    )"
+                                    @click="extractTransactions(previewFile)"
                                 >
                                     <BanknotesIcon class="w-3.5 h-3.5" />
                                     Extraer transacciones
@@ -662,6 +653,19 @@ async function runAnalysis(file, prompt, action = null) {
     } catch (e) {
         aiError.value = e.response?.data?.message ?? 'Error al analizar el archivo.'
     }
+}
+
+function extractTransactions(file) {
+    const prompt = [
+        'Analiza este archivo y extrae todas las transacciones financieras (ingresos y gastos) que encuentres.',
+        'Para cada transacción indica: tipo (income/expense), importe, descripción breve, fecha, y categoría sugerida.',
+        'Al final de tu respuesta, incluye un bloque JSON con este formato exacto (sin bloques de código markdown):',
+        'TRANSACTIONS_JSON_START',
+        '[{"type":"expense","amount":10.00,"description":"Ejemplo","date":"2026-01-01","category_name":"Servicios","category_type":"expense","category_color":"#f59e0b"}]',
+        'TRANSACTIONS_JSON_END',
+    ].join('\n')
+
+    runAnalysis(file, prompt, { type: 'create_transactions', label: 'Confirmar y crear transacciones' })
 }
 
 function submitCustomPrompt(file) {
