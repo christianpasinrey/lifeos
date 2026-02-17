@@ -3,7 +3,6 @@
 use App\Modules\Habits\Controllers\HabitAnalysisController;
 use App\Modules\Habits\Controllers\HabitController;
 use App\Modules\Habits\Controllers\HabitLogController;
-use App\Modules\Habits\Controllers\HabitCalendarController;
 use App\Modules\Habits\Controllers\HabitTemplateController;
 use App\Modules\Habits\Controllers\HabitVacationController;
 use App\Modules\Habits\Controllers\HabitWeekController;
@@ -13,7 +12,6 @@ Route::middleware(['api', 'auth:sanctum', 'module:habits'])->prefix('api')->grou
     Route::get('/habits/today', [HabitController::class, 'today']);
     Route::get('/habits/sparklines', [HabitController::class, 'sparklines']);
     Route::get('/habits/week', [HabitWeekController::class, 'index']);
-    Route::get('/habits/calendar', [HabitCalendarController::class, 'index']);
     Route::get('/habits/templates', [HabitTemplateController::class, 'index']);
     Route::post('/habits/templates/{template}/apply', [HabitTemplateController::class, 'apply']);
     Route::post('/habits/analyze', [HabitAnalysisController::class, 'analyze']);

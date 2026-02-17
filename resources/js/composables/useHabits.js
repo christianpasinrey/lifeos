@@ -60,14 +60,6 @@ export function useToggleHabitDate() {
     })
 }
 
-export function useHabitsCalendar(month) {
-    return useQuery({
-        queryKey: ['habits', 'calendar', month],
-        queryFn: () => api.get('/habits/calendar', { params: { month: unref(month) } }).then(r => r.data),
-        enabled: computed(() => !!unref(month)),
-    })
-}
-
 export function useHabitSparklines() {
     return useQuery({
         queryKey: ['habits', 'sparklines'],

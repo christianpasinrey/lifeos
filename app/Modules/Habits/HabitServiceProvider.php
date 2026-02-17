@@ -23,6 +23,11 @@ class HabitServiceProvider extends ServiceProvider
 
         $this->app->booted(function () {
             app(AiCoachRegistry::class)->register(new HabitsAiSpecialization());
+
+            if ($this->app->bound(\App\Modules\Calendar\CalendarEventRegistry::class)) {
+                app(\App\Modules\Calendar\CalendarEventRegistry::class)
+                    ->register(new \App\Modules\Habits\Providers\HabitsCalendarProvider());
+            }
         });
     }
 }

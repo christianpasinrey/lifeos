@@ -48,6 +48,11 @@ class FinanceServiceProvider extends ServiceProvider
         $this->app->booted(function () {
             app(AiCoachRegistry::class)->register(new FinanceAiSpecialization());
 
+            if ($this->app->bound(\App\Modules\Calendar\CalendarEventRegistry::class)) {
+                app(\App\Modules\Calendar\CalendarEventRegistry::class)
+                    ->register(new \App\Modules\Finance\Providers\FinanceCalendarProvider());
+            }
+
             $schedule = app(Schedule::class);
             $schedule->command('finance:generate-recurring')->daily();
         });

@@ -20,7 +20,6 @@ class ModuleRegistry
                 'charts' => false,
                 'ai_analyzer' => false,
                 'templates' => false,
-                'calendar_view' => false,
                 'vacation_mode' => false,
                 'reminders' => false,
             ],
@@ -51,6 +50,11 @@ class ModuleRegistry
                 'max_recurring' => 5,
                 'max_budgets' => 5,
             ],
+        ],
+        'calendar' => [
+            'name' => 'Calendario',
+            'description' => 'Calendario unificado con eventos propios y de otros módulos',
+            'free_limits' => ['max_events' => 50],
         ],
         'storage' => [
             'name' => 'Almacenamiento',

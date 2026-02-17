@@ -23,6 +23,11 @@ class TaskServiceProvider extends ServiceProvider
 
         $this->app->booted(function () {
             app(AiCoachRegistry::class)->register(new TasksAiSpecialization());
+
+            if ($this->app->bound(\App\Modules\Calendar\CalendarEventRegistry::class)) {
+                app(\App\Modules\Calendar\CalendarEventRegistry::class)
+                    ->register(new \App\Modules\Tasks\Providers\TasksCalendarProvider());
+            }
         });
     }
 }

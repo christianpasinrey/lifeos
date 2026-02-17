@@ -23,6 +23,7 @@
 @import "./pages/dashboard.css";
 @import "./pages/habits.css";
 @import "./pages/tasks.css";
+@import "./pages/calendar.css";
 
 @theme {
     --font-sans: 'Inter', system-ui, sans-serif;

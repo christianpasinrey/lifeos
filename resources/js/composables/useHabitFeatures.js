@@ -17,7 +17,6 @@ export function useHabitFeatures() {
         hasCharts: feature('charts'),
         hasAiAnalyzer: feature('ai_analyzer'),
         hasTemplates: feature('templates'),
-        hasCalendarView: feature('calendar_view'),
         hasVacationMode: feature('vacation_mode'),
         hasReminders: feature('reminders'),
     }

@@ -9,5 +9,6 @@ return [
     App\Modules\Admin\AdminServiceProvider::class,
     App\Modules\Tasks\TaskServiceProvider::class,
     App\Modules\Finance\FinanceServiceProvider::class,
+    App\Modules\Calendar\CalendarServiceProvider::class,
     App\Modules\Storage\StorageServiceProvider::class,
 ];

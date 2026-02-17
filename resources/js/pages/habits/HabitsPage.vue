@@ -136,7 +136,7 @@ const router = useRouter()
 const showModal = ref(false)
 const showAnalysis = ref(false)
 const editingHabit = ref(null)
-const { hasRoutines, hasSparklines, hasCelebrations, hasWeeklyView, hasCalendarView, hasAiAnalyzer } = useHabitFeatures()
+const { hasRoutines, hasSparklines, hasCelebrations, hasWeeklyView, hasAiAnalyzer } = useHabitFeatures()
 const { celebrateHabit, celebrateBadge, pendingBadge } = useCelebration()
 
 const { data: habitsData, isLoading } = useHabitsToday()
