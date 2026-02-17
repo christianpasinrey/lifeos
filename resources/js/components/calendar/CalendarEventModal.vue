@@ -70,11 +70,7 @@
                             <div class="grid grid-cols-2 gap-3">
                                 <div>
                                     <label class="form-label">Tipo</label>
-                                    <select v-model="form.type" class="form-input">
-                                        <option value="event">Evento</option>
-                                        <option value="meeting">Reunión</option>
-                                        <option value="time_block">Bloque de tiempo</option>
-                                    </select>
+                                    <CustomSelect v-model="form.type" :options="typeOptions" />
                                 </div>
                                 <div>
                                     <label class="form-label">Ubicación</label>
@@ -123,7 +119,14 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useCreateCalendarEvent, useUpdateCalendarEvent } from '@/composables/useCalendar'
+import CustomSelect from '@/components/ui/CustomSelect.vue'
 import { CalendarDaysIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+
+const typeOptions = [
+    { value: 'event', label: 'Evento' },
+    { value: 'meeting', label: 'Reunión' },
+    { value: 'time_block', label: 'Bloque de tiempo' },
+]
 
 const props = defineProps({
     event: { type: Object, default: null },
