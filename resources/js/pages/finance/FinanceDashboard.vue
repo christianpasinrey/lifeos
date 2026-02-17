@@ -13,9 +13,10 @@
             </div>
             <div class="ml-auto flex gap-3">
                 <button
-                    v-if="auth.hasModule('ai_coach')"
+                    v-for="action in toolbarActions"
+                    :key="action.label"
                     class="px-4 py-2 rounded-xl text-sm font-medium bg-primary-500/20 text-primary-100 hover:bg-primary-500/30 transition"
-                    @click="showAnalysis = true"
+                    @click="onSlotAction(action)"
                 >
                     Analizar con IA
                 </button>
@@ -116,14 +117,19 @@
 
 <script setup>
 import { computed, reactive, ref } from 'vue'
-import { useAuthStore } from '@/stores/auth'
+import { useModuleRegistry } from '@/modules/registry'
 import { ArrowUpCircleIcon, ArrowDownCircleIcon, ArrowsRightLeftIcon } from '@heroicons/vue/24/outline'
 import SummaryCards from './components/SummaryCards.vue'
 import FinanceAnalysisModal from '@/components/finance/FinanceAnalysisModal.vue'
 import { useFinanceSummary, useFinanceTransactions } from '@/composables/useFinance'
 import { useFinanceAccounts } from '@/composables/useFinanceAccounts'
 
-const auth = useAuthStore()
+const { actionsForSlot } = useModuleRegistry()
+const toolbarActions = actionsForSlot('finance-dashboard-toolbar')
+
+function onSlotAction(action) {
+    if (action.emit === 'show-analysis') showAnalysis.value = true
+}
 
 function formatDateInput(date) {
     return new Date(date).toISOString().slice(0, 10)

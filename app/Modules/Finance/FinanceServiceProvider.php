@@ -2,8 +2,11 @@
 
 namespace App\Modules\Finance;
 
+use App\Events\FileAnalysisContextRequested;
 use App\Modules\Ai\AiCoachRegistry;
 use App\Modules\Finance\Commands\GenerateRecurringTransactions;
+use App\Modules\Finance\Listeners\ProvideFinanceContext;
+use Illuminate\Support\Facades\Event;
 use App\Modules\Finance\Services\AccountService;
 use App\Modules\Finance\Services\BudgetService;
 use App\Modules\Finance\Services\CategoryService;
@@ -35,6 +38,8 @@ class FinanceServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->loadRoutesFrom(__DIR__ . '/routes.php');
+
+        Event::listen(FileAnalysisContextRequested::class, ProvideFinanceContext::class);
 
         $this->commands([
             GenerateRecurringTransactions::class,

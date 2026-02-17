@@ -2,12 +2,11 @@
 
 namespace App\Modules\Finance\Controllers;
 
+use App\Events\ActionRequested;
 use App\Http\Controllers\Controller;
 use App\Modules\Finance\Agents\FinanceAnalyzer;
 use App\Modules\Finance\Services\BudgetService;
 use App\Modules\Finance\Services\FinanceSummaryService;
-use App\Modules\Habits\HabitService;
-use App\Modules\Tasks\TaskService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -114,36 +113,19 @@ class FinanceAnalysisController extends Controller
         $created = ['habits' => 0, 'tasks' => 0];
 
         foreach ($request->input('actions') as $action) {
-            if ($action['type'] === 'habit') {
-                $habitService = app(HabitService::class);
-                $habitService->create($user, [
-                    'name' => $action['title'],
-                    'type' => 'boolean',
-                    'frequency' => 'daily',
-                    'routine' => 'morning',
-                    'color' => '#10b981',
-                ]);
+            $event = new ActionRequested(
+                user: $user,
+                type: $action['type'],
+                title: $action['title'],
+                description: $action['description'] ?? null,
+            );
+
+            event($event);
+
+            if (isset($event->results['habits'])) {
                 $created['habits']++;
-            } elseif ($action['type'] === 'task') {
-                $taskService = app(TaskService::class);
-
-                // Find a board named "Finanzas", or any board, or create one
-                $board = $user->boards()->where('name', 'Finanzas')->first()
-                    ?? $user->boards()->first();
-
-                if (!$board) {
-                    $board = $taskService->createBoard($user, [
-                        'name' => 'Finanzas',
-                        'description' => 'Tareas financieras sugeridas por el análisis IA',
-                    ]);
-                }
-
-                $column = $board->columns()->orderBy('sort_order')->first();
-
-                $taskService->createTask($column, $user, [
-                    'title' => $action['title'],
-                    'description' => $action['description'] ?? null,
-                ]);
+            }
+            if (isset($event->results['tasks'])) {
                 $created['tasks']++;
             }
         }

@@ -7,6 +7,7 @@ use App\Modules\Habits\Models\Habit;
 use App\Modules\Habits\Models\HabitBadge;
 use App\Modules\Habits\Models\HabitLog;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Gate;
 
 class HabitService
 {
@@ -100,8 +101,8 @@ class HabitService
 
         $streak = 0;
         $date = now()->startOfDay();
-        $hasFreezeFeature = $habit->user->hasModuleFeature('habits', 'streak_freeze');
-        $hasVacationFeature = $habit->user->hasModuleFeature('habits', 'vacation_mode');
+        $hasFreezeFeature = Gate::forUser($habit->user)->allows('feature:habits.streak_freeze');
+        $hasVacationFeature = Gate::forUser($habit->user)->allows('feature:habits.vacation_mode');
         $freezeUsed = false;
 
         // Preload vacation periods for efficiency
@@ -258,7 +259,7 @@ class HabitService
     public function checkAndAwardBadges(Habit $habit): array
     {
         $user = $habit->user;
-        if (!$user->hasModuleFeature('habits', 'badges')) {
+        if (!Gate::forUser($user)->allows('feature:habits.badges')) {
             return [];
         }
 

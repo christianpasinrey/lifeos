@@ -11,8 +11,8 @@ class HabitCalendarController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('feature:habits.calendar_view');
         $user = $request->user();
-        abort_unless($user->hasModuleFeature('habits', 'calendar_view'), 403);
 
         $month = $request->input('month', now()->format('Y-m'));
         $start = Carbon::parse($month . '-01')->startOfMonth();

@@ -2,6 +2,7 @@
 
 return [
     App\Providers\AppServiceProvider::class,
+    App\Providers\ModuleGateProvider::class,
     App\Modules\Habits\HabitServiceProvider::class,
     App\Modules\CustomEntities\CustomEntityServiceProvider::class,
     App\Modules\Ai\AiServiceProvider::class,

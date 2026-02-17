@@ -21,7 +21,7 @@ class HabitVacationController extends Controller
     public function store(Request $request, Habit $habit)
     {
         abort_unless($habit->user_id === $request->user()->id, 403);
-        abort_unless($request->user()->hasModuleFeature('habits', 'vacation_mode'), 403);
+        $this->authorize('feature:habits.vacation_mode');
 
         $data = $request->validate([
             'starts_at' => 'required|date',

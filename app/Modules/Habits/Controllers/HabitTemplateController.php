@@ -13,7 +13,7 @@ class HabitTemplateController extends Controller
 
     public function index(Request $request)
     {
-        abort_unless($request->user()->hasModuleFeature('habits', 'templates'), 403);
+        $this->authorize('feature:habits.templates');
 
         $templates = HabitTemplate::orderBy('sort_order')->get()->groupBy('category');
 
@@ -22,7 +22,7 @@ class HabitTemplateController extends Controller
 
     public function apply(Request $request, HabitTemplate $template)
     {
-        abort_unless($request->user()->hasModuleFeature('habits', 'templates'), 403);
+        $this->authorize('feature:habits.templates');
 
         $habit = $this->service->create($request->user(), [
             'name' => $template->name,

@@ -40,12 +40,13 @@
                 <!-- Actions -->
                 <div class="flex items-center gap-2">
                     <button
-                        v-if="auth.hasModule('ai_coach')"
+                        v-for="action in toolbarActions"
+                        :key="action.label"
                         class="btn-add"
-                        @click="showGenerator = true"
+                        @click="onSlotAction(action)"
                     >
-                        <SparklesIcon class="w-4 h-4" />
-                        Generar con IA
+                        <component :is="action.icon" class="w-4 h-4" />
+                        {{ action.label }}
                     </button>
                     <button class="btn-add" @click="showCreateColumn = true">
                         <PlusIcon class="w-4 h-4" />
@@ -131,12 +132,11 @@ import {
     ArrowLeftIcon,
     PlusIcon,
     PencilIcon,
-    SparklesIcon,
     ViewColumnsIcon,
     ClipboardDocumentListIcon,
     ExclamationTriangleIcon,
 } from '@heroicons/vue/24/outline'
-import { useAuthStore } from '@/stores/auth'
+import { useModuleRegistry } from '@/modules/registry'
 
 const route = useRoute()
 const boardId = computed(() => Number(route.params.id))
@@ -148,7 +148,8 @@ const allTasks = computed(() => columns.value.flatMap(c => c.tasks ?? []))
 const totalTasks = computed(() => allTasks.value.length)
 const highPriorityCount = computed(() => allTasks.value.filter(t => t.priority === 'high').length)
 
-const auth = useAuthStore()
+const { actionsForSlot } = useModuleRegistry()
+const toolbarActions = actionsForSlot('board-toolbar')
 const drag = useDrag()
 const moveTask = useMoveTask()
 const reorderCols = useReorderColumns()
@@ -189,5 +190,9 @@ function handleDropColumn(payload, targetIndex) {
         .filter(id => id !== payload.id)
     newOrder.splice(targetIndex, 0, payload.id)
     reorderCols.mutate({ boardId: boardId.value, order: newOrder })
+}
+
+function onSlotAction(action) {
+    if (action.emit === 'show-generator') showGenerator.value = true
 }
 </script>

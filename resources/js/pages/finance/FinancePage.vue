@@ -20,7 +20,7 @@
                     Gestionar categorías
                 </button>
                 <button
-                    v-if="auth.hasModule('ai_coach')"
+                    v-if="isActive('ai_coach')"
                     class="ai-chip"
                     :disabled="autoCategorize.isPending.value"
                     @click="runAutoCategorize"
@@ -29,7 +29,7 @@
                     {{ autoCategorize.isPending.value ? 'Analizando...' : 'Auto-clasificar' }}
                 </button>
                 <button
-                    v-if="auth.hasModule('ai_coach')"
+                    v-if="isActive('ai_coach')"
                     class="px-4 py-2 rounded-xl text-sm font-medium bg-primary-500/20 text-primary-100 hover:bg-primary-500/30 transition"
                     @click="openCoach"
                 >
@@ -142,7 +142,7 @@
                                 </p>
                                 <p v-if="tx.notes" class="text-xs text-surface-500 mt-1">{{ tx.notes }}</p>
                                 <!-- Attachments -->
-                                <div v-if="auth.hasModule('storage') && tx.media?.length" class="flex flex-wrap gap-2 mt-2">
+                                <div v-if="isActive('storage') && tx.media?.length" class="flex flex-wrap gap-2 mt-2">
                                     <span
                                         v-for="m in tx.media"
                                         :key="m.id"
@@ -164,7 +164,7 @@
                                 {{ tx.type === 'income' ? '+' : '-' }}{{ formatCurrency(tx.amount) }}
                             </p>
                             <div class="flex gap-2">
-                                <label v-if="auth.hasModule('storage')" class="text-xs font-medium text-primary-300 hover:text-primary-200 transition cursor-pointer">
+                                <label v-if="isActive('storage')" class="text-xs font-medium text-primary-300 hover:text-primary-200 transition cursor-pointer">
                                     <PaperClipIcon class="w-3.5 h-3.5 inline" />
                                     <input type="file" class="hidden" @change="attachFile(tx, $event)" />
                                 </label>
@@ -386,7 +386,7 @@
 
 <script setup>
 import { computed, reactive, ref } from 'vue'
-import { useAuthStore } from '@/stores/auth'
+import { useModuleRegistry } from '@/modules/registry'
 import {
     ArrowDownCircleIcon,
     ArrowUpCircleIcon,
@@ -413,7 +413,7 @@ import {
 } from '@/composables/useFinance'
 import { useUploadTransactionMedia, useDeleteTransactionMedia } from '@/composables/useStorage'
 
-const auth = useAuthStore()
+const { isActive } = useModuleRegistry()
 
 function formatDateInput(date) {
     const d = new Date(date)

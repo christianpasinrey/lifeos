@@ -12,8 +12,8 @@ class HabitWeekController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('feature:habits.weekly_view');
         $user = $request->user();
-        abort_unless($user->hasModuleFeature('habits', 'weekly_view'), 403);
 
         $start = $request->input('start')
             ? Carbon::parse($request->input('start'))->startOfWeek(Carbon::MONDAY)

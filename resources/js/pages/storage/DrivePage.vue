@@ -368,31 +368,14 @@
                             <!-- Quick actions -->
                             <div class="flex flex-wrap gap-2 mb-3">
                                 <button
-                                    v-if="auth.hasModule('tasks')"
+                                    v-for="action in driveFileActions"
+                                    :key="action.label"
                                     class="ai-chip"
                                     :disabled="analyzeMutation.isPending.value"
-                                    @click="runAnalysis(previewFile, 'Analiza este archivo y crea tareas accionables en el tablero de tareas. Extrae todas las acciones concretas que encuentres.')"
+                                    @click="handleDriveAction(action, previewFile)"
                                 >
-                                    <ClipboardDocumentListIcon class="w-3.5 h-3.5" />
-                                    Extraer tareas
-                                </button>
-                                <button
-                                    v-if="auth.hasModule('habits')"
-                                    class="ai-chip"
-                                    :disabled="analyzeMutation.isPending.value"
-                                    @click="runAnalysis(previewFile, 'Analiza este archivo y sugiere hábitos que el usuario podría crear basándose en su contenido. Crea los que tengan más sentido.')"
-                                >
-                                    <SparklesIcon class="w-3.5 h-3.5" />
-                                    Sugerir habitos
-                                </button>
-                                <button
-                                    v-if="auth.hasModule('finance')"
-                                    class="ai-chip"
-                                    :disabled="analyzeMutation.isPending.value"
-                                    @click="extractTransactions(previewFile)"
-                                >
-                                    <BanknotesIcon class="w-3.5 h-3.5" />
-                                    Extraer transacciones
+                                    <component :is="action.icon" class="w-3.5 h-3.5" />
+                                    {{ action.label }}
                                 </button>
                                 <button
                                     class="ai-chip"
@@ -473,7 +456,7 @@
 
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue'
-import { useAuthStore } from '@/stores/auth'
+import { useModuleRegistry } from '@/modules/registry'
 import {
     Squares2X2Icon,
     ListBulletIcon,
@@ -488,8 +471,6 @@ import {
     ArrowUpTrayIcon,
     MagnifyingGlassIcon,
     SparklesIcon,
-    ClipboardDocumentListIcon,
-    BanknotesIcon,
 } from '@heroicons/vue/24/outline'
 import {
     useDriveFiles,
@@ -498,9 +479,9 @@ import {
     useDeleteDriveFile,
     useAnalyzeFile,
 } from '@/composables/useStorage'
-import api from '@/composables/useApi'
 
-const auth = useAuthStore()
+const { actionsForSlot } = useModuleRegistry()
+const driveFileActions = actionsForSlot('drive-file-actions')
 
 // ── State ──
 const viewMode = ref('grid')
@@ -655,21 +636,8 @@ async function runAnalysis(file, prompt, action = null) {
     }
 }
 
-function extractTransactions(file) {
-    const prompt = [
-        'Analiza este archivo y extrae TODAS las transacciones financieras individuales (ingresos y gastos).',
-        'IMPORTANTE: Si hay cuotas mensuales, plazos o pagos recurrentes, EXPANDE cada uno como una transacción individual con su fecha concreta.',
-        'Por ejemplo, "23 cuotas de 125€" = 23 transacciones separadas, cada una con su fecha de vencimiento.',
-        'Para cada transacción indica: tipo (income/expense), importe, descripción breve, fecha exacta, y categoría sugerida.',
-        'Primero muestra un resumen legible de lo que vas a crear y cuántas transacciones serán en total.',
-        'Después incluye OBLIGATORIAMENTE un bloque JSON con TODAS las transacciones individuales expandidas.',
-        'Formato (sin bloques de código markdown):',
-        'TRANSACTIONS_JSON_START',
-        '[{"type":"expense","amount":125.98,"description":"Cuota 1/23 Aplazame","date":"2025-11-04","category_name":"Financiación","category_type":"expense","category_color":"#f59e0b"}]',
-        'TRANSACTIONS_JSON_END',
-    ].join('\n')
-
-    runAnalysis(file, prompt, { type: 'create_transactions', label: 'Confirmar y crear transacciones' })
+function handleDriveAction(action, file) {
+    runAnalysis(file, action.prompt, action.confirmAction || null)
 }
 
 function submitCustomPrompt(file) {
@@ -679,114 +647,35 @@ function submitCustomPrompt(file) {
 }
 
 async function confirmAnalysisAction() {
-    if (!lastAnalysisAction.value) return
-
     const action = lastAnalysisAction.value
+    if (!action?.handler) return
 
-    if (action.type === 'create_transactions') {
-        await createTransactionsFromAnalysis()
-    }
-}
-
-function parseTransactionsJson(text) {
-    const match = text.match(/TRANSACTIONS_JSON_START\s*([\s\S]*?)\s*TRANSACTIONS_JSON_END/)
-    if (match) {
-        try { return JSON.parse(match[1].trim()) } catch { return null }
-    }
-    // Fallback: try to find a raw JSON array in the response
-    const jsonMatch = text.match(/\[\s*\{[\s\S]*?"type"\s*:[\s\S]*?\}\s*\]/)
-    if (jsonMatch) {
-        try { return JSON.parse(jsonMatch[0]) } catch { return null }
-    }
-    return null
-}
-
-async function createTransactionsFromAnalysis() {
     confirmActionPending.value = true
     confirmActionResult.value = ''
     aiError.value = ''
 
     try {
-        let transactions = parseTransactionsJson(aiResponse.value)
+        const result = await action.handler({
+            aiResponse: aiResponse.value,
+            async reAnalyze(prompt) {
+                const res = await analyzeMutation.mutateAsync({
+                    mediaId: previewFile.value.id,
+                    prompt,
+                    content: getExtractedContent(),
+                })
+                aiResponse.value = res.text
+                return res
+            },
+        })
 
-        // If no JSON found, send a follow-up prompt asking for structured data
-        if (!transactions || !Array.isArray(transactions) || transactions.length === 0) {
-            const followUp = [
-                'El usuario CONFIRMA. Genera AHORA el JSON con TODAS las transacciones que propusiste.',
-                'Tu propuesta anterior fue:',
-                '---',
-                aiResponse.value,
-                '---',
-                'REGLAS ESTRICTAS:',
-                '- Genera UNA entrada JSON por cada transacción individual.',
-                '- Si propusiste cuotas/plazos recurrentes, EXPANDE cada cuota como una entrada separada con su fecha concreta.',
-                '- Por ejemplo "23 cuotas" = 23 objetos JSON, cada uno con fecha incrementada mensualmente.',
-                '- Devuelve SOLO el bloque JSON, sin texto ni explicaciones.',
-                'TRANSACTIONS_JSON_START',
-                '[{"type":"expense","amount":125.98,"description":"Cuota 1/23","date":"2025-11-04","category_name":"Financiación","category_type":"expense","category_color":"#f59e0b"}]',
-                'TRANSACTIONS_JSON_END',
-            ].join('\n')
-
-            const result = await analyzeMutation.mutateAsync({
-                mediaId: previewFile.value.id,
-                prompt: followUp,
-                content: getExtractedContent(),
-            })
-
-            aiResponse.value = result.text
-            transactions = parseTransactionsJson(result.text)
+        if (result.error) {
+            aiError.value = result.error
+        } else {
+            confirmActionResult.value = result.message
+            lastAnalysisAction.value = null
         }
-
-        if (!transactions || !Array.isArray(transactions) || transactions.length === 0) {
-            aiError.value = 'No se pudieron extraer las transacciones. Intenta con "Extraer transacciones" de nuevo.'
-            return
-        }
-
-        // Get existing categories to map names to IDs
-        const catResponse = await api.get('/finance/categories')
-        const existingCategories = catResponse.data?.data ?? []
-        const catMap = {}
-        existingCategories.forEach(c => { catMap[c.name.toLowerCase()] = c.id })
-
-        let created = 0
-        let newCats = 0
-
-        for (const tx of transactions) {
-            let categoryId = null
-
-            if (tx.category_name) {
-                const key = tx.category_name.toLowerCase()
-                if (catMap[key]) {
-                    categoryId = catMap[key]
-                } else {
-                    const newCat = await api.post('/finance/categories', {
-                        name: tx.category_name,
-                        color: tx.category_color || '#6366f1',
-                        type: tx.category_type || 'both',
-                    })
-                    categoryId = newCat.data?.data?.id
-                    if (categoryId) {
-                        catMap[key] = categoryId
-                        newCats++
-                    }
-                }
-            }
-
-            await api.post('/finance/transactions', {
-                type: tx.type || 'expense',
-                amount: Math.abs(Number(tx.amount)),
-                description: tx.description,
-                notes: tx.notes || null,
-                category_id: categoryId,
-                date: tx.date || null,
-            })
-            created++
-        }
-
-        confirmActionResult.value = `Se crearon ${created} transacciones` + (newCats > 0 ? ` y ${newCats} categorías nuevas.` : '.')
-        lastAnalysisAction.value = null
     } catch (e) {
-        aiError.value = e.response?.data?.message ?? 'Error al crear las transacciones.'
+        aiError.value = e.response?.data?.message ?? 'Error al procesar la acción.'
     } finally {
         confirmActionPending.value = false
     }

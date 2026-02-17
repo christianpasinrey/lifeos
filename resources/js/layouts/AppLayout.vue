@@ -14,7 +14,15 @@
                 <!-- Navigation -->
                 <nav class="sidebar-nav">
                     <router-link
-                        v-for="item in visibleNavItems"
+                        :to="'/'"
+                        class="nav-link"
+                        :class="[isActive({ to: '/' }) ? 'nav-link-active' : '']"
+                    >
+                        <HomeIcon class="w-5 h-5" />
+                        Dashboard
+                    </router-link>
+                    <router-link
+                        v-for="item in navItems"
                         :key="item.to"
                         :to="item.to"
                         class="nav-link"
@@ -25,17 +33,10 @@
                     </router-link>
                 </nav>
 
-                <!-- Coach button -->
-                <div v-if="auth.hasModule('ai_coach')" class="px-3 pb-2">
-                    <button
-                        @click="showChat = !showChat"
-                        class="w-full nav-link"
-                        :class="showChat ? 'nav-link-active' : ''"
-                    >
-                        <ChatBubbleLeftRightIcon class="w-5 h-5" />
-                        Coach IA
-                    </button>
-                </div>
+                <!-- Sidebar widgets (e.g. Coach button) -->
+                <template v-for="widget in sidebarWidgets" :key="widget.order">
+                    <component :is="widget.component" />
+                </template>
 
                 <!-- User -->
                 <div class="sidebar-footer">
@@ -64,52 +65,23 @@
                 <router-view />
             </main>
         </div>
-
-        <!-- Chat panel (fixed overlay) -->
-        <Transition name="slide-right">
-            <aside
-                v-if="showChat && auth.hasModule('ai_coach')"
-                class="chat-aside"
-            >
-                <div class="liquid-glass liquid-glass-panel h-full flex flex-col rounded-[20px]">
-                    <ChatPanel @close="showChat = false" />
-                </div>
-            </aside>
-        </Transition>
     </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import ChatPanel from '@/components/ai/ChatPanel.vue'
+import { useModuleRegistry } from '@/modules/registry'
 import {
     HomeIcon,
-    SparklesIcon,
-    ClipboardDocumentListIcon,
-    BanknotesIcon,
-    FolderIcon,
-    ChatBubbleLeftRightIcon,
     ArrowRightStartOnRectangleIcon,
 } from '@heroicons/vue/24/outline'
 
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
-const showChat = ref(false)
-
-const navItems = [
-    { to: '/', label: 'Dashboard', icon: HomeIcon },
-    { to: '/habits', label: 'Hábitos', icon: SparklesIcon, module: 'habits' },
-    { to: '/boards', label: 'Tareas', icon: ClipboardDocumentListIcon, module: 'tasks' },
-    { to: '/finance', label: 'Finanzas', icon: BanknotesIcon, module: 'finance' },
-    { to: '/drive', label: 'Archivos', icon: FolderIcon, module: 'storage' },
-]
-
-const visibleNavItems = computed(() =>
-    navItems.filter(item => !item.module || auth.hasModule(item.module))
-)
+const { navItems, sidebarWidgets } = useModuleRegistry()
 
 function isActive(item) {
     if (item.to === '/') return route.path === '/'
@@ -120,11 +92,4 @@ async function handleLogout() {
     await auth.logout()
     router.push({ name: 'login' })
 }
-
-function openCoachPanel() {
-    showChat.value = true
-}
-
-onMounted(() => window.addEventListener('open-coach-chat', openCoachPanel))
-onUnmounted(() => window.removeEventListener('open-coach-chat', openCoachPanel))
 </script>

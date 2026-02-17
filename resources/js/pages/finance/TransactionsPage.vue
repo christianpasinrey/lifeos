@@ -11,7 +11,7 @@
                     Importar
                 </button>
                 <button
-                    v-if="auth.hasModule('ai_coach')"
+                    v-if="isActive('ai_coach')"
                     class="ai-chip"
                     :disabled="autoCategorize.isPending.value"
                     @click="runAutoCategorize"
@@ -103,7 +103,7 @@
                                 <template v-if="tx.retention_total"> | Ret: -{{ formatCurrency(tx.retention_total) }}</template>
                             </p>
                             <!-- Attachments -->
-                            <div v-if="auth.hasModule('storage') && tx.media?.length" class="flex flex-wrap gap-2 mt-2">
+                            <div v-if="isActive('storage') && tx.media?.length" class="flex flex-wrap gap-2 mt-2">
                                 <span
                                     v-for="m in tx.media"
                                     :key="m.id"
@@ -127,7 +127,7 @@
                             {{ tx.type === 'income' ? '+' : tx.type === 'transfer' ? '' : '-' }}{{ formatCurrency(tx.amount) }}
                         </p>
                         <div class="flex gap-2">
-                            <label v-if="auth.hasModule('storage')" class="text-xs font-medium text-primary-300 hover:text-primary-200 transition cursor-pointer">
+                            <label v-if="isActive('storage')" class="text-xs font-medium text-primary-300 hover:text-primary-200 transition cursor-pointer">
                                 <PaperClipIcon class="w-3.5 h-3.5 inline" />
                                 <input type="file" class="hidden" @change="attachFile(tx, $event)" />
                             </label>
@@ -361,7 +361,7 @@
 
 <script setup>
 import { computed, reactive, ref } from 'vue'
-import { useAuthStore } from '@/stores/auth'
+import { useModuleRegistry } from '@/modules/registry'
 import {
     ArrowDownCircleIcon,
     ArrowUpCircleIcon,
@@ -388,7 +388,7 @@ import {
 } from '@/composables/useFinance'
 import { useUploadTransactionMedia, useDeleteTransactionMedia } from '@/composables/useStorage'
 
-const auth = useAuthStore()
+const { isActive } = useModuleRegistry()
 
 function formatDateInput(date) {
     return new Date(date).toISOString().slice(0, 10)

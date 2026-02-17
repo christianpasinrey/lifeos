@@ -14,7 +14,7 @@ class HabitAnalysisController extends Controller
     public function analyze(Request $request)
     {
         $user = $request->user();
-        abort_unless($user->hasModuleFeature('habits', 'ai_analyzer'), 403);
+        $this->authorize('feature:habits.ai_analyzer');
 
         $request->validate([
             'goals' => 'required|string|max:2000',
@@ -64,7 +64,7 @@ class HabitAnalysisController extends Controller
     public function applySuggestions(Request $request)
     {
         $user = $request->user();
-        abort_unless($user->hasModuleFeature('habits', 'ai_analyzer'), 403);
+        $this->authorize('feature:habits.ai_analyzer');
 
         $request->validate([
             'habits' => 'required|array|min:1',

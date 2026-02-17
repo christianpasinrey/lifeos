@@ -4,6 +4,7 @@ namespace App\Modules\Habits;
 
 use App\Models\User;
 use App\Modules\Ai\Contracts\AiSpecialization;
+use Illuminate\Support\Facades\Gate;
 use App\Modules\Ai\Tools\AnalyzeHabits;
 use App\Modules\Ai\Tools\CreateHabit;
 use App\Modules\Ai\Tools\GetHabitStats;
@@ -44,7 +45,7 @@ class HabitsAiSpecialization implements AiSpecialization
             new ToggleHabit($user),
         ];
 
-        if ($user->hasModuleFeature('habits', 'ai_analyzer')) {
+        if (Gate::forUser($user)->allows('feature:habits.ai_analyzer')) {
             $tools[] = new AnalyzeHabits($user);
             $tools[] = new SuggestHabitImprovements($user);
         }
