@@ -29,6 +29,12 @@ class HabitService
 
     public function create(User $user, array $data): Habit
     {
+        $maxHabits = $user->getModuleLimit('habits', 'max_habits');
+
+        if ($maxHabits !== null && $user->habits()->count() >= $maxHabits) {
+            abort(403, "Has alcanzado el límite de {$maxHabits} hábitos en tu plan actual.");
+        }
+
         return $user->habits()->create($data);
     }
 

@@ -24,7 +24,7 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return response()->json(Auth::user());
+        return response()->json($this->userWithModules(Auth::user()));
     }
 
     public function logout(Request $request)
@@ -38,6 +38,25 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        return response()->json($request->user());
+        return response()->json($this->userWithModules($request->user()));
+    }
+
+    private function userWithModules(User $user): array
+    {
+        $userData = $user->toArray();
+
+        $modules = $user->modules()
+            ->where('is_active', true)
+            ->get()
+            ->keyBy('module')
+            ->map(fn ($m) => [
+                'plan' => $m->plan,
+                'limits' => $m->limits,
+            ])
+            ->toArray();
+
+        $userData['modules'] = $modules;
+
+        return $userData;
     }
 }

@@ -7,7 +7,7 @@
 
         <!-- Quick Stats -->
         <div class="dashboard-grid">
-            <div class="liquid-glass liquid-glass-card glass-card">
+            <div v-if="auth.hasModule('habits')" class="liquid-glass liquid-glass-card glass-card">
                 <div class="flex items-center gap-3 mb-3">
                     <div class="stat-icon-wrap bg-primary-500/10">
                         <SparklesIcon class="w-5 h-5 text-primary-400" />
@@ -25,7 +25,7 @@
                 </div>
             </div>
 
-            <div class="liquid-glass liquid-glass-card glass-card">
+            <div v-if="auth.hasModule('habits')" class="liquid-glass liquid-glass-card glass-card">
                 <div class="flex items-center gap-3 mb-3">
                     <div class="stat-icon-wrap bg-accent-500/10">
                         <FireIcon class="w-5 h-5 text-accent-400" />
@@ -35,7 +35,7 @@
                 <p class="stat-value">{{ todayStats.bestStreak }} días</p>
             </div>
 
-            <div class="liquid-glass liquid-glass-card glass-card">
+            <div v-if="auth.hasModule('ai_coach')" class="liquid-glass liquid-glass-card glass-card">
                 <div class="flex items-center gap-3 mb-3">
                     <div class="stat-icon-wrap bg-accent-500/10">
                         <ChatBubbleLeftRightIcon class="w-5 h-5 text-accent-400" />
@@ -47,7 +47,7 @@
         </div>
 
         <!-- Today's habits preview -->
-        <div class="liquid-glass liquid-glass-card p-6">
+        <div v-if="auth.hasModule('habits')" class="liquid-glass liquid-glass-card p-6">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="section-title">Hábitos de hoy</h2>
                 <router-link to="/habits" class="text-sm text-primary-400 hover:text-primary-300 transition-colors">
@@ -115,7 +115,8 @@ const formattedDate = computed(() => {
     })
 })
 
-const { data: habitsData, isLoading: habitsLoading } = useHabitsToday()
+const hasHabits = computed(() => auth.hasModule('habits'))
+const { data: habitsData, isLoading: habitsLoading } = useHabitsToday(hasHabits)
 const { mutate: toggle } = useToggleHabit()
 
 const habits = computed(() => habitsData.value?.data ?? [])

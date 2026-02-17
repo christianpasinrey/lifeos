@@ -37,10 +37,14 @@
                         @endif
                     </td>
                     <td class="table-td text-center text-sm text-gray-400">{{ $user->active_modules_count ?? 0 }}</td>
-                    <td class="table-td text-right">
+                    <td class="table-td text-right space-x-3">
                         <a href="{{ route('admin.users.modules', $user) }}"
                            class="text-sm text-primary-400 hover:text-primary-300">
                             Módulos →
+                        </a>
+                        <a href="{{ route('admin.users.plan', $user) }}"
+                           class="text-sm text-primary-400 hover:text-primary-300">
+                            Plan →
                         </a>
                     </td>
                 </tr>

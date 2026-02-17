@@ -25,7 +25,7 @@
                 <!-- Navigation -->
                 <nav class="sidebar-nav">
                     <router-link
-                        v-for="item in navItems"
+                        v-for="item in visibleNavItems"
                         :key="item.to"
                         :to="item.to"
                         class="nav-link"
@@ -37,7 +37,7 @@
                 </nav>
 
                 <!-- Coach button -->
-                <div class="px-3 pb-2">
+                <div v-if="auth.hasModule('ai_coach')" class="px-3 pb-2">
                     <button
                         @click="showChat = !showChat"
                         class="w-full nav-link"
@@ -78,7 +78,7 @@
             <!-- Chat panel -->
             <Transition name="slide-right">
                 <aside
-                    v-if="showChat"
+                    v-if="showChat && auth.hasModule('ai_coach')"
                     class="chat-aside liquid-glass liquid-glass-panel"
                 >
                     <ChatPanel @close="showChat = false" />
@@ -89,16 +89,13 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import ChatPanel from '@/components/ai/ChatPanel.vue'
 import {
     HomeIcon,
     SparklesIcon,
-    ListBulletIcon,
-    BanknotesIcon,
-    UsersIcon,
     ChatBubbleLeftRightIcon,
     ArrowRightStartOnRectangleIcon,
 } from '@heroicons/vue/24/outline'
@@ -110,11 +107,12 @@ const showChat = ref(false)
 
 const navItems = [
     { to: '/', label: 'Dashboard', icon: HomeIcon },
-    { to: '/habits', label: 'Hábitos', icon: SparklesIcon },
-    { to: '/tasks', label: 'Tareas', icon: ListBulletIcon },
-    { to: '/finances', label: 'Finanzas', icon: BanknotesIcon },
-    { to: '/contacts', label: 'Contactos', icon: UsersIcon },
+    { to: '/habits', label: 'Hábitos', icon: SparklesIcon, module: 'habits' },
 ]
+
+const visibleNavItems = computed(() =>
+    navItems.filter(item => !item.module || auth.hasModule(item.module))
+)
 
 function isActive(item) {
     if (item.to === '/') return route.path === '/'

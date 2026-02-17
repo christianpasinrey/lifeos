@@ -7,11 +7,21 @@ use App\Modules\CustomEntities\Models\CustomAttribute;
 use App\Modules\CustomEntities\Models\CustomEntry;
 use App\Modules\CustomEntities\Models\CustomModel;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class CustomEntityService
 {
     public function createModel(User $user, string $name, string $description = '', array $attributes = [], ?string $icon = null, ?string $color = null): CustomModel
     {
+        $maxEntities = $user->getModuleLimit('custom_entities', 'max_entities');
+
+        if ($maxEntities !== null) {
+            $currentCount = CustomModel::where('user_id', $user->id)->where('is_active', true)->count();
+            if ($currentCount >= $maxEntities) {
+                abort(403, "Has alcanzado el límite de {$maxEntities} entidades en tu plan actual.");
+            }
+        }
+
         $model = CustomModel::create([
             'user_id' => $user->id,
             'name' => $name,

@@ -64,4 +64,16 @@ class User extends Authenticatable
     {
         return $this->modules()->where('module', $module)->where('is_active', true)->exists();
     }
+
+    public function getModule(string $slug): ?\App\Modules\Admin\Models\UserModule
+    {
+        return $this->modules()->where('module', $slug)->where('is_active', true)->first();
+    }
+
+    public function getModuleLimit(string $slug, string $key): ?int
+    {
+        $module = $this->getModule($slug);
+
+        return $module?->getLimit($key);
+    }
 }

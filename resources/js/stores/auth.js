@@ -7,6 +7,18 @@ export const useAuthStore = defineStore('auth', () => {
     const checked = ref(false)
 
     const isAuthenticated = computed(() => !!user.value)
+    const modules = computed(() => user.value?.modules ?? {})
+
+    function hasModule(slug) {
+        return slug in modules.value
+    }
+
+    function getModuleLimit(slug, key) {
+        const mod = modules.value[slug]
+        if (!mod) return undefined
+        if (mod.plan === 'premium') return null // sin límite
+        return mod.limits?.[key] ?? null
+    }
 
     async function fetchUser() {
         try {
@@ -30,5 +42,5 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = null
     }
 
-    return { user, checked, isAuthenticated, fetchUser, login, logout }
+    return { user, checked, isAuthenticated, modules, hasModule, getModuleLimit, fetchUser, login, logout }
 })

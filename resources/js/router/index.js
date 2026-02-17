@@ -22,12 +22,14 @@ const routes = [
                 path: 'habits',
                 name: 'habits',
                 component: () => import('@/pages/habits/HabitsPage.vue'),
+                meta: { module: 'habits' },
             },
             {
                 path: 'habits/:id/stats',
                 name: 'habit-stats',
                 component: () => import('@/pages/habits/HabitStatsPage.vue'),
                 props: true,
+                meta: { module: 'habits' },
             },
         ],
     },
@@ -50,6 +52,10 @@ router.beforeEach(async (to) => {
     }
 
     if (to.meta.guest && auth.isAuthenticated) {
+        return { name: 'dashboard' }
+    }
+
+    if (to.meta.module && !auth.hasModule(to.meta.module)) {
         return { name: 'dashboard' }
     }
 })

@@ -2,10 +2,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { computed, unref } from 'vue'
 import api from './useApi'
 
-export function useHabitsToday() {
+export function useHabitsToday(enabled) {
     return useQuery({
         queryKey: ['habits', 'today'],
         queryFn: () => api.get('/habits/today').then(r => r.data),
+        ...(enabled !== undefined && { enabled }),
     })
 }
 
