@@ -89,6 +89,7 @@ import {
     SparklesIcon,
     ClipboardDocumentListIcon,
     BanknotesIcon,
+    FolderIcon,
     ChatBubbleLeftRightIcon,
     ArrowRightStartOnRectangleIcon,
 } from '@heroicons/vue/24/outline'
@@ -103,6 +104,7 @@ const navItems = [
     { to: '/habits', label: 'Hábitos', icon: SparklesIcon, module: 'habits' },
     { to: '/boards', label: 'Tareas', icon: ClipboardDocumentListIcon, module: 'tasks' },
     { to: '/finance', label: 'Finanzas', icon: BanknotesIcon, module: 'finance' },
+    { to: '/drive', label: 'Archivos', icon: FolderIcon, module: 'storage' },
 ]
 
 const visibleNavItems = computed(() =>
