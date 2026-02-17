@@ -15,9 +15,8 @@
 
         <!-- Empty state -->
         <div v-else-if="!boards?.length" class="text-center py-20">
-            <ClipboardDocumentListIcon class="w-16 h-16 mx-auto text-surface-600 mb-4" />
-            <p class="text-surface-400 text-lg">No tienes tableros aún</p>
-            <p class="text-surface-500 text-sm mt-1">Crea uno para empezar a organizar tus tareas</p>
+            <ClipboardDocumentListIcon class="w-16 h-16 mx-auto text-surface-600 mb-6" />
+            <p class="text-surface-300 text-xl">Crea tu primer tablero</p>
         </div>
 
         <!-- Board grid -->

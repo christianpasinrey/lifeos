@@ -31,9 +31,8 @@
 
         <!-- Empty state -->
         <div v-else-if="habits.length === 0" class="text-center py-16">
-            <SparklesIcon class="w-12 h-12 text-surface-600 mx-auto mb-4" />
-            <h3 class="text-lg font-medium text-surface-300 mb-2">Sin hábitos aún</h3>
-            <p class="text-surface-500 mb-6">Crea tu primer hábito o dile al coach qué quieres mejorar</p>
+            <SparklesIcon class="w-12 h-12 text-surface-600 mx-auto mb-6" />
+            <h3 class="text-xl font-medium text-surface-300 mb-8">Sin hábitos aún</h3>
             <button
                 @click="showModal = true"
                 class="btn-add"
