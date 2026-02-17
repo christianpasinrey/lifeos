@@ -657,11 +657,15 @@ async function runAnalysis(file, prompt, action = null) {
 
 function extractTransactions(file) {
     const prompt = [
-        'Analiza este archivo y extrae todas las transacciones financieras (ingresos y gastos) que encuentres.',
-        'Para cada transacción indica: tipo (income/expense), importe, descripción breve, fecha, y categoría sugerida.',
-        'Al final de tu respuesta, incluye un bloque JSON con este formato exacto (sin bloques de código markdown):',
+        'Analiza este archivo y extrae TODAS las transacciones financieras individuales (ingresos y gastos).',
+        'IMPORTANTE: Si hay cuotas mensuales, plazos o pagos recurrentes, EXPANDE cada uno como una transacción individual con su fecha concreta.',
+        'Por ejemplo, "23 cuotas de 125€" = 23 transacciones separadas, cada una con su fecha de vencimiento.',
+        'Para cada transacción indica: tipo (income/expense), importe, descripción breve, fecha exacta, y categoría sugerida.',
+        'Primero muestra un resumen legible de lo que vas a crear y cuántas transacciones serán en total.',
+        'Después incluye OBLIGATORIAMENTE un bloque JSON con TODAS las transacciones individuales expandidas.',
+        'Formato (sin bloques de código markdown):',
         'TRANSACTIONS_JSON_START',
-        '[{"type":"expense","amount":10.00,"description":"Ejemplo","date":"2026-01-01","category_name":"Servicios","category_type":"expense","category_color":"#f59e0b"}]',
+        '[{"type":"expense","amount":125.98,"description":"Cuota 1/23 Aplazame","date":"2025-11-04","category_name":"Financiación","category_type":"expense","category_color":"#f59e0b"}]',
         'TRANSACTIONS_JSON_END',
     ].join('\n')
 
@@ -684,21 +688,57 @@ async function confirmAnalysisAction() {
     }
 }
 
+function parseTransactionsJson(text) {
+    const match = text.match(/TRANSACTIONS_JSON_START\s*([\s\S]*?)\s*TRANSACTIONS_JSON_END/)
+    if (match) {
+        try { return JSON.parse(match[1].trim()) } catch { return null }
+    }
+    // Fallback: try to find a raw JSON array in the response
+    const jsonMatch = text.match(/\[\s*\{[\s\S]*?"type"\s*:[\s\S]*?\}\s*\]/)
+    if (jsonMatch) {
+        try { return JSON.parse(jsonMatch[0]) } catch { return null }
+    }
+    return null
+}
+
 async function createTransactionsFromAnalysis() {
     confirmActionPending.value = true
     confirmActionResult.value = ''
+    aiError.value = ''
 
     try {
-        // Extract JSON from AI response
-        const match = aiResponse.value.match(/TRANSACTIONS_JSON_START\s*([\s\S]*?)\s*TRANSACTIONS_JSON_END/)
-        let transactions = null
+        let transactions = parseTransactionsJson(aiResponse.value)
 
-        if (match) {
-            transactions = JSON.parse(match[1].trim())
+        // If no JSON found, send a follow-up prompt asking for structured data
+        if (!transactions || !Array.isArray(transactions) || transactions.length === 0) {
+            const followUp = [
+                'El usuario CONFIRMA. Genera AHORA el JSON con TODAS las transacciones que propusiste.',
+                'Tu propuesta anterior fue:',
+                '---',
+                aiResponse.value,
+                '---',
+                'REGLAS ESTRICTAS:',
+                '- Genera UNA entrada JSON por cada transacción individual.',
+                '- Si propusiste cuotas/plazos recurrentes, EXPANDE cada cuota como una entrada separada con su fecha concreta.',
+                '- Por ejemplo "23 cuotas" = 23 objetos JSON, cada uno con fecha incrementada mensualmente.',
+                '- Devuelve SOLO el bloque JSON, sin texto ni explicaciones.',
+                'TRANSACTIONS_JSON_START',
+                '[{"type":"expense","amount":125.98,"description":"Cuota 1/23","date":"2025-11-04","category_name":"Financiación","category_type":"expense","category_color":"#f59e0b"}]',
+                'TRANSACTIONS_JSON_END',
+            ].join('\n')
+
+            const result = await analyzeMutation.mutateAsync({
+                mediaId: previewFile.value.id,
+                prompt: followUp,
+                content: getExtractedContent(),
+            })
+
+            aiResponse.value = result.text
+            transactions = parseTransactionsJson(result.text)
         }
 
         if (!transactions || !Array.isArray(transactions) || transactions.length === 0) {
-            aiError.value = 'No se pudieron extraer las transacciones del análisis. Intenta de nuevo.'
+            aiError.value = 'No se pudieron extraer las transacciones. Intenta con "Extraer transacciones" de nuevo.'
             return
         }
 
@@ -714,13 +754,11 @@ async function createTransactionsFromAnalysis() {
         for (const tx of transactions) {
             let categoryId = null
 
-            // Try to match existing category by name
             if (tx.category_name) {
                 const key = tx.category_name.toLowerCase()
                 if (catMap[key]) {
                     categoryId = catMap[key]
                 } else {
-                    // Create new category
                     const newCat = await api.post('/finance/categories', {
                         name: tx.category_name,
                         color: tx.category_color || '#6366f1',

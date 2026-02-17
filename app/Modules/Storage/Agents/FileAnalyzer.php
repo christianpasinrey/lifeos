@@ -23,6 +23,11 @@ class FileAnalyzer implements Agent
         return config('ai.openai_model', env('CHATGPT_MODEL', 'gpt-4o-mini'));
     }
 
+    public function timeout(): int
+    {
+        return 180;
+    }
+
     public function instructions(): Stringable|string
     {
         $base = <<<PROMPT

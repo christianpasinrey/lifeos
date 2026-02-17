@@ -22,6 +22,11 @@ class AiCoach implements Agent, Conversational, HasTools
         return config('ai.openai_model', env('CHATGPT_MODEL', 'gpt-4o-mini'));
     }
 
+    public function timeout(): int
+    {
+        return 180;
+    }
+
     public function instructions(): Stringable|string
     {
         $basePrompt = <<<'PROMPT'
