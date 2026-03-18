@@ -30,5 +30,9 @@ class LifeOsServer extends Server
         - Deleting a column deletes all its tasks
     MARKDOWN;
 
-    protected array $tools = [];
+    protected array $tools = [
+        // Board read tools
+        \App\Mcp\Tools\Tasks\ListBoardsTool::class,
+        \App\Mcp\Tools\Tasks\GetBoardTool::class,
+    ];
 }
