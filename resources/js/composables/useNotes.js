@@ -50,9 +50,10 @@ export function useCreateNote() {
 export function useUpdateNote() {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: ({ slug, id, ...data }) => api.put(`/notes/${slug || id}`, data).then(r => r.data),
+        mutationFn: ({ slug, ...data }) => api.put(`/notes/${slug}`, data).then(r => r.data),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ['notes'] })
+            qc.invalidateQueries({ queryKey: ['note-folders'] })
         },
     })
 }
@@ -60,7 +61,7 @@ export function useUpdateNote() {
 export function useDeleteNote() {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: ({ id }) => api.delete(`/notes/${id}`).then(r => r.data),
+        mutationFn: ({ id, slug }) => api.delete(`/notes/${slug || id}`).then(r => r.data),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ['notes'] })
             qc.invalidateQueries({ queryKey: ['note-folders'] })
@@ -71,9 +72,10 @@ export function useDeleteNote() {
 export function useRestoreNote() {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: ({ id }) => api.post(`/notes/${id}/restore`).then(r => r.data),
+        mutationFn: ({ id, slug }) => api.post(`/notes/${slug || id}/restore`).then(r => r.data),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ['notes'] })
+            qc.invalidateQueries({ queryKey: ['note-folders'] })
         },
     })
 }

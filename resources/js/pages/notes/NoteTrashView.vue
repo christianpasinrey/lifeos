@@ -16,7 +16,7 @@
                     <p class="text-xs text-surface-600">Eliminada {{ formatDate(note.deleted_at) }}</p>
                 </div>
                 <div class="flex items-center gap-1 flex-shrink-0">
-                    <button class="btn-icon text-primary-400" @click="restore(note.id)" title="Restaurar">
+                    <button class="btn-icon text-primary-400" @click="restore(note)" title="Restaurar">
                         <ArrowUturnLeftIcon class="w-3.5 h-3.5" />
                     </button>
                 </div>
@@ -36,8 +36,8 @@ import { TrashIcon, ArrowUturnLeftIcon } from '@heroicons/vue/24/outline'
 const { data: notes } = useTrashNotes()
 const restoreNote = useRestoreNote()
 
-async function restore(id) {
-    await restoreNote.mutateAsync({ id })
+async function restore(note) {
+    await restoreNote.mutateAsync({ id: note.id, slug: note.slug })
 }
 
 function formatDate(d) {

@@ -24,9 +24,20 @@ class Note extends Model
         'is_bookmarked' => 'boolean',
     ];
 
-    public function getRouteKeyName(): string
+    public function resolveRouteBinding($value, $field = null)
     {
-        return 'slug';
+        // Resolve by slug or ID — frontend uses both
+        return $this->where('slug', $value)
+            ->when(is_numeric($value), fn ($q) => $q->orWhere('id', $value))
+            ->firstOrFail();
+    }
+
+    public function resolveSoftDeletableRouteBinding($value, $field = null)
+    {
+        return $this->withTrashed()
+            ->where('slug', $value)
+            ->when(is_numeric($value), fn ($q) => $q->orWhere('id', $value))
+            ->firstOrFail();
     }
 
     protected static function booted(): void

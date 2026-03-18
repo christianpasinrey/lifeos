@@ -87,7 +87,7 @@ async function deleteFolder(folder) {
 
 async function deleteNote(note) {
     if (!confirm(`¿Mover "${note.title}" a la papelera?`)) return
-    await deleteNoteMutation.mutateAsync({ id: note.id })
+    await deleteNoteMutation.mutateAsync({ id: note.id, slug: note.slug })
 }
 
 function onRootContextMenu(e) {

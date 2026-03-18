@@ -86,7 +86,7 @@ async function saveContent(content) {
     if (!note.value) return
     saving.value = true
     try {
-        await updateNote.mutateAsync({ slug: note.value.id, content })
+        await updateNote.mutateAsync({ slug: note.value.slug, content })
         lastSaved.value = true
         setTimeout(() => { lastSaved.value = false }, 2000)
     } finally {
@@ -96,7 +96,7 @@ async function saveContent(content) {
 
 async function saveProperties(properties) {
     if (!note.value) return
-    await updateNote.mutateAsync({ slug: note.value.id, properties })
+    await updateNote.mutateAsync({ slug: note.value.slug, properties })
 }
 
 async function createNote() {
