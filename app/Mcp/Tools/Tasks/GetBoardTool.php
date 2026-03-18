@@ -31,7 +31,7 @@ class GetBoardTool extends Tool
 
         $board = Board::where('id', $request->get('board_id'))
             ->where('user_id', $user->id)
-            ->with(['columns.tasks' => fn ($q) => $q->orderBy('sort_order')])
+            ->with(['columns.tasks' => fn ($q) => $q->orderBy('sort_order'), 'columns.tasks.customFieldValues.field', 'customFields'])
             ->first();
 
         if (! $board) {
@@ -43,6 +43,14 @@ class GetBoardTool extends Tool
             $output .= "{$board->description}\n";
         }
         $output .= "\n";
+
+        if ($board->customFields->isNotEmpty()) {
+            $output .= "## Custom Fields\n";
+            foreach ($board->customFields as $f) {
+                $output .= "- {$f->name} ({$f->type})" . ($f->required ? ' [required]' : '') . "\n";
+            }
+            $output .= "\n";
+        }
 
         foreach ($board->columns as $column) {
             $output .= "## {$column->name} (ID: {$column->id})\n";
@@ -67,6 +75,11 @@ class GetBoardTool extends Tool
                 $output .= "\n";
                 if ($task->description) {
                     $output .= "      {$task->description}\n";
+                }
+                if ($task->customFieldValues->isNotEmpty()) {
+                    foreach ($task->customFieldValues as $fv) {
+                        $output .= "      {$fv->field->name}: {$fv->value}\n";
+                    }
                 }
             }
 

@@ -20,6 +20,7 @@ class UpdateTaskTool extends Tool
             'description' => $schema->string()->description('New description'),
             'priority' => $schema->string()->description('New priority: low, medium, or high'),
             'due_date' => $schema->string()->description('New due date in YYYY-MM-DD format (use empty string to clear)'),
+            'field_values' => $schema->object()->description('Optional custom field values: {field_id: value}'),
         ];
     }
 
@@ -59,6 +60,24 @@ class UpdateTaskTool extends Tool
         }
 
         $task->update($data);
+
+        if ($request->has('field_values') && is_array($request->get('field_values'))) {
+            $boardId = $task->column->board_id;
+            foreach ($request->get('field_values') as $fieldId => $value) {
+                $field = \App\Modules\Tasks\Models\CustomField::where('id', $fieldId)
+                    ->where('board_id', $boardId)->first();
+                if (! $field) {
+                    continue;
+                }
+                if ($field->type === 'multi_select' && is_array($value)) {
+                    $value = json_encode($value);
+                }
+                \App\Modules\Tasks\Models\CustomFieldValue::updateOrCreate(
+                    ['task_id' => $task->id, 'custom_field_id' => $field->id],
+                    ['value' => $value],
+                );
+            }
+        }
 
         return Response::text("Task '{$task->title}' updated (ID: {$task->id}).");
     }

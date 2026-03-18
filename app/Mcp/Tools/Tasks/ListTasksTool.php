@@ -46,6 +46,7 @@ class ListTasksTool extends Tool
         }
 
         $query = $board->tasks()
+            ->with('customFieldValues.field', 'media')
             ->when($request->get('column_id'), fn ($q, $colId) => $q->where('column_id', $colId))
             ->when($request->get('priority'), fn ($q, $p) => $q->where('priority', $p))
             ->when($request->get('search'), fn ($q, $s) => $q->where(function ($q) use ($s) {
@@ -74,6 +75,14 @@ class ListTasksTool extends Tool
                 $output .= " (due: {$task->due_date->format('Y-m-d')})";
             }
             $output .= " \xe2\x80\x94 column_id: {$task->column_id}\n";
+            if ($task->customFieldValues->isNotEmpty()) {
+                $cfValues = $task->customFieldValues->map(fn ($v) => "{$v->field->name}: {$v->value}")->join(', ');
+                $output .= "   Fields: {$cfValues}\n";
+            }
+            $attachCount = $task->getMedia('task-attachments')->count();
+            if ($attachCount > 0) {
+                $output .= "   \xF0\x9F\x93\x8E {$attachCount} attachment(s)\n";
+            }
         }
 
         return Response::text($output);
