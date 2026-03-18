@@ -38,7 +38,7 @@ class BoardController extends Controller
     {
         abort_unless($board->user_id === $request->user()->id, 403);
 
-        $board->load('columns.tasks');
+        $board->load('columns.tasks.customFieldValues', 'columns.tasks.media', 'customFields');
 
         return new BoardResource($board);
     }
