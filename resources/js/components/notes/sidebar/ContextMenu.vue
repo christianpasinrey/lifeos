@@ -60,8 +60,9 @@ function close() {
 }
 
 function execute(item) {
+    const cb = currentCallback
     close()
-    currentCallback?.(item.id)
+    cb?.(item.id)
 }
 
 defineExpose({ show, close })
