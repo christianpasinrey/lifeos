@@ -41,9 +41,9 @@
                 <!-- User -->
                 <div class="sidebar-footer">
                     <div class="flex items-center gap-3">
-                        <div class="glass-avatar">
+                        <router-link to="/profile" class="glass-avatar" title="Perfil">
                             {{ auth.user?.name?.charAt(0) }}
-                        </div>
+                        </router-link>
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-medium text-surface-200 truncate">
                                 {{ auth.user?.name }}
