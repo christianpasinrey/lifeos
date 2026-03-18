@@ -73,14 +73,14 @@
         <!-- Multi-select -->
         <div v-else-if="field.type === 'multi_select'" class="flex flex-wrap gap-1.5">
             <button
-                v-for="choice in field.options?.choices ?? []"
-                :key="choice.id"
-                @click="toggleMulti(choice.id)"
+                v-for="choice in multiOptions"
+                :key="choice.value"
+                @click="toggleMulti(choice.value)"
                 class="px-2 py-0.5 rounded-full text-xs font-medium transition-all"
-                :class="isSelected(choice.id)
+                :class="isSelected(choice.value)
                     ? 'text-white shadow-sm'
                     : 'text-surface-400 bg-white/5 hover:bg-white/10'"
-                :style="isSelected(choice.id) ? { backgroundColor: choice.color || '#6366f1' } : {}"
+                :style="isSelected(choice.value) ? { backgroundColor: choice.color || '#6366f1' } : {}"
             >
                 {{ choice.label }}
             </button>
@@ -107,9 +107,25 @@ watch(() => props.value, (v) => {
     localVal.value = v ?? ''
 })
 
-const selectOptions = computed(() =>
-    props.field.options?.choices?.map(c => ({ value: c.id, label: c.label })) ?? []
-)
+const multiOptions = computed(() => {
+    const opts = props.field.options
+    if (!opts) return []
+    if (Array.isArray(opts)) {
+        return opts.map(o => typeof o === 'string' ? { value: o, label: o, color: null } : { value: o.id ?? o.value, label: o.label ?? o, color: o.color ?? null })
+    }
+    return opts.choices?.map(c => ({ value: c.id ?? c.value ?? c.label, label: c.label, color: c.color ?? null })) ?? []
+})
+
+const selectOptions = computed(() => {
+    const opts = props.field.options
+    if (!opts) return []
+    // options is a plain array of strings from the API, e.g. ["XS", "S", "M"]
+    if (Array.isArray(opts)) {
+        return opts.map(o => typeof o === 'string' ? { value: o, label: o } : { value: o.id ?? o.value, label: o.label ?? o })
+    }
+    // Legacy: options.choices format
+    return opts.choices?.map(c => ({ value: c.id ?? c.value ?? c.label, label: c.label })) ?? []
+})
 
 // Multi-select helpers
 function parseMulti() {
