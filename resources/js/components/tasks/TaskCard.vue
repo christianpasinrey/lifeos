@@ -13,31 +13,56 @@
         @drop.stop="onDrop"
         @click="$emit('edit')"
     >
-        <!-- Priority indicator -->
+        <!-- Top row: priority + due date -->
         <div class="flex items-center justify-between gap-2">
             <span class="task-priority" :class="`task-priority-${task.priority}`">
                 {{ priorityLabel }}
             </span>
             <span v-if="task.due_date" class="task-due" :class="{ 'task-due-overdue': isOverdue }">
+                <CalendarIcon class="w-3 h-3 inline -mt-px mr-0.5" />
                 {{ formatDue(task.due_date) }}
             </span>
         </div>
 
+        <!-- Title -->
         <p class="text-sm font-medium text-surface-100 mt-1.5 leading-snug">{{ task.title }}</p>
+
+        <!-- Description -->
         <p v-if="task.description" class="text-xs text-surface-500 mt-1 line-clamp-2">
             {{ task.description }}
         </p>
+
+        <!-- Custom field chips -->
+        <div v-if="fieldChips.length" class="task-chips">
+            <span
+                v-for="chip in fieldChips"
+                :key="chip.fieldId"
+                class="task-chip"
+                :title="chip.fieldName"
+            >
+                <span class="task-chip-dot" :style="{ background: chip.color }" />
+                {{ chip.value }}
+            </span>
+        </div>
+
+        <!-- Bottom row: attachments count + id -->
+        <div v-if="task.attachments_count" class="flex items-center gap-1.5 mt-2 text-surface-600">
+            <PaperClipIcon class="w-3 h-3" />
+            <span class="text-[0.625rem] font-medium">{{ task.attachments_count }}</span>
+        </div>
     </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
+import { CalendarIcon, PaperClipIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
     task: { type: Object, required: true },
     index: { type: Number, required: true },
     columnId: { type: Number, required: true },
     drag: { type: Object, required: true },
+    customFields: { type: Array, default: () => [] },
 })
 
 const emit = defineEmits(['edit', 'dropAbove'])
@@ -48,6 +73,39 @@ const priorityLabel = computed(() => priorityLabels[props.task.priority] || 'Med
 const isOverdue = computed(() => {
     if (!props.task.due_date) return false
     return new Date(props.task.due_date) < new Date(new Date().toDateString())
+})
+
+// Color palette for chips based on field name hash
+const chipColors = [
+    '#6366f1', '#8b5cf6', '#a855f7', '#ec4899',
+    '#14b8a6', '#06b6d4', '#0ea5e9', '#f59e0b',
+    '#10b981', '#f97316', '#ef4444', '#84cc16',
+]
+
+function hashColor(str) {
+    let hash = 0
+    for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash)
+    return chipColors[Math.abs(hash) % chipColors.length]
+}
+
+const fieldChips = computed(() => {
+    const values = props.task.custom_field_values ?? []
+    if (!values.length || !props.customFields.length) return []
+
+    return values
+        .map(fv => {
+            const field = props.customFields.find(f => f.id === fv.field_id)
+            if (!field || !fv.value) return null
+            // Only show select-type fields as chips (text/url values are less useful as badges)
+            if (field.type !== 'select' && field.type !== 'multi_select') return null
+            return {
+                fieldId: fv.field_id,
+                fieldName: field.name,
+                value: fv.value,
+                color: hashColor(field.name),
+            }
+        })
+        .filter(Boolean)
 })
 
 function formatDue(d) {

@@ -64,6 +64,7 @@
                         :column="column"
                         :board-id="boardId"
                         :drag="drag"
+                        :custom-fields="customFields"
                         @edit-column="editColumn"
                         @add-task="addTask"
                         @edit-task="editTask"
@@ -145,6 +146,7 @@ const boardId = computed(() => Number(route.params.id))
 const { data, isLoading } = useBoard(boardId)
 const board = computed(() => data.value?.data ?? null)
 const columns = computed(() => board.value?.columns ?? [])
+const customFields = computed(() => board.value?.custom_fields ?? [])
 const allTasks = computed(() => columns.value.flatMap(c => c.tasks ?? []))
 const totalTasks = computed(() => allTasks.value.length)
 const highPriorityCount = computed(() => allTasks.value.filter(t => t.priority === 'high').length)
