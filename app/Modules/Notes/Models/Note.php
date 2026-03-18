@@ -24,6 +24,11 @@ class Note extends Model
         'is_bookmarked' => 'boolean',
     ];
 
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
     protected static function booted(): void
     {
         static::creating(function (self $note) {
