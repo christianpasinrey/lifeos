@@ -29,7 +29,10 @@ class NotesAiSpecialization implements AiSpecialization
 
     public function tools(User $user): array
     {
-        // Tools will be implemented in T8
-        return [];
+        return [
+            new \App\Modules\Notes\Tools\SearchNotes($user),
+            new \App\Modules\Notes\Tools\GetNoteContent($user),
+            new \App\Modules\Notes\Tools\CreateNote($user),
+        ];
     }
 }
