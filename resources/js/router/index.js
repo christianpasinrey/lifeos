@@ -143,6 +143,36 @@ const routes = [
                 component: () => import('@/pages/storage/DrivePage.vue'),
                 meta: { module: 'storage' },
             },
+            // Notes — static routes BEFORE dynamic :slug
+            {
+                path: 'notes',
+                name: 'notes',
+                component: () => import('@/pages/notes/NotesPage.vue'),
+                meta: { module: 'notes' },
+                children: [
+                    {
+                        path: '',
+                        name: 'notes-home',
+                        component: () => import('@/pages/notes/NoteEditorView.vue'),
+                    },
+                    {
+                        path: 'graph',
+                        name: 'notes-graph',
+                        component: () => import('@/pages/notes/NoteGraphView.vue'),
+                    },
+                    {
+                        path: 'trash',
+                        name: 'notes-trash',
+                        component: () => import('@/pages/notes/NoteTrashView.vue'),
+                    },
+                    {
+                        path: ':slug',
+                        name: 'note',
+                        component: () => import('@/pages/notes/NoteEditorView.vue'),
+                        props: true,
+                    },
+                ],
+            },
         ],
     },
 ]
