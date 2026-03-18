@@ -436,6 +436,51 @@
     background: rgba(99, 102, 241, 0.1);
 }
 
+/* Context Menu */
+.context-menu-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+}
+
+.context-menu {
+    position: fixed;
+    z-index: 71;
+    min-width: 10rem;
+    padding: 0.25rem;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(24px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.context-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.375rem 0.625rem;
+    border-radius: 0.375rem;
+    font-size: 0.8125rem;
+    color: var(--color-surface-300);
+    transition: background 150ms, color 150ms;
+}
+
+.context-menu-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--color-surface-100);
+}
+
+.context-menu-danger {
+    color: var(--color-danger-400);
+}
+
+.context-menu-danger:hover {
+    background: rgba(244, 63, 94, 0.1);
+    color: var(--color-danger-300);
+}
+
 /* Trash view */
 .note-trash-view {
     max-width: 40rem;
