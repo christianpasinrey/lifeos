@@ -28,4 +28,9 @@ class Board extends Model
     {
         return $this->hasManyThrough(Task::class, Column::class, 'board_id', 'column_id');
     }
+
+    public function customFields(): HasMany
+    {
+        return $this->hasMany(CustomField::class, 'board_id')->orderBy('sort_order');
+    }
 }
