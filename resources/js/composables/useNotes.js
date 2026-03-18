@@ -50,10 +50,9 @@ export function useCreateNote() {
 export function useUpdateNote() {
     const qc = useQueryClient()
     return useMutation({
-        mutationFn: ({ slug, ...data }) => api.put(`/notes/${slug}`, data).then(r => r.data),
-        onSuccess: (_, { slug }) => {
+        mutationFn: ({ slug, id, ...data }) => api.put(`/notes/${slug || id}`, data).then(r => r.data),
+        onSuccess: () => {
             qc.invalidateQueries({ queryKey: ['notes'] })
-            qc.invalidateQueries({ queryKey: ['notes', slug] })
         },
     })
 }
