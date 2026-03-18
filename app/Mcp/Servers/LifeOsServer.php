@@ -34,5 +34,9 @@ class LifeOsServer extends Server
         // Board read tools
         \App\Mcp\Tools\Tasks\ListBoardsTool::class,
         \App\Mcp\Tools\Tasks\GetBoardTool::class,
+        // Board mutation tools
+        \App\Mcp\Tools\Tasks\CreateBoardTool::class,
+        \App\Mcp\Tools\Tasks\UpdateBoardTool::class,
+        \App\Mcp\Tools\Tasks\DeleteBoardTool::class,
     ];
 }
