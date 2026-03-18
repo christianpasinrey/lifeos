@@ -11,4 +11,5 @@ return [
     App\Modules\Finance\FinanceServiceProvider::class,
     App\Modules\Calendar\CalendarServiceProvider::class,
     App\Modules\Storage\StorageServiceProvider::class,
+    App\Modules\Notes\NoteServiceProvider::class,
 ];

@@ -77,6 +77,21 @@ class User extends Authenticatable implements HasMedia
         return $this->hasMany(\App\Modules\Finance\Models\Account::class);
     }
 
+    public function notes(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Notes\Models\Note::class);
+    }
+
+    public function noteFolders(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Notes\Models\NoteFolder::class);
+    }
+
+    public function noteTags(): HasMany
+    {
+        return $this->hasMany(\App\Modules\Notes\Models\NoteTag::class);
+    }
+
     public function modules()
     {
         return $this->hasMany(\App\Modules\Admin\Models\UserModule::class);

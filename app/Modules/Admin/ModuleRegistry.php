@@ -65,6 +65,15 @@ class ModuleRegistry
                 'max_storage_mb' => 100,
             ],
         ],
+        'notes' => [
+            'name' => 'Notas',
+            'description' => 'Knowledge management con notas markdown, wiki-links y graph view',
+            'free_limits' => [
+                'max_notes' => 50,
+                'max_folders' => 10,
+                'max_note_size_kb' => 512,
+            ],
+        ],
     ];
 
     public static function all(): array
