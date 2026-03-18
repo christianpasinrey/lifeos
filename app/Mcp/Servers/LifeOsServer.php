@@ -63,5 +63,10 @@ class LifeOsServer extends Server
         \App\Mcp\Tools\Tasks\SetTaskFieldValuesTool::class,
         \App\Mcp\Tools\Tasks\AddTaskAttachmentTool::class,
         \App\Mcp\Tools\Tasks\DeleteTaskAttachmentTool::class,
+        // Notes tools
+        \App\Mcp\Tools\Notes\SearchNotesTool::class,
+        \App\Mcp\Tools\Notes\GetNoteTool::class,
+        \App\Mcp\Tools\Notes\CreateNoteTool::class,
+        \App\Mcp\Tools\Notes\ListFoldersTool::class,
     ];
 }
