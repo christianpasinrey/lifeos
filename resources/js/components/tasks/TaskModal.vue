@@ -4,16 +4,7 @@
             <div class="modal-backdrop" />
             <div class="modal-content liquid-glass liquid-glass-card">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-surface-100">
-                        {{ task ? 'Editar tarea' : 'Nueva tarea' }}
-                    </h3>
-                    <button
-                        v-if="task"
-                        class="text-xs text-danger-400 hover:text-danger-500 transition-colors"
-                        @click="handleDelete"
-                    >
-                        Eliminar
-                    </button>
+                    <h3 class="text-lg font-semibold text-surface-100">Nueva tarea</h3>
                 </div>
 
                 <form @submit.prevent="handleSubmit" class="form-group">
@@ -59,7 +50,7 @@
                             Cancelar
                         </button>
                         <button type="submit" class="btn-primary" :disabled="saving">
-                            {{ task ? 'Guardar' : 'Crear' }}
+                            Crear
                         </button>
                     </div>
                 </form>
@@ -70,7 +61,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useCreateTask, useUpdateTask, useDeleteTask } from '@/composables/useTasks'
+import { useCreateTask } from '@/composables/useTasks'
 import CustomSelect from '@/components/ui/CustomSelect.vue'
 
 const priorityOptions = [
@@ -82,23 +73,20 @@ const priorityOptions = [
 const props = defineProps({
     boardId: { type: Number, required: true },
     columnId: { type: Number, required: true },
-    task: { type: Object, default: null },
 })
 
 const emit = defineEmits(['close', 'saved'])
 
 const form = ref({
-    title: props.task?.title ?? '',
-    description: props.task?.description ?? '',
-    priority: props.task?.priority ?? 'medium',
-    due_date: props.task?.due_date ?? '',
+    title: '',
+    description: '',
+    priority: 'medium',
+    due_date: '',
 })
 
 const saving = ref(false)
 const titleInput = ref(null)
 const createTask = useCreateTask()
-const updateTask = useUpdateTask()
-const deleteTask = useDeleteTask()
 
 onMounted(() => {
     titleInput.value?.focus()
@@ -107,20 +95,10 @@ onMounted(() => {
 async function handleSubmit() {
     saving.value = true
     try {
-        if (props.task) {
-            await updateTask.mutateAsync({ id: props.task.id, boardId: props.boardId, ...form.value })
-        } else {
-            await createTask.mutateAsync({ columnId: props.columnId, boardId: props.boardId, ...form.value })
-        }
+        await createTask.mutateAsync({ columnId: props.columnId, boardId: props.boardId, ...form.value })
         emit('saved')
     } finally {
         saving.value = false
     }
-}
-
-async function handleDelete() {
-    if (!confirm('¿Eliminar esta tarea?')) return
-    await deleteTask.mutateAsync({ id: props.task.id, boardId: props.boardId })
-    emit('saved')
 }
 </script>
