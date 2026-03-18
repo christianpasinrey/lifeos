@@ -10,6 +10,9 @@
                 <button class="btn-icon" @click="showEditBoard = true" title="Editar tablero">
                     <PencilIcon class="w-4 h-4" />
                 </button>
+                <button class="btn-icon" @click="showBoardSettings = true" title="Configuración del tablero">
+                    <Cog6ToothIcon class="w-4 h-4" />
+                </button>
             </div>
         </div>
 
@@ -98,13 +101,18 @@
             @close="creatingTaskColumnId = null"
             @saved="creatingTaskColumnId = null"
         />
-        <TaskModal
-            v-if="editingTask"
+        <TaskDetailPanel
+            v-if="viewingTaskId"
+            :task-id="viewingTaskId"
             :board-id="boardId"
-            :column-id="editingTask.column_id"
-            :task="editingTask.task"
-            @close="editingTask = null"
-            @saved="editingTask = null"
+            :columns="columns"
+            @close="viewingTaskId = null"
+        />
+        <BoardSettingsModal
+            v-if="showBoardSettings"
+            :board="board"
+            :board-id="boardId"
+            @close="showBoardSettings = false"
         />
     </div>
 </template>
@@ -118,10 +126,13 @@ import KanbanColumn from '@/components/tasks/KanbanColumn.vue'
 import BoardModal from '@/components/tasks/BoardModal.vue'
 import ColumnModal from '@/components/tasks/ColumnModal.vue'
 import TaskModal from '@/components/tasks/TaskModal.vue'
+import TaskDetailPanel from '@/components/tasks/TaskDetailPanel.vue'
+import BoardSettingsModal from '@/components/tasks/BoardSettingsModal.vue'
 import {
     ArrowLeftIcon,
     PlusIcon,
     PencilIcon,
+    Cog6ToothIcon,
     ViewColumnsIcon,
     ClipboardDocumentListIcon,
     ExclamationTriangleIcon,
@@ -148,7 +159,9 @@ const showEditBoard = ref(false)
 const showCreateColumn = ref(false)
 const editingColumn = ref(null)
 const creatingTaskColumnId = ref(null)
-const editingTask = ref(null)
+const viewingTaskId = ref(null)
+const showBoardSettings = ref(false)
+
 function editColumn(col) {
     editingColumn.value = col
 }
@@ -158,7 +171,7 @@ function addTask(columnId) {
 }
 
 function editTask(task, columnId) {
-    editingTask.value = { task, column_id: columnId }
+    viewingTaskId.value = task.id
 }
 
 function handleDropTask(payload, targetColumnId, targetIndex) {
