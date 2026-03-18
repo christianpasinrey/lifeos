@@ -132,6 +132,44 @@ export function useMoveTask() {
     })
 }
 
+// Single Task & Attachments
+export function useTask(id) {
+    return useQuery({
+        queryKey: computed(() => ['tasks', unref(id)]),
+        queryFn: () => api.get(`/tasks/${unref(id)}`).then(r => r.data),
+        enabled: computed(() => !!unref(id)),
+    })
+}
+
+export function useUploadAttachment() {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: ({ taskId, boardId, file }) => {
+            const formData = new FormData()
+            formData.append('file', file)
+            return api.post(`/tasks/${taskId}/attachments`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+            }).then(r => r.data)
+        },
+        onSuccess: (_, { taskId, boardId }) => {
+            qc.invalidateQueries({ queryKey: ['tasks', taskId] })
+            qc.invalidateQueries({ queryKey: ['boards', boardId] })
+        },
+    })
+}
+
+export function useDeleteAttachment() {
+    const qc = useQueryClient()
+    return useMutation({
+        mutationFn: ({ taskId, boardId, attachmentId }) =>
+            api.delete(`/tasks/${taskId}/attachments/${attachmentId}`).then(r => r.data),
+        onSuccess: (_, { taskId, boardId }) => {
+            qc.invalidateQueries({ queryKey: ['tasks', taskId] })
+            qc.invalidateQueries({ queryKey: ['boards', boardId] })
+        },
+    })
+}
+
 // AI Generation
 export function useSuggestTasks() {
     return useMutation({
