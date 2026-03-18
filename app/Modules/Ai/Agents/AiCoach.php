@@ -19,7 +19,9 @@ class AiCoach implements Agent, Conversational, HasTools
 
     public function model(): string
     {
-        return config('ai.providers.openai.model', env('CHATGPT_MODEL', 'gpt-4o-mini'));
+        $provider = config('ai.default', 'openai');
+
+        return config("ai.providers.{$provider}.model", 'gpt-4o-mini');
     }
 
     public function timeout(): int
