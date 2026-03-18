@@ -38,5 +38,10 @@ class LifeOsServer extends Server
         \App\Mcp\Tools\Tasks\CreateBoardTool::class,
         \App\Mcp\Tools\Tasks\UpdateBoardTool::class,
         \App\Mcp\Tools\Tasks\DeleteBoardTool::class,
+        // Column tools
+        \App\Mcp\Tools\Tasks\CreateColumnTool::class,
+        \App\Mcp\Tools\Tasks\UpdateColumnTool::class,
+        \App\Mcp\Tools\Tasks\ReorderColumnsTool::class,
+        \App\Mcp\Tools\Tasks\DeleteColumnTool::class,
     ];
 }
