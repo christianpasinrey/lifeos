@@ -125,7 +125,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, shallowRef } from 'vue'
 import { useCalendarSources } from '@/composables/useCalendarSources'
 import MonthView from '@/components/calendar/MonthView.vue'
 import WeekView from '@/components/calendar/WeekView.vue'
@@ -148,7 +148,7 @@ const showDaySummary = ref(false)
 const summaryDate = ref(null)
 
 // Quick create state
-const quickCreateSlot = ref(null)
+const quickCreateSlot = shallowRef(null)
 const quickCreateDate = ref(null)
 
 const views = [

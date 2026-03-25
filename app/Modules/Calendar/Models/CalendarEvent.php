@@ -17,8 +17,12 @@ class CalendarEvent extends Model
         'all_day',
         'color',
         'location',
+        'latitude',
+        'longitude',
         'type',
         'recurrence_rule',
+        'reminder',
+        'attendees',
     ];
 
     protected function casts(): array
@@ -28,6 +32,9 @@ class CalendarEvent extends Model
             'end_at' => 'datetime',
             'all_day' => 'boolean',
             'recurrence_rule' => 'array',
+            'attendees' => 'array',
+            'latitude' => 'float',
+            'longitude' => 'float',
         ];
     }
 
