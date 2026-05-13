@@ -105,8 +105,9 @@ export function useUpdateTask() {
     const qc = useQueryClient()
     return useMutation({
         mutationFn: ({ id, boardId, ...data }) => api.put(`/tasks/${id}`, data).then(r => r.data),
-        onSuccess: (_, { boardId }) => {
+        onSuccess: (_, { id, boardId }) => {
             qc.invalidateQueries({ queryKey: ['boards', boardId] })
+            qc.invalidateQueries({ queryKey: ['tasks', id] })
         },
     })
 }
@@ -126,8 +127,9 @@ export function useMoveTask() {
     return useMutation({
         mutationFn: ({ id, boardId, column_id, sort_order }) =>
             api.put(`/tasks/${id}/move`, { column_id, sort_order }).then(r => r.data),
-        onSuccess: (_, { boardId }) => {
+        onSuccess: (_, { id, boardId }) => {
             qc.invalidateQueries({ queryKey: ['boards', boardId] })
+            qc.invalidateQueries({ queryKey: ['tasks', id] })
         },
     })
 }
