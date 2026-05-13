@@ -12,7 +12,7 @@
         @dragover.stop="onDragOver"
         @dragleave="drag.onDragLeave($event, `task-${task.id}`)"
         @drop.stop="onDrop"
-        @click.self="$emit('edit')"
+        @click="$emit('edit')"
     >
         <!-- Top row: priority + due date -->
         <div class="flex items-center justify-between gap-2">
