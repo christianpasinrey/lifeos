@@ -111,23 +111,31 @@ watch(() => props.drag.dragging.value, (val) => {
 function onTaskDragOver(targetTaskId) {
     const payload = props.drag.dragging.value
     if (!payload || payload.type !== 'task' || payload.sourceColumnId !== props.column.id) return
+    if (targetTaskId === payload.id) return
     const list = baseTasks.value
     const fromIdx = list.findIndex(t => t.id === payload.id)
     const toIdx = list.findIndex(t => t.id === targetTaskId)
-    if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) {
-        previewTaskOrder.value = list.map(t => t.id)
-        return
-    }
+    if (fromIdx < 0 || toIdx < 0) return
     const order = list.map(t => t.id)
     order.splice(fromIdx, 1)
     order.splice(toIdx, 0, payload.id)
+    if (sameOrder(order, previewTaskOrder.value)) return
     previewTaskOrder.value = order
+}
+
+function sameOrder(a, b) {
+    if (!a || !b || a.length !== b.length) return false
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false
+    return true
 }
 
 function onColumnDragOver(e) {
     if (props.drag.dragging.value?.type === 'column') {
         props.drag.onDragOver(e, `col-${props.column.id}`)
-        emit('columnDragOver', props.index)
+        // Emit the stable column id, not the rendered index — the preview
+        // reorder uses base-list indices so the math doesn't oscillate as
+        // siblings slide under the cursor.
+        emit('columnDragOver', props.column.id)
     }
 }
 

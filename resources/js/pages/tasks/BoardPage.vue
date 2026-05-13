@@ -205,37 +205,6 @@ const highPriorityCount = computed(() => allTasks.value.filter(t => t.priority =
 const activeTab = ref('board')
 const cycleFilter = ref(null) // null = all, 0 = no cycle, N = cycle id
 
-// Live preview order while dragging a column. null = use natural order.
-const previewColumnOrder = ref(null)
-
-watch(() => drag.dragging.value, (val) => {
-    if (!val || val.type !== 'column') previewColumnOrder.value = null
-})
-
-function onColumnDragOver(targetIndex) {
-    const payload = drag.dragging.value
-    if (!payload || payload.type !== 'column') return
-    const list = filteredColumns.value
-    const fromIdx = list.findIndex(c => c.id === payload.id)
-    if (fromIdx < 0 || fromIdx === targetIndex) {
-        previewColumnOrder.value = list.map(c => c.id)
-        return
-    }
-    const order = list.map(c => c.id)
-    order.splice(fromIdx, 1)
-    order.splice(Math.max(0, Math.min(targetIndex, order.length)), 0, payload.id)
-    previewColumnOrder.value = order
-}
-
-const renderedColumns = computed(() => {
-    const base = filteredColumns.value
-    if (!previewColumnOrder.value) return base
-    const byId = new Map(base.map(c => [c.id, c]))
-    return previewColumnOrder.value
-        .map(id => byId.get(id))
-        .filter(Boolean)
-})
-
 const cycleFilterOptions = computed(() => [
     { value: '__all__', label: 'Todos los cycles' },
     { value: 0, label: 'Sin cycle' },
@@ -267,6 +236,43 @@ const toolbarActions = actionsForSlot('board-toolbar')
 const drag = useDrag()
 const moveTask = useMoveTask()
 const reorderCols = useReorderColumns()
+
+// Live preview order while dragging a column. null = use natural order.
+const previewColumnOrder = ref(null)
+
+watch(() => drag.dragging.value, (val) => {
+    if (!val || val.type !== 'column') previewColumnOrder.value = null
+})
+
+function onColumnDragOver(targetColumnId) {
+    const payload = drag.dragging.value
+    if (!payload || payload.type !== 'column') return
+    if (targetColumnId === payload.id) return
+    const baseList = filteredColumns.value
+    const fromIdx = baseList.findIndex(c => c.id === payload.id)
+    const toIdx = baseList.findIndex(c => c.id === targetColumnId)
+    if (fromIdx < 0 || toIdx < 0) return
+    const order = baseList.map(c => c.id)
+    order.splice(fromIdx, 1)
+    order.splice(toIdx, 0, payload.id)
+    if (sameOrder(order, previewColumnOrder.value)) return
+    previewColumnOrder.value = order
+}
+
+function sameOrder(a, b) {
+    if (!a || !b || a.length !== b.length) return false
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false
+    return true
+}
+
+const renderedColumns = computed(() => {
+    const base = filteredColumns.value
+    if (!previewColumnOrder.value) return base
+    const byId = new Map(base.map(c => [c.id, c]))
+    return previewColumnOrder.value
+        .map(id => byId.get(id))
+        .filter(Boolean)
+})
 
 const showEditBoard = ref(false)
 const showCreateColumn = ref(false)
