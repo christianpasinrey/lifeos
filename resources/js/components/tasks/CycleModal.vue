@@ -38,11 +38,10 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="form-label">Estado</label>
-                            <select v-model="form.status" class="form-input">
-                                <option value="planned">Planificado</option>
-                                <option value="active">Activo</option>
-                                <option value="completed">Completado</option>
-                            </select>
+                            <CustomSelect
+                                v-model="form.status"
+                                :options="statusOptions"
+                            />
                         </div>
                         <div>
                             <label class="form-label">Color</label>
@@ -90,6 +89,13 @@
 import { ref, computed, onMounted } from 'vue'
 import { XMarkIcon } from '@heroicons/vue/24/outline'
 import { useCreateCycle, useUpdateCycle, useDeleteCycle } from '@/composables/useCycles'
+import CustomSelect from '@/components/ui/CustomSelect.vue'
+
+const statusOptions = [
+    { value: 'planned', label: 'Planificado' },
+    { value: 'active', label: 'Activo' },
+    { value: 'completed', label: 'Completado' },
+]
 
 const props = defineProps({
     boardId: { type: Number, required: true },
