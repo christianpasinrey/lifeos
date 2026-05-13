@@ -100,16 +100,17 @@ const statusOptions = [
 const props = defineProps({
     boardId: { type: Number, required: true },
     cycle: { type: Object, default: null },
+    initialName: { type: String, default: '' },
 })
 
-const emit = defineEmits(['close', 'saved'])
+const emit = defineEmits(['close', 'saved', 'created'])
 
 const isEdit = computed(() => !!props.cycle)
 const error = ref('')
 const nameInput = ref(null)
 
 const form = ref({
-    name: props.cycle?.name ?? '',
+    name: props.cycle?.name ?? props.initialName ?? '',
     description: props.cycle?.description ?? '',
     status: props.cycle?.status ?? 'planned',
     color: props.cycle?.color ?? '#6366f1',
@@ -131,12 +132,15 @@ async function onSave() {
         const payload = { ...form.value, boardId: props.boardId }
         if (!payload.starts_on) payload.starts_on = null
         if (!payload.ends_on) payload.ends_on = null
+        let result
         if (isEdit.value) {
-            await update.mutateAsync({ id: props.cycle.id, ...payload })
+            result = await update.mutateAsync({ id: props.cycle.id, ...payload })
         } else {
-            await create.mutateAsync(payload)
+            result = await create.mutateAsync(payload)
         }
-        emit('saved')
+        const created = result?.data ?? result
+        emit('created', created)
+        emit('saved', created)
     } catch (e) {
         error.value = e?.response?.data?.message || 'Error guardando el cycle.'
     } finally {

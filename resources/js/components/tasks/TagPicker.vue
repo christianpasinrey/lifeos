@@ -87,10 +87,11 @@ import TagChip from './TagChip.vue'
 import { useTags, useCreateTag, useAttachTags, useDetachTags } from '@/composables/useTags'
 
 const props = defineProps({
-    targetType: { type: String, required: true }, // 'board' | 'task'
-    targetId: { type: Number, required: true },
+    targetType: { type: String, default: null }, // 'board' | 'task' | null when local
+    targetId: { type: Number, default: null },
     boardId: { type: Number, default: null },
     modelValue: { type: Array, default: () => [] }, // current tags on the target
+    local: { type: Boolean, default: false }, // skip API attach/detach, just emit selection
 })
 
 const emit = defineEmits(['update:modelValue', 'change'])
@@ -165,7 +166,7 @@ async function toggle(tag) {
     if (isSelected(tag.id)) {
         await detach(tag)
     } else {
-        await attach([tag.id], [])
+        await attachIds([tag.id])
     }
 }
 
@@ -173,16 +174,29 @@ async function createAndAttach() {
     const name = query.value.trim()
     if (!name) return
     const created = await createTag.mutateAsync({ name })
-    await attach([created.data.id], [])
+    await attachIds([created.data.id])
     query.value = ''
 }
 
-async function attach(tagIds, tagNames) {
+async function attachIds(tagIds) {
+    if (props.local) {
+        const allTagsList = allTags.value
+        const newOnes = tagIds
+            .map(id => allTagsList.find(t => t.id === id))
+            .filter(Boolean)
+        const merged = [...selected.value]
+        for (const t of newOnes) {
+            if (!merged.some(s => s.id === t.id)) merged.push(t)
+        }
+        emit('update:modelValue', merged)
+        emit('change', merged)
+        return
+    }
     const res = await attachTags.mutateAsync({
         target_type: props.targetType,
         target_id: props.targetId,
         tag_ids: tagIds,
-        tag_names: tagNames,
+        tag_names: [],
         boardId: props.boardId,
     })
     emit('update:modelValue', res.data || [])
@@ -190,6 +204,12 @@ async function attach(tagIds, tagNames) {
 }
 
 async function detach(tag) {
+    if (props.local) {
+        const remaining = selected.value.filter(t => t.id !== tag.id)
+        emit('update:modelValue', remaining)
+        emit('change', remaining)
+        return
+    }
     const res = await detachTags.mutateAsync({
         target_type: props.targetType,
         target_id: props.targetId,
