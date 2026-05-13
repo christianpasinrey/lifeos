@@ -17,7 +17,8 @@ class BoardController extends Controller
     {
         $boards = $request->user()
             ->boards()
-            ->withCount(['columns', 'tasks'])
+            ->with('tags')
+            ->withCount(['columns', 'tasks', 'cycles'])
             ->orderBy('sort_order')
             ->get();
 
@@ -38,7 +39,14 @@ class BoardController extends Controller
     {
         abort_unless($board->user_id === $request->user()->id, 403);
 
-        $board->load('columns.tasks.customFieldValues', 'columns.tasks.media', 'customFields');
+        $board->load([
+            'tags',
+            'cycles' => fn ($q) => $q->withCount('tasks')->orderBy('sort_order'),
+            'columns.tasks.customFieldValues',
+            'columns.tasks.media',
+            'columns.tasks.tags',
+            'customFields',
+        ]);
 
         return new BoardResource($board);
     }

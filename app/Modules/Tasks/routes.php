@@ -2,8 +2,10 @@
 
 use App\Modules\Tasks\Controllers\BoardController;
 use App\Modules\Tasks\Controllers\ColumnController;
-use App\Modules\Tasks\Controllers\QuickTaskController;
 use App\Modules\Tasks\Controllers\CustomFieldController;
+use App\Modules\Tasks\Controllers\CycleController;
+use App\Modules\Tasks\Controllers\QuickTaskController;
+use App\Modules\Tasks\Controllers\TagController;
 use App\Modules\Tasks\Controllers\TaskAttachmentController;
 use App\Modules\Tasks\Controllers\TaskController;
 use App\Modules\Tasks\Controllers\TaskFieldValueController;
@@ -50,4 +52,19 @@ Route::middleware(['api', 'auth:sanctum', 'module:tasks'])->prefix('api')->group
     // Task attachments
     Route::post('tasks/{task}/attachments', [TaskAttachmentController::class, 'store']);
     Route::delete('tasks/{task}/attachments/{media}', [TaskAttachmentController::class, 'destroy']);
+
+    // Tags (per-user, polymorphic across boards & tasks)
+    Route::get('tags', [TagController::class, 'index']);
+    Route::post('tags', [TagController::class, 'store']);
+    Route::put('tags/{tag}', [TagController::class, 'update']);
+    Route::delete('tags/{tag}', [TagController::class, 'destroy']);
+    Route::post('tags/attach', [TagController::class, 'attach']);
+    Route::post('tags/detach', [TagController::class, 'detach']);
+
+    // Cycles (per-board)
+    Route::get('boards/{board}/cycles', [CycleController::class, 'index']);
+    Route::post('boards/{board}/cycles', [CycleController::class, 'store']);
+    Route::put('cycles/{cycle}', [CycleController::class, 'update']);
+    Route::delete('cycles/{cycle}', [CycleController::class, 'destroy']);
+    Route::get('cycles/{cycle}/tasks', [CycleController::class, 'tasks']);
 });
