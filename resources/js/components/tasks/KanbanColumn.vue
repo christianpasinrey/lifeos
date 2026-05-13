@@ -2,6 +2,7 @@
     <div
         class="kanban-column liquid-glass liquid-glass-card"
         :class="{ 'kanban-column-dragover': drag.dragOverId.value === `col-${column.id}` }"
+        :data-column-id="column.id"
         draggable="true"
         @dragstart.self="drag.onDragStart($event, { type: 'column', id: column.id })"
         @dragend="drag.onDragEnd"

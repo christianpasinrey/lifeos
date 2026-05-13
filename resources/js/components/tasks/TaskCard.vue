@@ -5,6 +5,7 @@
             'is-dragging': drag.dragging.value?.type === 'task' && drag.dragging.value?.id === task.id,
             'task-card-dragover': drag.dragOverId.value === `task-${task.id}`,
         }"
+        :data-task-id="task.id"
         draggable="true"
         @dragstart.stop="drag.onDragStart($event, { type: 'task', id: task.id, sourceColumnId: columnId })"
         @dragend="drag.onDragEnd"
