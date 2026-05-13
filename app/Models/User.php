@@ -92,6 +92,11 @@ class User extends Authenticatable implements HasMedia
         return $this->hasMany(\App\Modules\Notes\Models\NoteTag::class);
     }
 
+    public function tags(): HasMany
+    {
+        return $this->hasMany(\App\Models\Tag::class);
+    }
+
     public function modules()
     {
         return $this->hasMany(\App\Modules\Admin\Models\UserModule::class);

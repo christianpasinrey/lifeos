@@ -2,6 +2,7 @@
 
 namespace App\Modules\Tasks\Models;
 
+use App\Models\Concerns\HasTags;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Board extends Model
 {
+    use HasTags;
+
     protected $table = 'task_boards';
 
     protected $fillable = ['user_id', 'name', 'description', 'sort_order'];
@@ -32,5 +35,10 @@ class Board extends Model
     public function customFields(): HasMany
     {
         return $this->hasMany(CustomField::class, 'board_id')->orderBy('sort_order');
+    }
+
+    public function cycles(): HasMany
+    {
+        return $this->hasMany(Cycle::class, 'board_id')->orderBy('sort_order');
     }
 }

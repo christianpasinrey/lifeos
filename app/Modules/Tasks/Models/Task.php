@@ -2,6 +2,7 @@
 
 namespace App\Modules\Tasks\Models;
 
+use App\Models\Concerns\HasTags;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,12 +12,12 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class Task extends Model implements HasMedia
 {
-    use InteractsWithMedia;
+    use HasTags, InteractsWithMedia;
 
     protected $table = 'tasks';
 
     protected $fillable = [
-        'column_id', 'user_id', 'title', 'description',
+        'column_id', 'cycle_id', 'user_id', 'title', 'description', 'body_html',
         'due_date', 'priority', 'sort_order',
     ];
 
@@ -30,6 +31,11 @@ class Task extends Model implements HasMedia
     public function column(): BelongsTo
     {
         return $this->belongsTo(Column::class);
+    }
+
+    public function cycle(): BelongsTo
+    {
+        return $this->belongsTo(Cycle::class);
     }
 
     public function user(): BelongsTo

@@ -25,7 +25,8 @@ class ListBoardsTool extends Tool
         }
 
         $boards = $user->boards()
-            ->with(['columns' => fn ($q) => $q->withCount('tasks')])
+            ->with(['columns' => fn ($q) => $q->withCount('tasks'), 'tags'])
+            ->withCount('cycles')
             ->orderBy('sort_order')
             ->get();
 
@@ -37,9 +38,12 @@ class ListBoardsTool extends Tool
 
         foreach ($boards as $board) {
             $totalTasks = $board->columns->sum('tasks_count');
-            $output .= "\xF0\x9F\x93\x8B {$board->name} (ID: {$board->id}) \xe2\x80\x94 {$board->columns->count()} columns, {$totalTasks} tasks\n";
+            $output .= "\xF0\x9F\x93\x8B {$board->name} (ID: {$board->id}) \xe2\x80\x94 {$board->columns->count()} columns, {$totalTasks} tasks, {$board->cycles_count} cycles\n";
             if ($board->description) {
                 $output .= "   {$board->description}\n";
+            }
+            if ($board->tags->isNotEmpty()) {
+                $output .= '   Tags: ' . $board->tags->pluck('name')->join(', ') . "\n";
             }
             foreach ($board->columns as $col) {
                 $output .= "   - {$col->name} (ID: {$col->id}): {$col->tasks_count} tasks\n";
