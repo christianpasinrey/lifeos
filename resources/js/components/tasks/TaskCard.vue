@@ -12,7 +12,7 @@
         @dragover.stop="onDragOver"
         @dragleave="drag.onDragLeave($event, `task-${task.id}`)"
         @drop.stop="onDrop"
-        @click="$emit('edit')"
+        @click.self="$emit('edit')"
     >
         <!-- Top row: priority + due date -->
         <div class="flex items-center justify-between gap-2">
@@ -85,7 +85,7 @@ const cycle = computed(() => {
     return props.cycles.find(c => c.id === props.task.cycle_id) || null
 })
 
-const emit = defineEmits(['edit', 'dropAbove'])
+const emit = defineEmits(['edit', 'dropAbove', 'taskDragOver'])
 
 const priorityLabels = { low: 'Baja', medium: 'Media', high: 'Alta' }
 const priorityLabel = computed(() => priorityLabels[props.task.priority] || 'Media')
@@ -135,6 +135,7 @@ function formatDue(d) {
 function onDragOver(e) {
     if (props.drag.dragging.value?.type === 'task') {
         props.drag.onDragOver(e, `task-${props.task.id}`)
+        emit('taskDragOver', props.task.id)
     }
 }
 

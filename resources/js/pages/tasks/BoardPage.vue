@@ -94,11 +94,12 @@
             </div>
 
             <div class="kanban-scroll glass-scroll">
-                <div class="kanban-track">
+                <TransitionGroup tag="div" name="kanban-flip" class="kanban-track">
                     <KanbanColumn
-                        v-for="column in filteredColumns"
+                        v-for="(column, index) in renderedColumns"
                         :key="column.id"
                         :column="column"
+                        :index="index"
                         :board-id="boardId"
                         :drag="drag"
                         :custom-fields="customFields"
@@ -108,8 +109,9 @@
                         @edit-task="editTask"
                         @drop-task="handleDropTask"
                         @drop-column="handleDropColumn"
+                        @column-drag-over="onColumnDragOver"
                     />
-                </div>
+                </TransitionGroup>
             </div>
         </template>
 
@@ -162,7 +164,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useBoard, useMoveTask, useReorderColumns } from '@/composables/useTasks'
 import { useDrag } from '@/composables/useDrag'
@@ -202,6 +204,37 @@ const highPriorityCount = computed(() => allTasks.value.filter(t => t.priority =
 
 const activeTab = ref('board')
 const cycleFilter = ref(null) // null = all, 0 = no cycle, N = cycle id
+
+// Live preview order while dragging a column. null = use natural order.
+const previewColumnOrder = ref(null)
+
+watch(() => drag.dragging.value, (val) => {
+    if (!val || val.type !== 'column') previewColumnOrder.value = null
+})
+
+function onColumnDragOver(targetIndex) {
+    const payload = drag.dragging.value
+    if (!payload || payload.type !== 'column') return
+    const list = filteredColumns.value
+    const fromIdx = list.findIndex(c => c.id === payload.id)
+    if (fromIdx < 0 || fromIdx === targetIndex) {
+        previewColumnOrder.value = list.map(c => c.id)
+        return
+    }
+    const order = list.map(c => c.id)
+    order.splice(fromIdx, 1)
+    order.splice(Math.max(0, Math.min(targetIndex, order.length)), 0, payload.id)
+    previewColumnOrder.value = order
+}
+
+const renderedColumns = computed(() => {
+    const base = filteredColumns.value
+    if (!previewColumnOrder.value) return base
+    const byId = new Map(base.map(c => [c.id, c]))
+    return previewColumnOrder.value
+        .map(id => byId.get(id))
+        .filter(Boolean)
+})
 
 const cycleFilterOptions = computed(() => [
     { value: '__all__', label: 'Todos los cycles' },
@@ -266,11 +299,16 @@ function handleDropTask(payload, targetColumnId, targetIndex) {
 
 function handleDropColumn(payload, targetIndex) {
     if (payload.type !== 'column') return
-    const newOrder = columns.value
-        .map(c => c.id)
-        .filter(id => id !== payload.id)
-    newOrder.splice(targetIndex, 0, payload.id)
-    reorderCols.mutate({ boardId: boardId.value, order: newOrder })
+    // Use the live preview order if available — it's already what the user sees.
+    const finalOrder = previewColumnOrder.value
+        ? [...previewColumnOrder.value]
+        : (() => {
+            const o = columns.value.map(c => c.id).filter(id => id !== payload.id)
+            o.splice(targetIndex, 0, payload.id)
+            return o
+        })()
+    previewColumnOrder.value = null
+    reorderCols.mutate({ boardId: boardId.value, order: finalOrder })
 }
 
 function onSlotAction(action) {
