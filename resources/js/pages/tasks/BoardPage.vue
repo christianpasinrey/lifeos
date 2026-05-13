@@ -72,16 +72,13 @@
                 <!-- Actions -->
                 <div class="flex items-center gap-2">
                     <!-- Cycle filter -->
-                    <select
-                        v-if="cycles.length"
-                        v-model="cycleFilter"
-                        class="form-input form-input-sm"
-                        title="Filtrar por cycle"
-                    >
-                        <option :value="null">Todos los cycles</option>
-                        <option :value="0">Sin cycle</option>
-                        <option v-for="c in cycles" :key="c.id" :value="c.id">{{ c.name }}</option>
-                    </select>
+                    <div v-if="cycles.length" class="board-cycle-filter">
+                        <CustomSelect
+                            :modelValue="cycleFilter ?? '__all__'"
+                            :options="cycleFilterOptions"
+                            @update:modelValue="setCycleFilter"
+                        />
+                    </div>
                     <template v-for="action in toolbarActions" :key="action.id || action.label">
                         <component v-if="action.component" :is="action.component" :board-id="boardId" :columns="columns" />
                         <button v-else class="btn-add" @click="onSlotAction(action)">
@@ -177,6 +174,7 @@ import TaskDetailPanel from '@/components/tasks/TaskDetailPanel.vue'
 import BoardSettingsModal from '@/components/tasks/BoardSettingsModal.vue'
 import BoardCyclesTab from '@/components/tasks/BoardCyclesTab.vue'
 import TagPicker from '@/components/tasks/TagPicker.vue'
+import CustomSelect from '@/components/ui/CustomSelect.vue'
 import {
     ArrowLeftIcon,
     PlusIcon,
@@ -204,6 +202,16 @@ const highPriorityCount = computed(() => allTasks.value.filter(t => t.priority =
 
 const activeTab = ref('board')
 const cycleFilter = ref(null) // null = all, 0 = no cycle, N = cycle id
+
+const cycleFilterOptions = computed(() => [
+    { value: '__all__', label: 'Todos los cycles' },
+    { value: 0, label: 'Sin cycle' },
+    ...cycles.value.map(c => ({ value: c.id, label: c.name })),
+])
+
+function setCycleFilter(val) {
+    cycleFilter.value = val === '__all__' ? null : Number(val)
+}
 
 const filteredColumns = computed(() => {
     if (cycleFilter.value === null) return columns.value
@@ -302,5 +310,5 @@ function onSlotAction(action) {
     font-size: 10px;
     color: rgb(203 213 225);
 }
-.form-input-sm { font-size: 0.75rem; padding: 0.25rem 0.5rem; }
+.board-cycle-filter { min-width: 180px; }
 </style>
