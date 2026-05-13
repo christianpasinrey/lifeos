@@ -74,9 +74,56 @@
                                 v-model="descLocal"
                                 @blur="saveDescription"
                                 class="form-input w-full resize-none"
-                                rows="3"
-                                placeholder="Añade una descripción..."
+                                rows="2"
+                                placeholder="Resumen corto…"
                             />
+                        </div>
+
+                        <!-- Tags -->
+                        <div>
+                            <label class="form-label">Etiquetas</label>
+                            <TagPicker
+                                :target-type="'task'"
+                                :target-id="taskId"
+                                :board-id="boardId"
+                                :modelValue="task.tags || []"
+                                @change="onTagsChanged"
+                            />
+                        </div>
+
+                        <!-- Cycle -->
+                        <div>
+                            <label class="form-label">Cycle</label>
+                            <CycleSelector
+                                :board-id="boardId"
+                                :modelValue="task.cycle_id"
+                                @change="onCycleChanged"
+                            />
+                        </div>
+
+                        <!-- Rich body -->
+                        <div>
+                            <label class="form-label flex items-center justify-between">
+                                <span>Contenido enriquecido</span>
+                                <button
+                                    type="button"
+                                    class="text-[10px] text-surface-500 hover:text-surface-300 transition-colors"
+                                    @click="bodyEditing = !bodyEditing"
+                                >
+                                    {{ bodyEditing ? 'Vista previa' : 'Editar' }}
+                                </button>
+                            </label>
+                            <BodyHtmlEditor
+                                v-if="bodyEditing"
+                                v-model="bodyLocal"
+                                @blur="saveBody"
+                            />
+                            <div
+                                v-else
+                                class="rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3 min-h-[80px]"
+                            >
+                                <BodyHtmlRenderer :html="task.body_html || ''" />
+                            </div>
                         </div>
 
                         <!-- Custom Fields -->
@@ -121,6 +168,10 @@ import { useCustomFields, useSetFieldValues } from '@/composables/useCustomField
 import CustomFieldRenderer from './CustomFieldRenderer.vue'
 import AddCustomFieldInline from './AddCustomFieldInline.vue'
 import TaskAttachments from './TaskAttachments.vue'
+import TagPicker from './TagPicker.vue'
+import CycleSelector from './CycleSelector.vue'
+import BodyHtmlEditor from './BodyHtmlEditor.vue'
+import BodyHtmlRenderer from './BodyHtmlRenderer.vue'
 import CustomSelect from '@/components/ui/CustomSelect.vue'
 import { ClipboardDocumentListIcon, XMarkIcon } from '@heroicons/vue/24/outline'
 
@@ -146,11 +197,14 @@ const setFieldValues = useSetFieldValues()
 // Local state for inline editing
 const titleLocal = ref('')
 const descLocal = ref('')
+const bodyLocal = ref('')
+const bodyEditing = ref(false)
 
 watch(task, (t) => {
     if (t) {
         titleLocal.value = t.title
         descLocal.value = t.description || ''
+        bodyLocal.value = t.body_html || ''
     }
 }, { immediate: true })
 
@@ -185,6 +239,23 @@ async function saveTitle() {
 async function saveDescription() {
     if (descLocal.value === (task.value?.description || '')) return
     await updateTask.mutateAsync({ id: props.taskId, boardId: props.boardId, description: descLocal.value })
+}
+
+async function saveBody() {
+    if (bodyLocal.value === (task.value?.body_html || '')) return
+    await updateTask.mutateAsync({ id: props.taskId, boardId: props.boardId, body_html: bodyLocal.value })
+}
+
+function onTagsChanged() {
+    // Mutation invalidates queries; nothing else to do.
+}
+
+async function onCycleChanged(cycleId) {
+    await updateTask.mutateAsync({
+        id: props.taskId,
+        boardId: props.boardId,
+        cycle_id: cycleId ?? 0, // 0 = clear server-side
+    })
 }
 
 async function saveField(field, value) {

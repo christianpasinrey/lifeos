@@ -44,6 +44,7 @@
                 :column-id="column.id"
                 :drag="drag"
                 :custom-fields="customFields"
+                :cycles="cycles"
                 @edit="$emit('editTask', task, column.id)"
                 @drop-above="(payload) => $emit('dropTask', payload, column.id, index)"
             />
@@ -70,6 +71,7 @@ const props = defineProps({
     boardId: { type: Number, required: true },
     drag: { type: Object, required: true },
     customFields: { type: Array, default: () => [] },
+    cycles: { type: Array, default: () => [] },
 })
 
 const emit = defineEmits(['editColumn', 'addTask', 'editTask', 'dropTask', 'dropColumn'])

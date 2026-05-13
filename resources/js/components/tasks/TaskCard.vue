@@ -32,6 +32,11 @@
             {{ task.description }}
         </p>
 
+        <!-- Tags -->
+        <div v-if="task.tags?.length" class="flex flex-wrap gap-1 mt-2">
+            <TagChip v-for="tag in task.tags" :key="tag.id" :tag="tag" size="xs" />
+        </div>
+
         <!-- Custom field chips -->
         <div v-if="fieldChips.length" class="task-chips">
             <span
@@ -45,17 +50,25 @@
             </span>
         </div>
 
-        <!-- Bottom row: attachments count + id -->
-        <div v-if="task.attachments_count" class="flex items-center gap-1.5 mt-2 text-surface-600">
-            <PaperClipIcon class="w-3 h-3" />
-            <span class="text-[0.625rem] font-medium">{{ task.attachments_count }}</span>
+        <!-- Bottom row: cycle + rich body + attachments -->
+        <div class="flex items-center gap-2 mt-2 text-surface-600">
+            <CycleBadge v-if="cycle" :cycle="cycle" />
+            <span v-if="task.body_html" class="flex items-center gap-0.5 text-[10px]" title="Tiene contenido enriquecido">
+                <DocumentTextIcon class="w-3 h-3" />
+            </span>
+            <span v-if="task.attachments_count" class="flex items-center gap-1 text-[10px]">
+                <PaperClipIcon class="w-3 h-3" />
+                <span class="font-medium">{{ task.attachments_count }}</span>
+            </span>
         </div>
     </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
-import { CalendarIcon, PaperClipIcon } from '@heroicons/vue/24/outline'
+import { CalendarIcon, PaperClipIcon, DocumentTextIcon } from '@heroicons/vue/24/outline'
+import TagChip from './TagChip.vue'
+import CycleBadge from './CycleBadge.vue'
 
 const props = defineProps({
     task: { type: Object, required: true },
@@ -63,6 +76,12 @@ const props = defineProps({
     columnId: { type: Number, required: true },
     drag: { type: Object, required: true },
     customFields: { type: Array, default: () => [] },
+    cycles: { type: Array, default: () => [] },
+})
+
+const cycle = computed(() => {
+    if (!props.task.cycle_id) return null
+    return props.cycles.find(c => c.id === props.task.cycle_id) || null
 })
 
 const emit = defineEmits(['edit', 'dropAbove'])
