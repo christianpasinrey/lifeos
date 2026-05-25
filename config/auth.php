@@ -20,6 +20,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Self-service Registration
+    |--------------------------------------------------------------------------
+    |
+    | LifeOS no expone el endpoint público de registro por defecto. Para una
+    | instancia personal el primer usuario se crea con `php artisan admin:create`.
+    | Pon REGISTER_ROUTE=true en tu .env para habilitar POST /api/register.
+    |
+    */
+
+    'registration_enabled' => env('REGISTER_ROUTE', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Authentication Guards
     |--------------------------------------------------------------------------
     |

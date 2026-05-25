@@ -424,6 +424,9 @@ cp .env.example .env
 php artisan key:generate
 php artisan migrate
 
+# Crear el primer usuario administrador (interactivo)
+php artisan admin:create
+
 # Arrancar todo (server + queue + logs + vite)
 composer dev
 ```
@@ -433,6 +436,21 @@ composer dev
 - **queue** - `php artisan queue:listen`
 - **logs** - `php artisan pail` (logs en tiempo real)
 - **vite** - `npm run dev`
+
+## Cuentas y registro
+
+LifeOS está pensado como una instancia personal, así que **no expone un endpoint de registro público por defecto** y no incluye una ruta `/register`.
+
+- **Crear usuarios**: usa el comando Artisan. De forma interactiva pedirá nombre, email y contraseña:
+
+  ```bash
+  php artisan admin:create
+  # o de forma no interactiva:
+  php artisan admin:create --name="Tu Nombre" --email=tu@email.com --password=secreto
+  # añade --no-admin para crear un usuario sin privilegios de administrador
+  ```
+
+- **Habilitar el registro público** (opcional): pon `REGISTER_ROUTE=true` en tu `.env`. Eso activa `POST /api/register`, que crea usuarios **sin** privilegios de administrador. Con `REGISTER_ROUTE=false` (valor por defecto) la ruta no se registra y responde 404.
 
 ## Convenciones
 
