@@ -23,5 +23,7 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 
-# Claude Code project settings (contains MCP tokens)
-.claude/settings.json
+# Local tooling / AI assistants (not versioned)
+/.claude
+/.superpowers
+/.vs
