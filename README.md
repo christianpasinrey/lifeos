@@ -452,6 +452,31 @@ LifeOS está pensado como una instancia personal, así que **no expone un endpoi
 
 - **Habilitar el registro público** (opcional): pon `REGISTER_ROUTE=true` en tu `.env`. Eso activa `POST /api/register`, que crea usuarios **sin** privilegios de administrador. Con `REGISTER_ROUTE=false` (valor por defecto) la ruta no se registra y responde 404.
 
+## Conectar con Claude (MCP)
+
+LifeOS expone un servidor [Model Context Protocol](https://modelcontextprotocol.io) en `/mcp`, de modo que un agente (Claude Desktop / Claude Code) puede operar tus tableros, tareas y demás módulos por lenguaje natural.
+
+1. Genera un **token MCP** desde la app: *Perfil → Token MCP* (endpoint `POST /api/profile/mcp-token`).
+2. Copia la plantilla y rellena tu dominio y el token:
+
+   ```bash
+   cp .mcp.json.example .mcp.json
+   ```
+
+   ```json
+   {
+     "mcpServers": {
+       "lifeos": {
+         "type": "http",
+         "url": "https://tu-dominio/mcp",
+         "headers": { "Authorization": "Bearer tu-token-mcp" }
+       }
+     }
+   }
+   ```
+
+El `.mcp.json` real está en `.gitignore` (contiene tu token); en el repo solo se versiona `.mcp.json.example`.
+
 ## Convenciones
 
 - **Namespacing**: `App\Modules\{Modulo}\` para todo el código del módulo
